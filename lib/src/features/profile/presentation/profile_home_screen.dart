@@ -65,15 +65,9 @@ class ProfileHomeScreen extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         _ProfileShortcut(
-          title: 'Mes tickets',
-          subtitle: 'Acces futur aux tickets de l utilisateur connecte.',
-          routeName: AppRoutes.myTickets,
-        ),
-        const SizedBox(height: 12),
-        _ProfileShortcut(
-          title: 'Mes entreprises',
-          subtitle: 'Acces futur aux entreprises admin de l utilisateur.',
-          routeName: AppRoutes.myCompanies,
+          title: 'Mes infos profil',
+          subtitle: 'Acces futur aux informations du compte connecte.',
+          routeName: AppRoutes.login,
         ),
       ],
     );

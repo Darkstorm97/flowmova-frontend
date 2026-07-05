@@ -7,19 +7,28 @@ void main() {
     await tester.pumpWidget(const FlowMovaApp());
 
     expect(
-      find.text('Trouvez une entreprise et suivez vos demandes.'),
+      find.text('Trouvez une entreprise et creez votre demande.'),
       findsOneWidget,
     );
-    expect(find.text('Client'), findsOneWidget);
+    expect(find.text('Accueil'), findsOneWidget);
+    expect(find.text('Tickets'), findsOneWidget);
     expect(find.text('Profil'), findsOneWidget);
     expect(find.text('Entreprise'), findsOneWidget);
     expect(find.text('Rechercher une entreprise'), findsOneWidget);
+    expect(find.text('Scanner un QR code'), findsOneWidget);
+    expect(find.text('Consulter un ticket'), findsNothing);
   });
 
-  testWidgets('main navigation opens profile and business spaces', (
+  testWidgets('main navigation opens tickets profile and business spaces', (
     tester,
   ) async {
     await tester.pumpWidget(const FlowMovaApp());
+
+    await tester.tap(find.text('Tickets'));
+    await tester.pumpAndSettle();
+    expect(find.text('Mes tickets'), findsOneWidget);
+    expect(find.text('Recents sur cet appareil'), findsOneWidget);
+    expect(find.text('Voir un ticket avec le code'), findsOneWidget);
 
     await tester.tap(find.text('Profil'));
     await tester.pumpAndSettle();
@@ -35,7 +44,7 @@ void main() {
 
     Navigator.of(
       tester.element(
-        find.text('Trouvez une entreprise et suivez vos demandes.'),
+        find.text('Trouvez une entreprise et creez votre demande.'),
       ),
     ).pushNamed('/route/inconnue');
     await tester.pumpAndSettle();

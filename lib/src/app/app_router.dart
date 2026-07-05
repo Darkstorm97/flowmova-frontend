@@ -6,6 +6,7 @@ import '../features/navigation/presentation/flow_mova_navigation_shell.dart';
 import '../features/placeholders/presentation/feature_placeholder_screen.dart';
 import '../features/placeholders/presentation/not_found_screen.dart';
 import '../features/profile/presentation/profile_home_screen.dart';
+import '../features/tickets/presentation/tickets_home_screen.dart';
 import 'app_routes.dart';
 
 abstract final class AppRouter {
@@ -21,6 +22,10 @@ abstract final class AppRouter {
       AppRoutes.profile => const FlowMovaNavigationShell(
         selectedRoute: AppRoutes.profile,
         child: ProfileHomeScreen(),
+      ),
+      AppRoutes.tickets => const FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.tickets,
+        child: TicketsHomeScreen(),
       ),
       AppRoutes.business => const FlowMovaNavigationShell(
         selectedRoute: AppRoutes.business,

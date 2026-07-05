@@ -1,6 +1,7 @@
 abstract final class AppRoutes {
   static const client = '/';
   static const clientAlias = '/client';
+  static const tickets = '/tickets';
   static const profile = '/profile';
   static const business = '/business';
 

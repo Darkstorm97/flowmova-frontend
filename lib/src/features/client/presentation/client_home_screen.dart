@@ -17,12 +17,12 @@ class ClientHomeScreen extends StatelessWidget {
         const FlowMovaLogo(width: 188),
         const SizedBox(height: 32),
         Text(
-          'Trouvez une entreprise et suivez vos demandes.',
+          'Trouvez une entreprise et creez votre demande.',
           style: textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 12),
         Text(
-          'L espace client sera le point d entree principal pour rechercher une entreprise, filtrer par domaine ou ville, puis creer ou consulter un ticket.',
+          'L accueil sera le point d entree principal pour rechercher une entreprise, filtrer par domaine ou ville, puis acceder aux services disponibles.',
           style: textTheme.titleMedium?.copyWith(color: FlowMovaColors.slate),
         ),
         const SizedBox(height: 28),
@@ -32,7 +32,7 @@ class ClientHomeScreen extends StatelessWidget {
           children: [
             _BrandBadge(label: 'Recherche entreprises'),
             _BrandBadge(label: 'Filtres'),
-            _BrandBadge(label: 'Suivi ticket'),
+            _BrandBadge(label: 'Acces QR code'),
           ],
         ),
         const SizedBox(height: 28),
@@ -47,13 +47,14 @@ class ClientHomeScreen extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         _ClientActionCard(
-          title: 'Consulter un ticket',
+          title: 'Scanner un QR code',
           description:
-              'Acceder a un ticket avec son numero plateforme, puis suivre son statut.',
-          actionLabel: 'Consulter',
-          icon: Icons.confirmation_number_outlined,
+              'Ouvrir rapidement le parcours public d un emplacement ou d une unite de service.',
+          actionLabel: 'Ouvrir',
+          icon: Icons.qr_code_scanner_outlined,
           secondary: true,
-          onPressed: () => Navigator.pushNamed(context, AppRoutes.ticketLookup),
+          onPressed: () =>
+              Navigator.pushNamed(context, AppRoutes.publicLocationDetail),
         ),
       ],
     );

@@ -32,7 +32,12 @@ class FlowMovaNavigationShell extends StatelessWidget {
                 NavigationDestination(
                   icon: Icon(Icons.search_outlined),
                   selectedIcon: Icon(Icons.search),
-                  label: 'Client',
+                  label: 'Accueil',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.confirmation_number_outlined),
+                  selectedIcon: Icon(Icons.confirmation_number),
+                  label: 'Tickets',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.person_outline),
@@ -68,7 +73,12 @@ class FlowMovaNavigationShell extends StatelessWidget {
                     NavigationRailDestination(
                       icon: Icon(Icons.search_outlined),
                       selectedIcon: Icon(Icons.search),
-                      label: Text('Client'),
+                      label: Text('Accueil'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.confirmation_number_outlined),
+                      selectedIcon: Icon(Icons.confirmation_number),
+                      label: Text('Tickets'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.person_outline),
@@ -93,15 +103,17 @@ class FlowMovaNavigationShell extends StatelessWidget {
   }
 
   int get _selectedIndex => switch (selectedRoute) {
-    AppRoutes.profile => 1,
-    AppRoutes.business => 2,
+    AppRoutes.tickets => 1,
+    AppRoutes.profile => 2,
+    AppRoutes.business => 3,
     _ => 0,
   };
 
   void _goToIndex(BuildContext context, int index) {
     final targetRoute = switch (index) {
-      1 => AppRoutes.profile,
-      2 => AppRoutes.business,
+      1 => AppRoutes.tickets,
+      2 => AppRoutes.profile,
+      3 => AppRoutes.business,
       _ => AppRoutes.client,
     };
 
