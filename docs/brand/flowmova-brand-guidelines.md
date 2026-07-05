@@ -243,8 +243,10 @@ A eviter:
 }
 ```
 
-## Open Decisions
+## Validated Decisions
 
-- Choisir definitivement entre `Inter` et `Nunito Sans` pour toute l'interface.
-- Valider les contrastes exacts lors de l'implementation frontend.
-- Definir plus tard la variante logo sombre a partir des SVG valides.
+- Police de marque: `Nunito Sans`.
+- Police d'interface: `Inter`.
+- Logos MVP valides: couleur avec texte, couleur sans texte, monochrome avec texte, monochrome sans texte, icône app.
+- Les contrastes exacts seront verifies pendant l'implementation frontend comme regle de qualite, pas comme decision de direction artistique ouverte.
+- La variante sombre n'est pas requise pour le MVP. Elle pourra etre derivee plus tard depuis les SVG valides si le besoin apparait.
