@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'app_router.dart';
+import 'app_routes.dart';
 import '../core/theme/flow_mova_theme.dart';
-import '../features/home/presentation/home_screen.dart';
 
 class FlowMovaApp extends StatelessWidget {
   const FlowMovaApp({super.key});
@@ -12,7 +13,8 @@ class FlowMovaApp extends StatelessWidget {
       title: 'FlowMova',
       debugShowCheckedModeBanner: false,
       theme: FlowMovaTheme.light,
-      home: const HomeScreen(),
+      initialRoute: AppRoutes.client,
+      onGenerateRoute: AppRouter.onGenerateRoute,
     );
   }
 }

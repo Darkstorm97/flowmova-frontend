@@ -1,21 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/app_routes.dart';
 import '../../../core/theme/flow_mova_colors.dart';
 import '../../../core/theme/flow_mova_radii.dart';
-import '../../../shared/widgets/flow_mova_app_shell.dart';
 import '../../../shared/widgets/flow_mova_logo.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const FlowMovaAppShell(child: _HomeContent());
-  }
-}
-
-class _HomeContent extends StatelessWidget {
-  const _HomeContent();
+class ClientHomeScreen extends StatelessWidget {
+  const ClientHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,12 +17,12 @@ class _HomeContent extends StatelessWidget {
         const FlowMovaLogo(width: 188),
         const SizedBox(height: 32),
         Text(
-          'Un pont fluide entre vos clients et votre equipe.',
+          'Trouvez une entreprise et suivez vos demandes.',
           style: textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 12),
         Text(
-          'FlowMova simplifie la creation, le suivi et le traitement des demandes client.',
+          'L espace client sera le point d entree principal pour rechercher une entreprise, filtrer par domaine ou ville, puis creer ou consulter un ticket.',
           style: textTheme.titleMedium?.copyWith(color: FlowMovaColors.slate),
         ),
         const SizedBox(height: 28),
@@ -39,27 +30,30 @@ class _HomeContent extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            _BrandBadge(label: 'Mobile-first'),
-            _BrandBadge(label: 'Tickets'),
-            _BrandBadge(label: 'Services'),
+            _BrandBadge(label: 'Recherche entreprises'),
+            _BrandBadge(label: 'Filtres'),
+            _BrandBadge(label: 'Suivi ticket'),
           ],
         ),
         const SizedBox(height: 28),
-        const _HomeActionCard(
-          title: 'Parcours client',
+        _ClientActionCard(
+          title: 'Rechercher une entreprise',
           description:
-              'Rechercher une entreprise, choisir un service et creer un ticket.',
-          actionLabel: 'Explorer',
-          icon: Icons.person_search_outlined,
+              'La recherche publique avec categorie, ville et pagination arrive dans PUBLIC-FRONT-001.',
+          actionLabel: 'Voir le placeholder',
+          icon: Icons.search_outlined,
+          onPressed: () =>
+              Navigator.pushNamed(context, AppRoutes.companyDetail),
         ),
         const SizedBox(height: 12),
-        const _HomeActionCard(
-          title: 'Espace entreprise',
+        _ClientActionCard(
+          title: 'Consulter un ticket',
           description:
-              'Se connecter pour gerer ses entreprises, services et demandes.',
-          actionLabel: 'Se connecter',
-          icon: Icons.storefront_outlined,
+              'Acceder a un ticket avec son numero plateforme, puis suivre son statut.',
+          actionLabel: 'Consulter',
+          icon: Icons.confirmation_number_outlined,
           secondary: true,
+          onPressed: () => Navigator.pushNamed(context, AppRoutes.ticketLookup),
         ),
       ],
     );
@@ -93,12 +87,13 @@ class _BrandBadge extends StatelessWidget {
   }
 }
 
-class _HomeActionCard extends StatelessWidget {
-  const _HomeActionCard({
+class _ClientActionCard extends StatelessWidget {
+  const _ClientActionCard({
     required this.title,
     required this.description,
     required this.actionLabel,
     required this.icon,
+    required this.onPressed,
     this.secondary = false,
   });
 
@@ -106,6 +101,7 @@ class _HomeActionCard extends StatelessWidget {
   final String description;
   final String actionLabel;
   final IconData icon;
+  final VoidCallback onPressed;
   final bool secondary;
 
   @override
@@ -151,8 +147,8 @@ class _HomeActionCard extends StatelessWidget {
             ],
           );
           final action = secondary
-              ? OutlinedButton(onPressed: () {}, child: Text(actionLabel))
-              : FilledButton(onPressed: () {}, child: Text(actionLabel));
+              ? OutlinedButton(onPressed: onPressed, child: Text(actionLabel))
+              : FilledButton(onPressed: onPressed, child: Text(actionLabel));
 
           return Padding(
             padding: const EdgeInsets.all(16),
