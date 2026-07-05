@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../features/auth/presentation/login_screen.dart';
+import '../features/auth/presentation/register_screen.dart';
 import '../features/business/presentation/business_home_screen.dart';
 import '../features/client/presentation/client_home_screen.dart';
 import '../features/navigation/presentation/flow_mova_navigation_shell.dart';
@@ -31,16 +33,8 @@ abstract final class AppRouter {
         selectedRoute: AppRoutes.business,
         child: BusinessHomeScreen(),
       ),
-      AppRoutes.login => const FeaturePlaceholderScreen(
-        title: 'Connexion',
-        description:
-            'Le formulaire de connexion sera implemente dans AUTH-FRONT-002.',
-      ),
-      AppRoutes.register => const FeaturePlaceholderScreen(
-        title: 'Creer un compte',
-        description:
-            'Le formulaire d inscription sera implemente dans AUTH-FRONT-001.',
-      ),
+      AppRoutes.login => const LoginScreen(),
+      AppRoutes.register => const RegisterScreen(),
       AppRoutes.businessDashboard => const FeaturePlaceholderScreen(
         title: 'Dashboard entreprise',
         description:

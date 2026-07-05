@@ -13,13 +13,13 @@ class ApiClient {
   ApiClient({
     this.environment = AppEnvironment.current,
     http.Client? httpClient,
-    this._accessTokenProvider,
+    this.accessTokenProvider,
     this._timeout = const Duration(seconds: 20),
   }) : _httpClient = httpClient ?? http.Client();
 
   final AppEnvironment environment;
   final http.Client _httpClient;
-  final AccessTokenProvider? _accessTokenProvider;
+  final AccessTokenProvider? accessTokenProvider;
   final Duration _timeout;
 
   Future<Object?> get(String path, {Map<String, dynamic>? queryParameters}) {
@@ -89,7 +89,7 @@ class ApiClient {
       'Content-Type': 'application/json',
     };
 
-    final accessToken = await _accessTokenProvider?.call();
+    final accessToken = await accessTokenProvider?.call();
     if (accessToken != null && accessToken.trim().isNotEmpty) {
       headers['Authorization'] = 'Bearer ${accessToken.trim()}';
     }
