@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/theme/flow_mova_theme.dart';
 import '../features/home/presentation/home_screen.dart';
 
 class FlowMovaApp extends StatelessWidget {
@@ -10,10 +11,7 @@ class FlowMovaApp extends StatelessWidget {
     return MaterialApp(
       title: 'FlowMova',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0EA5A7)),
-        useMaterial3: true,
-      ),
+      theme: FlowMovaTheme.light,
       home: const HomeScreen(),
     );
   }
