@@ -26,7 +26,7 @@ Le frontend doit rester aligne avec:
 
 La navigation principale MVP doit etre organisee autour de quatre entrees:
 
-- `Accueil`: entree par defaut de l'application. Elle contient la recherche d'entreprises actives, les filtres publics, l'acces aux fiches entreprises, aux unites de service et a la creation de ticket. Elle ne doit pas contenir le raccourci `Consulter un ticket par code`.
+- `Accueil`: entree par defaut de l'application. Elle contient la recherche d'entreprises actives, les filtres publics, l'acces aux fiches entreprises, aux unites de service et a la creation de ticket. Elle expose aussi une action secondaire `Scanner un QR code` pour ouvrir rapidement un lien public d'emplacement ou d'unite de service. Elle ne doit pas contenir le raccourci `Consulter un ticket par code`.
 - `Tickets`: espace dedie au suivi des tickets. Il contient `Mes tickets`, reserve aux tickets du compte authentifie, `Recents sur cet appareil`, disponible authentifie ou non avec les tickets crees localement dans le navigateur ou l'application mobile du client, ainsi que `Voir un ticket avec le code`, accessible aux utilisateurs authentifies ou non.
 - `Entreprise`: espace admin/entreprise. Si l'utilisateur n'est pas connecte, il propose `Se connecter` et `Creer un compte`. Si l'utilisateur est connecte, il contient `Creer une entreprise`, la liste des entreprises de l'utilisateur avec recherche/filtre, puis l'acces a la page d'administration d'une entreprise.
 - `Profil`: espace compte. Si l'utilisateur n'est pas connecte, il propose `Se connecter` et `Creer un compte`. Si l'utilisateur est connecte, il contient `Mes infos profil`, les parametres, la deconnexion et les futures options de compte.
@@ -262,6 +262,7 @@ Brancher la recherche publique d'entreprises.
 Inclure:
 
 - implementation dans l'accueil client;
+- action secondaire `Scanner un QR code`, sans rendre la recherche dependante du scanner;
 - recherche texte;
 - filtre type/domaine d'entreprise;
 - filtres ville, region, pays;
@@ -273,6 +274,27 @@ Definition of Done:
 - un utilisateur peut rechercher les entreprises actives;
 - les filtres backend disponibles sont exploites.
 - la recherche est le contenu principal de l'accueil client.
+
+### QR-FRONT-001 - Scanner ou ouvrir un lien QR code
+
+Ajouter une entree QR code depuis l'accueil client pour acceder rapidement au parcours public d'une unite de service ou d'un emplacement.
+
+Inclure:
+
+- bouton/action secondaire `Scanner un QR code` sur l'accueil;
+- sur mobile, preparation du parcours scanner camera quand le package Flutter sera valide;
+- sur web, fallback simple par saisie ou collage d'un lien public si la camera n'est pas disponible ou non autorisee;
+- ouverture du lien public vers l'ecran `PUBLIC-FRONT-004`;
+- gestion des permissions camera, chargement et erreur lorsque le scanner reel sera implemente;
+- aucun generation de QR code cote frontend ou backend dans ce ticket;
+- ne bloque pas la recherche publique d'entreprises.
+
+Definition of Done:
+
+- un utilisateur voit une entree QR code depuis l'accueil;
+- l'entree permet d'aller vers un parcours public existant par scan ou lien manuel selon la plateforme;
+- un refus de permission camera n'empeche pas d'utiliser l'application;
+- le parcours reste separe de `Voir un ticket avec le code`, qui appartient a l'onglet `Tickets`.
 
 ### PUBLIC-FRONT-002 - Consulter la fiche publique entreprise
 
