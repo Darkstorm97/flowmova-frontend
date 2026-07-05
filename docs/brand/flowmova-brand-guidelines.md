@@ -19,12 +19,12 @@ Mots-cles:
 
 ## Logo
 
-Concept valide: **Logo 6 - pont fluide avec point de progression**.
+Concept valide: **Logo 6 - flux fluide entreprise-client**.
 
 Le logo doit representer le flux entre l'entreprise et le client:
 
-- un pont ou arc fluide;
-- un point de progression sur le parcours;
+- trois bandes fluides et legerement inclinees;
+- un point client a gauche et un point entreprise a droite;
 - une sensation de demande accompagnee jusqu'a destination;
 - une forme simple, lisible en petit et utilisable comme icone d'application.
 
@@ -33,13 +33,31 @@ Le logo ne doit pas etre un monogramme `F/M` comme concept principal. Les lettre
 Usage recommande:
 
 - icone seule pour favicon, app icon, boutons compacts;
-- icone + wordmark `FlowMova` pour navigation, ecrans de connexion et documents;
+- logo complet empile, avec l'icone au-dessus du wordmark `FlowMova`, pour navigation, ecrans de connexion et documents;
 - variante monochrome pour fonds contraints.
 
-Assets MVP:
+Assets SVG valides:
 
-- Logo complet: [`assets/brand/flowmova-logo.svg`](../../assets/brand/flowmova-logo.svg)
-- Marque seule: [`assets/brand/flowmova-mark.svg`](../../assets/brand/flowmova-mark.svg)
+| Asset | Fichier | Usage |
+| --- | --- | --- |
+| Icône seule couleur | [`assets/brand/flowmova-regenerated-logo/flowmova-logo-mark-color-aligned.svg`](../../assets/brand/flowmova-regenerated-logo/flowmova-logo-mark-color-aligned.svg) | Source principale du symbole FlowMova. A utiliser pour favicon, boutons compacts, splash screen ou variantes futures. |
+| Logo complet couleur | [`assets/brand/flowmova-regenerated-logo/flowmova-logo-with-text-color-aligned.svg`](../../assets/brand/flowmova-regenerated-logo/flowmova-logo-with-text-color-aligned.svg) | Version officielle avec le texte `FlowMova` sous l'icône. A utiliser pour navigation, connexion, documents et ecrans de presentation. |
+| Icône app couleur | [`assets/brand/flowmova-regenerated-logo/flowmova-app-icon-color.svg`](../../assets/brand/flowmova-regenerated-logo/flowmova-app-icon-color.svg) | Version carree pour application, PWA, launcher ou export PNG haute resolution. |
+| Icône seule monochrome | [`assets/brand/flowmova-regenerated-logo/flowmova-logo-mark-monochrome.svg`](../../assets/brand/flowmova-regenerated-logo/flowmova-logo-mark-monochrome.svg) | Version en une seule couleur pour fonds contraints, documents simples ou impressions. |
+| Logo complet monochrome | [`assets/brand/flowmova-regenerated-logo/flowmova-logo-with-text-monochrome.svg`](../../assets/brand/flowmova-regenerated-logo/flowmova-logo-with-text-monochrome.svg) | Version officielle avec texte en une seule couleur. A utiliser quand la couleur n'est pas possible ou pas souhaitee. |
+
+Previsualisations PNG:
+
+- [`flowmova-logo-mark-color-aligned.png`](../../assets/brand/flowmova-regenerated-logo/vector-preview/flowmova-logo-mark-color-aligned.png)
+- [`flowmova-logo-with-text-color-aligned.png`](../../assets/brand/flowmova-regenerated-logo/vector-preview/flowmova-logo-with-text-color-aligned.png)
+- [`flowmova-app-icon-color.png`](../../assets/brand/flowmova-regenerated-logo/vector-preview/flowmova-app-icon-color.png)
+- [`flowmova-logo-mark-monochrome.png`](../../assets/brand/flowmova-regenerated-logo/vector-preview/flowmova-logo-mark-monochrome.png)
+- [`flowmova-logo-with-text-monochrome.png`](../../assets/brand/flowmova-regenerated-logo/vector-preview/flowmova-logo-with-text-monochrome.png)
+
+Notes de generation:
+
+- Le fichier [`build_logo_variants.py`](../../assets/brand/flowmova-regenerated-logo/build_logo_variants.py) sert a regenerer le logo avec texte, les variantes monochrome et l'icône app depuis l'icône seule validee.
+- Les fichiers `*-aligned.svg`, `*-monochrome.svg` et `flowmova-app-icon-color.svg` sont les assets valides pour le MVP. Les anciens essais de generation ne doivent pas etre utilises.
 
 ## Color Palette
 
@@ -57,6 +75,23 @@ Palette MVP:
 | White | `#FFFFFF` | surfaces principales |
 | Error | `#EF4444` | erreurs et actions destructives |
 | Warning | `#FACC15` | alertes non bloquantes |
+
+Palette exacte du logo valide:
+
+| Element | Couleur |
+| --- | --- |
+| Vague bleue, debut | `#168AF4` |
+| Vague bleue, fin | `#38C3EC` |
+| Vague turquoise, debut | `#05A9A7` |
+| Vague turquoise, fin | `#37CBD7` |
+| Vague verte, debut | `#2FB252` |
+| Vague verte, fin | `#8DD93A` |
+| Point droit orange, debut | `#FFB347` |
+| Point droit orange, fin | `#FF8A1E` |
+| Texte logo | `#13233E` |
+| Monochrome | `#13233E` |
+
+Pour creer une variante avec d'autres couleurs, partir en priorite de [`flowmova-logo-mark-color-aligned.svg`](../../assets/brand/flowmova-regenerated-logo/flowmova-logo-mark-color-aligned.svg), modifier les gradients SVG dans `<defs>`, puis regenerer les variantes avec [`build_logo_variants.py`](../../assets/brand/flowmova-regenerated-logo/build_logo_variants.py).
 
 Regle d'usage:
 
@@ -212,4 +247,4 @@ A eviter:
 
 - Choisir definitivement entre `Inter` et `Nunito Sans` pour toute l'interface.
 - Valider les contrastes exacts lors de l'implementation frontend.
-- Definir les variantes logo: clair, sombre, monochrome, app icon.
+- Definir plus tard la variante logo sombre a partir des SVG valides.
