@@ -27,7 +27,7 @@ Le frontend doit rester aligne avec:
 La navigation principale MVP doit etre organisee autour de quatre entrees:
 
 - `Accueil`: entree par defaut de l'application. Elle contient la recherche d'entreprises actives, les filtres publics, l'acces aux fiches entreprises, aux unites de service et a la creation de ticket. Elle ne doit pas contenir le raccourci `Consulter un ticket par code`.
-- `Tickets`: espace dedie au suivi des tickets. Il contient `Mes tickets`, qui demande la connexion si l'utilisateur n'est pas authentifie et affiche la liste des tickets si l'utilisateur est authentifie, ainsi que `Voir un ticket avec le code`, accessible aux utilisateurs authentifies ou non.
+- `Tickets`: espace dedie au suivi des tickets. Il contient `Mes tickets`, reserve aux tickets du compte authentifie, `Recents sur cet appareil`, disponible authentifie ou non avec les tickets crees localement dans le navigateur ou l'application mobile du client, ainsi que `Voir un ticket avec le code`, accessible aux utilisateurs authentifies ou non.
 - `Entreprise`: espace admin/entreprise. Si l'utilisateur n'est pas connecte, il propose `Se connecter` et `Creer un compte`. Si l'utilisateur est connecte, il contient `Creer une entreprise`, la liste des entreprises de l'utilisateur avec recherche/filtre, puis l'acces a la page d'administration d'une entreprise.
 - `Profil`: espace compte. Si l'utilisateur n'est pas connecte, il propose `Se connecter` et `Creer un compte`. Si l'utilisateur est connecte, il contient `Mes infos profil`, les parametres, la deconnexion et les futures options de compte.
 
@@ -111,6 +111,7 @@ Inclure:
 - ajouter l'onglet principal `Tickets`;
 - retirer le raccourci `Consulter un ticket` de l'accueil;
 - deplacer `Mes tickets` et `Voir un ticket avec le code` dans l'onglet `Tickets`;
+- ajouter `Recents sur cet appareil` dans l'onglet `Tickets`;
 - garder `Profil` pour les informations de compte, les parametres et la deconnexion;
 - garder `Entreprise` pour la creation d'entreprise, la liste des entreprises et l'acces administration.
 
@@ -118,7 +119,7 @@ Definition of Done:
 
 - la bottom navigation mobile et la navigation large exposent `Accueil`, `Tickets`, `Entreprise`, `Profil`;
 - l'accueil ne propose plus la consultation directe d'un ticket par code;
-- l'onglet `Tickets` affiche les deux entrees `Mes tickets` et `Voir un ticket avec le code`;
+- l'onglet `Tickets` affiche les entrees `Mes tickets`, `Recents sur cet appareil` et `Voir un ticket avec le code`;
 - les tests widget couvrent cette navigation.
 
 ### FRONT-004 - Configurer environnement API
@@ -331,12 +332,15 @@ Inclure:
 - telephone optionnel;
 - choix emplacement;
 - lignes d'articles avec quantite optionnelle par defaut a 1;
-- affichage numero de ticket et code d'acces si applicable.
+- affichage numero de ticket et code d'acces si applicable;
+- enregistrement local du ticket cree dans `Recents sur cet appareil` si un `accessCode` est retourne ou si les informations minimales sont disponibles;
+- application du mode `AUTHENTICATED_OR_GUEST_RECENT_ONE_OPEN_TICKET` pour les visiteurs non authentifies: si un ticket recent ouvert existe deja localement pour la meme unite, proposer d'ouvrir le ticket existant au lieu de recreer.
 
 Definition of Done:
 
 - un client peut creer un ticket depuis l'application ou un QR code;
-- le retour backend est affiche clairement.
+- le retour backend est affiche clairement;
+- les tickets invites crees depuis le navigateur ou l'application mobile sont conserves dans les recents locaux.
 
 ### TICKET-FRONT-002 - Consulter un ticket par numero
 
@@ -353,6 +357,49 @@ Inclure:
 Definition of Done:
 
 - un client non authentifie peut retrouver son ticket avec les informations necessaires.
+
+### TICKET-FRONT-004 - Gerer les tickets recents sur cet appareil
+
+Permettre a l'utilisateur de retrouver les tickets crees localement depuis le navigateur ou l'application mobile.
+
+Inclure:
+
+- section `Recents sur cet appareil` dans l'onglet `Tickets`;
+- disponible pour utilisateur authentifie ou non;
+- stockage local des references utiles: `ticketNumber`, `accessCode` si applicable, `serviceUnitId`, `locationId`, `companyId`, `status`, `createdAt`, `companyName`, `serviceUnitName`, `locationName` lorsque disponibles;
+- ouverture rapide d'un ticket recent avec les informations stockees;
+- rafraichissement du statut depuis le backend lors de l'ouverture d'un ticket recent;
+- option `Vider les tickets recents`;
+- message d'aide indiquant que ces tickets sont conserves uniquement dans le navigateur ou l'application mobile du client;
+- suppression locale uniquement: vider les recents ne supprime jamais les tickets backend.
+
+Definition of Done:
+
+- un ticket invite cree depuis cet appareil apparait dans `Recents sur cet appareil`;
+- un utilisateur peut vider les recents;
+- un ticket recent peut etre ouvert sans retaper manuellement le numero et le code;
+- le stockage local n'est jamais considere comme une preuve d'identite par le frontend.
+
+### TICKET-FRONT-005 - Limiter les creations invitees avec les tickets recents
+
+Appliquer cote frontend le mode `AUTHENTICATED_OR_GUEST_RECENT_ONE_OPEN_TICKET` pour les visiteurs non authentifies.
+
+Inclure:
+
+- lecture du `ticketCreationGuardMode` expose par l'unite de service;
+- si le mode est `AUTHENTICATED_OR_GUEST_RECENT_ONE_OPEN_TICKET`, verifier les tickets recents locaux avant creation invitee;
+- bloquer la creation invitee si un ticket recent ouvert existe pour la meme unite de service;
+- proposer `Voir le ticket existant` et `J'ai un autre code`;
+- autoriser une nouvelle creation si aucun ticket recent ouvert n'existe localement pour cette unite;
+- considerer comme ouverts les statuts `CREATED` et `RECEIVED`;
+- considerer comme liberateurs les statuts `TREATED`, `CUSTOMER_CONFIRMED`, `CANCELLED` et `CLOSED`;
+- ne pas afficher le libelle admin `cet appareil`; utiliser un message utilisateur clair dans le contexte client.
+
+Definition of Done:
+
+- le blocage local invite suit le mode backend expose;
+- le comportement reste non bloquant pour les invites si le mode est `NONE`;
+- le frontend ne tente pas de garantir un blocage global des visiteurs non authentifies.
 
 ### TICKET-FRONT-003 - Actions client sur ticket
 
@@ -464,7 +511,8 @@ Inclure:
 
 - nom;
 - description;
-- regle anti-spam ticket;
+- mode de controle de creation de tickets (`ticketCreationGuardMode`) avec les libelles admin:
+  `Aucune restriction`, `Clients connectes uniquement, un ticket ouvert maximum`, `Clients connectes controles, invites limites cote application`;
 - lien public si expose;
 - association catalogue;
 - etat actif/archive selon backend.
