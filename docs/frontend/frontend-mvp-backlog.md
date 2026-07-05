@@ -19,16 +19,17 @@ Le frontend doit rester aligne avec:
 - Les ecrans doivent etre branches sur le backend progressivement, sans faux parcours definitifs.
 - Les erreurs backend standardisees doivent etre affichees proprement cote utilisateur.
 - Les listes paginees doivent respecter la pagination backend.
-- L'application est orientee client d'abord: l'ecran par defaut doit aider un client a trouver une entreprise, consulter un ticket ou acceder a un service.
+- L'application est orientee client d'abord: l'ecran par defaut doit aider un client a trouver une entreprise et acceder aux services disponibles.
 - L'espace entreprise reste visible, mais secondaire par rapport au parcours client.
 
 ## Navigation MVP
 
-La navigation principale MVP doit etre organisee autour de trois entrees:
+La navigation principale MVP doit etre organisee autour de quatre entrees:
 
-- `Client`: entree par defaut de l'application. Elle contient la recherche d'entreprises actives, les filtres publics, l'acces aux fiches entreprises, aux services et a la consultation d'un ticket par numero.
-- `Profil`: espace personnel. Si l'utilisateur n'est pas connecte, il affiche les actions `Se connecter` et `Creer un compte`. Si l'utilisateur est connecte, il donne acces au profil, a `Mes tickets`, a `Mes entreprises` et a la deconnexion.
-- `Entreprise`: espace admin/entreprise. Si l'utilisateur est connecte et admin d'entreprise, il donne acces au dashboard entreprise. Sinon, il invite a se connecter ou a creer une entreprise selon le contexte.
+- `Accueil`: entree par defaut de l'application. Elle contient la recherche d'entreprises actives, les filtres publics, l'acces aux fiches entreprises, aux unites de service et a la creation de ticket. Elle ne doit pas contenir le raccourci `Consulter un ticket par code`.
+- `Tickets`: espace dedie au suivi des tickets. Il contient `Mes tickets`, qui demande la connexion si l'utilisateur n'est pas authentifie et affiche la liste des tickets si l'utilisateur est authentifie, ainsi que `Voir un ticket avec le code`, accessible aux utilisateurs authentifies ou non.
+- `Entreprise`: espace admin/entreprise. Si l'utilisateur n'est pas connecte, il propose `Se connecter` et `Creer un compte`. Si l'utilisateur est connecte, il contient `Creer une entreprise`, la liste des entreprises de l'utilisateur avec recherche/filtre, puis l'acces a la page d'administration d'une entreprise.
+- `Profil`: espace compte. Si l'utilisateur n'est pas connecte, il propose `Se connecter` et `Creer un compte`. Si l'utilisateur est connecte, il contient `Mes infos profil`, les parametres, la deconnexion et les futures options de compte.
 
 Sur mobile, cette navigation peut etre rendue sous forme de bottom navigation. Sur web/tablette, elle peut etre rendue en barre superieure. Le comportement fonctionnel reste le meme.
 
@@ -95,10 +96,30 @@ Inclure routes pour:
 Definition of Done:
 
 - les routes MVP existent;
-- l'ecran par defaut est l'espace client;
-- la navigation principale expose `Client`, `Profil` et `Entreprise`;
+- l'ecran par defaut est l'accueil client;
+- la navigation principale expose `Accueil`, `Tickets`, `Entreprise` et `Profil`;
 - les ecrans peuvent etre atteints sans logique metier complete;
 - une route inconnue affiche un etat propre.
+
+### FRONT-005 - Ajuster la navigation MVP avec l'onglet Tickets
+
+Adapter le squelette de navigation apres validation de la navigation a quatre onglets.
+
+Inclure:
+
+- renommer l'entree `Client` en `Accueil`;
+- ajouter l'onglet principal `Tickets`;
+- retirer le raccourci `Consulter un ticket` de l'accueil;
+- deplacer `Mes tickets` et `Voir un ticket avec le code` dans l'onglet `Tickets`;
+- garder `Profil` pour les informations de compte, les parametres et la deconnexion;
+- garder `Entreprise` pour la creation d'entreprise, la liste des entreprises et l'acces administration.
+
+Definition of Done:
+
+- la bottom navigation mobile et la navigation large exposent `Accueil`, `Tickets`, `Entreprise`, `Profil`;
+- l'accueil ne propose plus la consultation directe d'un ticket par code;
+- l'onglet `Tickets` affiche les deux entrees `Mes tickets` et `Voir un ticket avec le code`;
+- les tests widget couvrent cette navigation.
 
 ### FRONT-004 - Configurer environnement API
 
@@ -216,6 +237,8 @@ Afficher les informations du compte connecte.
 Inclure:
 
 - etat non connecte avec boutons `Se connecter` et `Creer un compte`;
+- affichage `Mes infos profil` si l'utilisateur est connecte;
+- acces futur aux parametres et a la deconnexion si l'utilisateur est connecte;
 - appel API profil;
 - etat chargement;
 - etat erreur;
@@ -237,7 +260,7 @@ Brancher la recherche publique d'entreprises.
 
 Inclure:
 
-- implementation dans l'espace client;
+- implementation dans l'accueil client;
 - recherche texte;
 - filtre type/domaine d'entreprise;
 - filtres ville, region, pays;
@@ -248,7 +271,7 @@ Definition of Done:
 
 - un utilisateur peut rechercher les entreprises actives;
 - les filtres backend disponibles sont exploites.
-- la recherche est le contenu principal de l'espace client.
+- la recherche est le contenu principal de l'accueil client.
 
 ### PUBLIC-FRONT-002 - Consulter la fiche publique entreprise
 
@@ -302,6 +325,7 @@ Brancher la creation de ticket.
 
 Inclure:
 
+- implementation dans l'onglet `Tickets`;
 - support utilisateur connecte;
 - support invite avec `guestName` requis;
 - telephone optionnel;
@@ -320,6 +344,7 @@ Permettre la consultation simple d'un ticket par son numero plateforme.
 
 Inclure:
 
+- implementation dans l'onglet `Tickets`;
 - saisie numero ticket;
 - saisie code d'acces si requis par backend;
 - affichage statut et informations principales;
@@ -355,14 +380,18 @@ Afficher les entreprises de l'utilisateur authentifie.
 Inclure:
 
 - integration dans l'espace entreprise;
+- bouton `Creer une entreprise`;
+- recherche/filtre dans la liste des entreprises si pertinent pour le MVP;
 - pagination;
 - entreprises actives et desactivees si l'API admin les retourne;
-- acces creation/detail/modification.
+- acces creation/detail/modification;
+- clic sur une entreprise vers la page d'administration de cette entreprise.
 
 Definition of Done:
 
 - un admin voit ses entreprises apres connexion.
 - l'espace entreprise reste distinct du parcours client public.
+- un utilisateur non connecte est invite a se connecter ou creer un compte.
 
 ### COMPANY-FRONT-002 - Creer une entreprise
 
