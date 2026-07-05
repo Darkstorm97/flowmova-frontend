@@ -1,0 +1,10 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="flowmova-mark-title flowmova-mark-desc">
+  <title id="flowmova-mark-title">FlowMova mark</title>
+  <desc id="flowmova-mark-desc">A fluid bridge between a business and a customer with a progress point.</desc>
+  <rect width="96" height="96" rx="24" fill="#F4F7FA"/>
+  <circle cx="24" cy="62" r="8" fill="#0EA5A7"/>
+  <circle cx="72" cy="34" r="8" fill="#2BB673"/>
+  <path d="M25 61C34 43 52 28 72 34" stroke="#0EA5A7" stroke-width="10" stroke-linecap="round"/>
+  <path d="M25 61C38 72 58 70 72 51" stroke="#38BDF8" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="51" cy="47" r="6.5" fill="#FFB86B" stroke="#FFFFFF" stroke-width="3"/>
+</svg>

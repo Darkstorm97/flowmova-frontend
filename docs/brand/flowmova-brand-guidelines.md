@@ -36,6 +36,11 @@ Usage recommande:
 - icone + wordmark `FlowMova` pour navigation, ecrans de connexion et documents;
 - variante monochrome pour fonds contraints.
 
+Assets MVP:
+
+- Logo complet: [`assets/brand/flowmova-logo.svg`](../../assets/brand/flowmova-logo.svg)
+- Marque seule: [`assets/brand/flowmova-mark.svg`](../../assets/brand/flowmova-mark.svg)
+
 ## Color Palette
 
 Palette MVP:
@@ -205,7 +210,6 @@ A eviter:
 
 ## Open Decisions
 
-- Produire une version SVG finale du logo `Logo 6`.
 - Choisir definitivement entre `Inter` et `Nunito Sans` pour toute l'interface.
 - Valider les contrastes exacts lors de l'implementation frontend.
 - Definir les variantes logo: clair, sombre, monochrome, app icon.

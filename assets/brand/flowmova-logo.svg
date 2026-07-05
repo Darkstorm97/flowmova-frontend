@@ -1,0 +1,15 @@
+<svg width="320" height="96" viewBox="0 0 320 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="flowmova-logo-title flowmova-logo-desc">
+  <title id="flowmova-logo-title">FlowMova logo</title>
+  <desc id="flowmova-logo-desc">FlowMova wordmark with a fluid bridge mark representing the connection between a business and a customer.</desc>
+  <g>
+    <rect width="96" height="96" rx="24" fill="#F4F7FA"/>
+    <circle cx="24" cy="62" r="8" fill="#0EA5A7"/>
+    <circle cx="72" cy="34" r="8" fill="#2BB673"/>
+    <path d="M25 61C34 43 52 28 72 34" stroke="#0EA5A7" stroke-width="10" stroke-linecap="round"/>
+    <path d="M25 61C38 72 58 70 72 51" stroke="#38BDF8" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="51" cy="47" r="6.5" fill="#FFB86B" stroke="#FFFFFF" stroke-width="3"/>
+  </g>
+  <text x="116" y="59" fill="#1F2937" font-family="Nunito Sans, Inter, system-ui, sans-serif" font-size="36" font-weight="800" letter-spacing="0">
+    Flow<tspan fill="#0EA5A7">Mova</tspan>
+  </text>
+</svg>
