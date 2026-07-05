@@ -1,4 +1,5 @@
 import 'package:flowmova_frontend/src/app/flow_mova_app.dart';
+import 'package:flowmova_frontend/src/core/session/session_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -51,5 +52,14 @@ void main() {
 
     expect(find.text('Route inconnue'), findsOneWidget);
     expect(find.text('/route/inconnue'), findsOneWidget);
+  });
+
+  testWidgets('session scope is available to app widgets', (tester) async {
+    await tester.pumpWidget(const FlowMovaApp());
+
+    final context = tester.element(find.byType(MaterialApp));
+    final session = SessionScope.of(context);
+
+    expect(session.isAuthenticated, isFalse);
   });
 }
