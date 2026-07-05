@@ -19,6 +19,18 @@ Le frontend doit rester aligne avec:
 - Les ecrans doivent etre branches sur le backend progressivement, sans faux parcours definitifs.
 - Les erreurs backend standardisees doivent etre affichees proprement cote utilisateur.
 - Les listes paginees doivent respecter la pagination backend.
+- L'application est orientee client d'abord: l'ecran par defaut doit aider un client a trouver une entreprise, consulter un ticket ou acceder a un service.
+- L'espace entreprise reste visible, mais secondaire par rapport au parcours client.
+
+## Navigation MVP
+
+La navigation principale MVP doit etre organisee autour de trois entrees:
+
+- `Client`: entree par defaut de l'application. Elle contient la recherche d'entreprises actives, les filtres publics, l'acces aux fiches entreprises, aux services et a la consultation d'un ticket par numero.
+- `Profil`: espace personnel. Si l'utilisateur n'est pas connecte, il affiche les actions `Se connecter` et `Creer un compte`. Si l'utilisateur est connecte, il donne acces au profil, a `Mes tickets`, a `Mes entreprises` et a la deconnexion.
+- `Entreprise`: espace admin/entreprise. Si l'utilisateur est connecte et admin d'entreprise, il donne acces au dashboard entreprise. Sinon, il invite a se connecter ou a creer une entreprise selon le contexte.
+
+Sur mobile, cette navigation peut etre rendue sous forme de bottom navigation. Sur web/tablette, elle peut etre rendue en barre superieure. Le comportement fonctionnel reste le meme.
 
 ## Milestone 1 - Fondation Frontend
 
@@ -66,11 +78,12 @@ Mettre en place la navigation frontend.
 
 Inclure routes pour:
 
-- accueil public;
-- connexion;
-- inscription;
-- dashboard admin;
-- recherche/consultation d'entreprises;
+- espace client par defaut (`/` ou `/client`);
+- profil (`/profile`);
+- espace entreprise (`/business`);
+- connexion et inscription accessibles depuis le profil;
+- dashboard admin accessible depuis l'espace entreprise;
+- recherche/consultation d'entreprises depuis l'espace client;
 - detail entreprise;
 - detail unite de service;
 - detail emplacement public;
@@ -82,6 +95,8 @@ Inclure routes pour:
 Definition of Done:
 
 - les routes MVP existent;
+- l'ecran par defaut est l'espace client;
+- la navigation principale expose `Client`, `Profil` et `Entreprise`;
 - les ecrans peuvent etre atteints sans logique metier complete;
 - une route inconnue affiche un etat propre.
 
@@ -200,6 +215,7 @@ Afficher les informations du compte connecte.
 
 Inclure:
 
+- etat non connecte avec boutons `Se connecter` et `Creer un compte`;
 - appel API profil;
 - etat chargement;
 - etat erreur;
@@ -207,6 +223,7 @@ Inclure:
 
 Definition of Done:
 
+- un utilisateur non connecte comprend comment se connecter ou creer un compte;
 - l'utilisateur connecte peut voir son profil;
 - il peut se deconnecter.
 
@@ -220,6 +237,7 @@ Brancher la recherche publique d'entreprises.
 
 Inclure:
 
+- implementation dans l'espace client;
 - recherche texte;
 - filtre type/domaine d'entreprise;
 - filtres ville, region, pays;
@@ -230,6 +248,7 @@ Definition of Done:
 
 - un utilisateur peut rechercher les entreprises actives;
 - les filtres backend disponibles sont exploites.
+- la recherche est le contenu principal de l'espace client.
 
 ### PUBLIC-FRONT-002 - Consulter la fiche publique entreprise
 
@@ -335,6 +354,7 @@ Afficher les entreprises de l'utilisateur authentifie.
 
 Inclure:
 
+- integration dans l'espace entreprise;
 - pagination;
 - entreprises actives et desactivees si l'API admin les retourne;
 - acces creation/detail/modification.
@@ -342,6 +362,7 @@ Inclure:
 Definition of Done:
 
 - un admin voit ses entreprises apres connexion.
+- l'espace entreprise reste distinct du parcours client public.
 
 ### COMPANY-FRONT-002 - Creer une entreprise
 
