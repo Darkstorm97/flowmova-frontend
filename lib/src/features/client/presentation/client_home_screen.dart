@@ -21,7 +21,6 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
 
   final _searchController = TextEditingController();
   final _cityController = TextEditingController();
-  final _regionController = TextEditingController();
   final _countryController = TextEditingController();
 
   late final CompanySearchGateway _searchGateway =
@@ -62,7 +61,6 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
         const SizedBox(height: 12),
         _AdvancedFilters(
           cityController: _cityController,
-          regionController: _regionController,
           countryController: _countryController,
           loading: _loading,
           onSubmit: () => _search(page: 0),
@@ -128,7 +126,6 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
           text: _searchController.text,
           businessType: _selectedBusinessType,
           city: _cityController.text,
-          region: _regionController.text,
           country: _countryController.text,
           page: nextPage,
           size: _pageSize,
@@ -166,7 +163,6 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   void _resetFilters() {
     _searchController.clear();
     _cityController.clear();
-    _regionController.clear();
     _countryController.clear();
     setState(() => _selectedBusinessType = null);
     _search(page: 0);
@@ -176,7 +172,6 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   void dispose() {
     _searchController.dispose();
     _cityController.dispose();
-    _regionController.dispose();
     _countryController.dispose();
     super.dispose();
   }
@@ -206,7 +201,7 @@ class _DiscoveryHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(FlowMovaRadii.large),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -219,22 +214,22 @@ class _DiscoveryHeader extends StatelessWidget {
                     children: [
                       Text(
                         'Decouvrez autour de vous',
-                        style: textTheme.headlineSmall?.copyWith(
+                        style: textTheme.titleLarge?.copyWith(
                           color: FlowMovaColors.logoInk,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
-                        'Parcourez les entreprises actives et trouvez vite le bon service.',
-                        style: textTheme.bodyMedium?.copyWith(
+                        'Trouvez vite le bon service.',
+                        style: textTheme.bodySmall?.copyWith(
                           color: FlowMovaColors.slate,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 IconButton.filledTonal(
                   tooltip: 'Scanner un QR code',
                   onPressed: onQrPressed,
@@ -242,7 +237,7 @@ class _DiscoveryHeader extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             TextField(
               controller: searchController,
               textInputAction: TextInputAction.search,
@@ -308,7 +303,6 @@ class _DomainScroller extends StatelessWidget {
 class _AdvancedFilters extends StatelessWidget {
   const _AdvancedFilters({
     required this.cityController,
-    required this.regionController,
     required this.countryController,
     required this.loading,
     required this.onSubmit,
@@ -316,7 +310,6 @@ class _AdvancedFilters extends StatelessWidget {
   });
 
   final TextEditingController cityController;
-  final TextEditingController regionController;
   final TextEditingController countryController;
   final bool loading;
   final VoidCallback onSubmit;
@@ -350,11 +343,6 @@ class _AdvancedFilters extends StatelessWidget {
                         controller: cityController,
                         label: 'Ville',
                         icon: Icons.location_city_outlined,
-                      ),
-                      _FilterTextField(
-                        controller: regionController,
-                        label: 'Region',
-                        icon: Icons.map_outlined,
                       ),
                       _FilterTextField(
                         controller: countryController,
@@ -593,12 +581,12 @@ class _CompanyFeedCard extends StatelessWidget {
       child: InkWell(
         onTap: () => Navigator.pushNamed(context, AppRoutes.companyDetail),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _CompanyAvatar(type: company.businessType),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -615,13 +603,10 @@ class _CompanyFeedCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Icon(
-                          Icons.chevron_right,
-                          color: FlowMovaColors.slate.withValues(alpha: 0.72),
-                        ),
+                        _OpenBadge(),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 7),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -634,15 +619,11 @@ class _CompanyFeedCard extends StatelessWidget {
                           icon: Icons.place_outlined,
                           label: company.locationLabel,
                         ),
-                        _InfoPill(
-                          icon: Icons.payments_outlined,
-                          label: company.currency,
-                        ),
                       ],
                     ),
                     if (company.description != null &&
                         company.description!.trim().isNotEmpty) ...[
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       Text(
                         company.description!,
                         maxLines: 2,
@@ -673,12 +654,39 @@ class _CompanyAvatar extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: _businessTypeColor(type).withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(FlowMovaRadii.large),
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
       ),
       child: SizedBox(
-        width: 54,
-        height: 54,
+        width: 46,
+        height: 46,
         child: Icon(_businessTypeIcon(type), color: _businessTypeColor(type)),
+      ),
+    );
+  }
+}
+
+class _OpenBadge extends StatelessWidget {
+  const _OpenBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.leafGreen.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(FlowMovaRadii.pill),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.chevron_right,
+              size: 16,
+              color: FlowMovaColors.leafGreen,
+            ),
+          ],
+        ),
       ),
     );
   }

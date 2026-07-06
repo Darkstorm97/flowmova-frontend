@@ -324,6 +324,27 @@ Definition of Done:
 - la recherche publique branchee sur le backend reste fonctionnelle;
 - les tests widget couvrent le nouveau flux d'accueil.
 
+### PUBLIC-FRONT-006 - Affiner le flux d'accueil entreprises
+
+Issue GitHub: #38.
+
+Affiner le flux de decouverte apres revue visuelle.
+
+Inclure:
+
+- premiere tuile d'accueil plus compacte;
+- suppression du filtre `Region` dans l'interface d'accueil;
+- cartes entreprises plus soignees et plus faciles a parcourir;
+- suppression de l'affichage de la devise dans les cartes entreprises;
+- conservation des filtres utiles valides: recherche texte, domaine, ville et pays;
+- compatibilite avec l'API backend existante.
+
+Definition of Done:
+
+- l'accueil prend moins de place avant le flux d'entreprises;
+- les cartes entreprises sont plus lisibles;
+- les tests widget restent a jour.
+
 ### QR-FRONT-001 - Scanner ou ouvrir un lien QR code
 
 Ajouter une entree QR code depuis l'accueil client pour acceder rapidement au parcours public d'une unite de service ou d'un emplacement.
