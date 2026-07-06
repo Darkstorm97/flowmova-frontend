@@ -4,20 +4,29 @@ import '../../core/theme/flow_mova_colors.dart';
 import 'flow_mova_logo.dart';
 
 class FlowMovaAppBarTitle extends StatelessWidget {
-  const FlowMovaAppBarTitle({required this.title, super.key});
+  const FlowMovaAppBarTitle({
+    required this.title,
+    super.key,
+    this.showLogo = true,
+    this.logoSize = 30,
+  });
 
   final String title;
+  final bool showLogo;
+  final double logoSize;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const FlowMovaLogo(
-          variant: FlowMovaLogoVariant.mark,
-          width: 34,
-          height: 34,
-        ),
-        const SizedBox(width: 10),
+        if (showLogo) ...[
+          FlowMovaLogo(
+            variant: FlowMovaLogoVariant.mark,
+            width: logoSize,
+            height: logoSize,
+          ),
+          const SizedBox(width: 12),
+        ],
         Expanded(
           child: Text(
             title,

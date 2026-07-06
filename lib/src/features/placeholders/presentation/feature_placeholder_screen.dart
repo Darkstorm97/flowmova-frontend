@@ -18,7 +18,13 @@ class FeaturePlaceholderScreen extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: FlowMovaAppBarTitle(title: title)),
+      appBar: AppBar(
+        titleSpacing: Navigator.canPop(context) ? 4 : null,
+        title: FlowMovaAppBarTitle(
+          title: title,
+          showLogo: !Navigator.canPop(context),
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

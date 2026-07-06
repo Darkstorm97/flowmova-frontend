@@ -24,7 +24,13 @@ class AuthFormShell extends StatelessWidget {
     final wideLayout = mediaQuery.size.width >= 840;
 
     return Scaffold(
-      appBar: AppBar(title: FlowMovaAppBarTitle(title: title)),
+      appBar: AppBar(
+        titleSpacing: Navigator.canPop(context) ? 4 : null,
+        title: FlowMovaAppBarTitle(
+          title: title,
+          showLogo: !Navigator.canPop(context),
+        ),
+      ),
       body: SafeArea(
         child: ColoredBox(
           color: FlowMovaColors.cloud,

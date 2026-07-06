@@ -41,69 +41,45 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Trouvez une entreprise',
-                    style: textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Recherchez par nom, domaine ou localisation, puis ouvrez la fiche publique pour consulter les services disponibles.',
-                    style: textTheme.bodyLarge?.copyWith(
-                      color: FlowMovaColors.slate,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            IconButton.filledTonal(
-              tooltip: 'Scanner un QR code',
-              onPressed: () =>
-                  Navigator.pushNamed(context, AppRoutes.publicLocationDetail),
-              icon: const Icon(Icons.qr_code_scanner_outlined),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        _SearchPanel(
+        _DiscoveryHeader(
           searchController: _searchController,
+          loading: _loading,
+          onSubmit: () => _search(page: 0),
+          onQrPressed: () =>
+              Navigator.pushNamed(context, AppRoutes.publicLocationDetail),
+        ),
+        const SizedBox(height: 16),
+        _DomainScroller(
+          selectedBusinessType: _selectedBusinessType,
+          onSelected: (value) {
+            setState(() => _selectedBusinessType = value);
+            _search(page: 0);
+          },
+        ),
+        const SizedBox(height: 12),
+        _AdvancedFilters(
           cityController: _cityController,
           regionController: _regionController,
           countryController: _countryController,
-          selectedBusinessType: _selectedBusinessType,
           loading: _loading,
-          onBusinessTypeChanged: (value) {
-            setState(() => _selectedBusinessType = value);
-          },
           onSubmit: () => _search(page: 0),
           onReset: _resetFilters,
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
         _ResultsHeader(results: _results, loading: _loading),
         const SizedBox(height: 12),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
-          child: _buildResults(context),
+          child: _buildResults(),
         ),
       ],
     );
   }
 
-  Widget _buildResults(BuildContext context) {
+  Widget _buildResults() {
     if (_loading && _results == null) {
       return const _LoadingResults();
     }
@@ -122,11 +98,11 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
     }
 
     return Column(
-      key: ValueKey('companies-page-${results.page}'),
+      key: ValueKey('companies-feed-${results.page}'),
       children: [
         for (final company in results.items) ...[
-          _CompanyResultCard(company: company),
-          const SizedBox(height: 10),
+          _CompanyFeedCard(company: company),
+          const SizedBox(height: 12),
         ],
         _PaginationBar(
           results: results,
@@ -206,115 +182,89 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   }
 }
 
-class _SearchPanel extends StatelessWidget {
-  const _SearchPanel({
+class _DiscoveryHeader extends StatelessWidget {
+  const _DiscoveryHeader({
     required this.searchController,
-    required this.cityController,
-    required this.regionController,
-    required this.countryController,
-    required this.selectedBusinessType,
     required this.loading,
-    required this.onBusinessTypeChanged,
     required this.onSubmit,
-    required this.onReset,
+    required this.onQrPressed,
   });
 
   final TextEditingController searchController;
-  final TextEditingController cityController;
-  final TextEditingController regionController;
-  final TextEditingController countryController;
-  final String? selectedBusinessType;
   final bool loading;
-  final ValueChanged<String?> onBusinessTypeChanged;
   final VoidCallback onSubmit;
-  final VoidCallback onReset;
+  final VoidCallback onQrPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final textTheme = Theme.of(context).textTheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.white,
+        border: Border.all(color: FlowMovaColors.border),
+        borderRadius: BorderRadius.circular(FlowMovaRadii.large),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Decouvrez autour de vous',
+                        style: textTheme.headlineSmall?.copyWith(
+                          color: FlowMovaColors.logoInk,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Parcourez les entreprises actives et trouvez vite le bon service.',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: FlowMovaColors.slate,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                IconButton.filledTonal(
+                  tooltip: 'Scanner un QR code',
+                  onPressed: onQrPressed,
+                  icon: const Icon(Icons.qr_code_scanner_outlined),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
             TextField(
               controller: searchController,
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => onSubmit(),
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search_outlined),
-                labelText: 'Recherche',
-                hintText: 'Nom, service ou mot cle',
-              ),
-            ),
-            const SizedBox(height: 12),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final compact = constraints.maxWidth < 620;
-                final fields = [
-                  _BusinessTypeField(
-                    value: selectedBusinessType,
-                    onChanged: onBusinessTypeChanged,
-                  ),
-                  _FilterTextField(
-                    controller: cityController,
-                    label: 'Ville',
-                    icon: Icons.location_city_outlined,
-                  ),
-                  _FilterTextField(
-                    controller: regionController,
-                    label: 'Region',
-                    icon: Icons.map_outlined,
-                  ),
-                  _FilterTextField(
-                    controller: countryController,
-                    label: 'Pays',
-                    icon: Icons.flag_outlined,
-                    textCapitalization: TextCapitalization.characters,
-                  ),
-                ];
-
-                if (compact) {
-                  return Column(
-                    children: [
-                      for (final field in fields) ...[
-                        field,
-                        const SizedBox(height: 10),
-                      ],
-                    ],
-                  );
-                }
-
-                return Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    for (final field in fields)
-                      SizedBox(
-                        width: (constraints.maxWidth - 10) / 2,
-                        child: field,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search_outlined),
+                hintText: 'Restaurant, salon, service...',
+                suffixIcon: loading
+                    ? const Padding(
+                        padding: EdgeInsets.all(14),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : IconButton(
+                        tooltip: 'Rechercher',
+                        onPressed: onSubmit,
+                        icon: const Icon(Icons.arrow_forward),
                       ),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: loading ? null : onSubmit,
-                    icon: const Icon(Icons.search),
-                    label: const Text('Rechercher'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                IconButton.outlined(
-                  tooltip: 'Reinitialiser les filtres',
-                  onPressed: loading ? null : onReset,
-                  icon: const Icon(Icons.refresh),
-                ),
-              ],
+              ),
             ),
           ],
         ),
@@ -323,35 +273,141 @@ class _SearchPanel extends StatelessWidget {
   }
 }
 
-class _BusinessTypeField extends StatelessWidget {
-  const _BusinessTypeField({required this.value, required this.onChanged});
+class _DomainScroller extends StatelessWidget {
+  const _DomainScroller({
+    required this.selectedBusinessType,
+    required this.onSelected,
+  });
 
-  final String? value;
-  final ValueChanged<String?> onChanged;
+  final String? selectedBusinessType;
+  final ValueChanged<String?> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      isExpanded: true,
-      decoration: const InputDecoration(
-        prefixIcon: Icon(Icons.category_outlined),
-        labelText: 'Domaine',
+    return SizedBox(
+      height: 42,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _businessTypeOptions.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final option = _businessTypeOptions[index];
+          return ChoiceChip(
+            selected: option.value == selectedBusinessType,
+            showCheckmark: false,
+            avatar: Icon(option.icon, size: 18),
+            label: Text(option.label),
+            onSelected: (_) => onSelected(option.value),
+          );
+        },
       ),
-      items: const [
-        DropdownMenuItem(value: null, child: Text('Tous les domaines')),
-        DropdownMenuItem(value: 'RESTAURANT', child: Text('Restauration')),
-        DropdownMenuItem(value: 'HAIR_SALON', child: Text('Salon de coiffure')),
-        DropdownMenuItem(value: 'RETAIL', child: Text('Commerce')),
-        DropdownMenuItem(value: 'HEALTHCARE', child: Text('Sante')),
-        DropdownMenuItem(
-          value: 'ADMINISTRATION',
-          child: Text('Administration'),
+    );
+  }
+}
+
+class _AdvancedFilters extends StatelessWidget {
+  const _AdvancedFilters({
+    required this.cityController,
+    required this.regionController,
+    required this.countryController,
+    required this.loading,
+    required this.onSubmit,
+    required this.onReset,
+  });
+
+  final TextEditingController cityController;
+  final TextEditingController regionController;
+  final TextEditingController countryController;
+  final bool loading;
+  final VoidCallback onSubmit;
+  final VoidCallback onReset;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      childrenPadding: EdgeInsets.zero,
+      shape: const Border(),
+      collapsedShape: const Border(),
+      leading: const Icon(Icons.tune_outlined),
+      title: Text(
+        'Affiner par localisation',
+        style: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+      ),
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              children: [
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxWidth < 620;
+                    final fields = [
+                      _FilterTextField(
+                        controller: cityController,
+                        label: 'Ville',
+                        icon: Icons.location_city_outlined,
+                      ),
+                      _FilterTextField(
+                        controller: regionController,
+                        label: 'Region',
+                        icon: Icons.map_outlined,
+                      ),
+                      _FilterTextField(
+                        controller: countryController,
+                        label: 'Pays',
+                        icon: Icons.flag_outlined,
+                        textCapitalization: TextCapitalization.characters,
+                      ),
+                    ];
+
+                    if (compact) {
+                      return Column(
+                        children: [
+                          for (final field in fields) ...[
+                            field,
+                            const SizedBox(height: 10),
+                          ],
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        for (final field in fields) ...[
+                          Expanded(child: field),
+                          if (field != fields.last) const SizedBox(width: 10),
+                        ],
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: loading ? null : onSubmit,
+                        icon: const Icon(Icons.search),
+                        label: const Text('Appliquer'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    IconButton.outlined(
+                      tooltip: 'Reinitialiser les filtres',
+                      onPressed: loading ? null : onReset,
+                      icon: const Icon(Icons.refresh),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-        DropdownMenuItem(value: 'SERVICE', child: Text('Service')),
-        DropdownMenuItem(value: 'OTHER', child: Text('Autre')),
       ],
-      onChanged: onChanged,
     );
   }
 }
@@ -389,7 +445,7 @@ class _ResultsHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final totalItems = results?.totalItems;
     final label = totalItems == null
-        ? 'Entreprises actives'
+        ? 'Entreprises a explorer'
         : totalItems <= 1
         ? '$totalItems entreprise active'
         : '$totalItems entreprises actives';
@@ -523,8 +579,8 @@ class _StateBox extends StatelessWidget {
   }
 }
 
-class _CompanyResultCard extends StatelessWidget {
-  const _CompanyResultCard({required this.company});
+class _CompanyFeedCard extends StatelessWidget {
+  const _CompanyFeedCard({required this.company});
 
   final CompanySummary company;
 
@@ -533,55 +589,71 @@ class _CompanyResultCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Card(
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
         onTap: () => Navigator.pushNamed(context, AppRoutes.companyDetail),
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+          padding: const EdgeInsets.all(14),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      company.name,
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+              _CompanyAvatar(type: company.businessType),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            company.name,
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.chevron_right,
+                          color: FlowMovaColors.slate.withValues(alpha: 0.72),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  _BusinessTypeChip(type: company.businessType),
-                ],
-              ),
-              if (company.description != null &&
-                  company.description!.trim().isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  company.description!,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: FlowMovaColors.slate,
-                  ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _InfoPill(
+                          icon: _businessTypeIcon(company.businessType),
+                          label: _businessTypeLabel(company.businessType),
+                        ),
+                        _InfoPill(
+                          icon: Icons.place_outlined,
+                          label: company.locationLabel,
+                        ),
+                        _InfoPill(
+                          icon: Icons.payments_outlined,
+                          label: company.currency,
+                        ),
+                      ],
+                    ),
+                    if (company.description != null &&
+                        company.description!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        company.description!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: FlowMovaColors.slate,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _InfoPill(
-                    icon: Icons.place_outlined,
-                    label: company.locationLabel,
-                  ),
-                  _InfoPill(
-                    icon: Icons.payments_outlined,
-                    label: company.currency,
-                  ),
-                ],
               ),
             ],
           ),
@@ -591,8 +663,8 @@ class _CompanyResultCard extends StatelessWidget {
   }
 }
 
-class _BusinessTypeChip extends StatelessWidget {
-  const _BusinessTypeChip({required this.type});
+class _CompanyAvatar extends StatelessWidget {
+  const _CompanyAvatar({required this.type});
 
   final String type;
 
@@ -600,18 +672,13 @@ class _BusinessTypeChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: FlowMovaColors.primaryAqua.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(FlowMovaRadii.pill),
+        color: _businessTypeColor(type).withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(FlowMovaRadii.large),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Text(
-          _businessTypeLabel(type),
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: FlowMovaColors.logoInk,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+      child: SizedBox(
+        width: 54,
+        height: 54,
+        child: Icon(_businessTypeIcon(type), color: _businessTypeColor(type)),
       ),
     );
   }
@@ -702,6 +769,29 @@ class _PaginationBar extends StatelessWidget {
   }
 }
 
+class _BusinessTypeOption {
+  const _BusinessTypeOption(this.value, this.label, this.icon);
+
+  final String? value;
+  final String label;
+  final IconData icon;
+}
+
+const _businessTypeOptions = [
+  _BusinessTypeOption(null, 'Tous', Icons.auto_awesome_outlined),
+  _BusinessTypeOption('RESTAURANT', 'Restauration', Icons.restaurant_outlined),
+  _BusinessTypeOption('HAIR_SALON', 'Coiffure', Icons.content_cut_outlined),
+  _BusinessTypeOption('RETAIL', 'Commerce', Icons.shopping_bag_outlined),
+  _BusinessTypeOption('HEALTHCARE', 'Sante', Icons.local_hospital_outlined),
+  _BusinessTypeOption(
+    'ADMINISTRATION',
+    'Administration',
+    Icons.account_balance_outlined,
+  ),
+  _BusinessTypeOption('SERVICE', 'Service', Icons.handshake_outlined),
+  _BusinessTypeOption('OTHER', 'Autre', Icons.more_horiz_outlined),
+];
+
 String _businessTypeLabel(String type) {
   return switch (type) {
     'RESTAURANT' => 'Restauration',
@@ -712,5 +802,31 @@ String _businessTypeLabel(String type) {
     'SERVICE' => 'Service',
     'OTHER' => 'Autre',
     _ => type,
+  };
+}
+
+IconData _businessTypeIcon(String type) {
+  return switch (type) {
+    'RESTAURANT' => Icons.restaurant_outlined,
+    'HAIR_SALON' => Icons.content_cut_outlined,
+    'RETAIL' => Icons.shopping_bag_outlined,
+    'HEALTHCARE' => Icons.local_hospital_outlined,
+    'ADMINISTRATION' => Icons.account_balance_outlined,
+    'SERVICE' => Icons.handshake_outlined,
+    'OTHER' => Icons.more_horiz_outlined,
+    _ => Icons.storefront_outlined,
+  };
+}
+
+Color _businessTypeColor(String type) {
+  return switch (type) {
+    'RESTAURANT' => FlowMovaColors.softApricot,
+    'HAIR_SALON' => FlowMovaColors.skyBlue,
+    'RETAIL' => FlowMovaColors.leafGreen,
+    'HEALTHCARE' => FlowMovaColors.error,
+    'ADMINISTRATION' => FlowMovaColors.logoInk,
+    'SERVICE' => FlowMovaColors.primaryAqua,
+    'OTHER' => FlowMovaColors.slate,
+    _ => FlowMovaColors.primaryAqua,
   };
 }

@@ -122,6 +122,29 @@ Definition of Done:
 - l'onglet `Tickets` affiche les entrees `Mes tickets`, `Recents sur cet appareil` et `Voir un ticket avec le code`;
 - les tests widget couvrent cette navigation.
 
+### FRONT-006 - Unifier la coquille applicative et la barre de navigation
+
+Issue GitHub: #36.
+
+Unifier la structure applicative pour eviter de repeter une barre de menu differente sur chaque ecran.
+
+Inclure:
+
+- coquille applicative unique pour les ecrans racines;
+- barre haute coherente entre les espaces principaux et les pages secondaires;
+- variante de barre haute avec bouton retour, titre compact et espacement suffisant;
+- logo reduit ou masque sur les sous-pages lorsque le bouton retour est present;
+- navigation mobile conservee en bottom navigation;
+- navigation large conservee en rail ou structure adaptee tablette/desktop;
+- pas de librairie externe obligatoire pour le MVP;
+- `go_router` pourra etre evalue plus tard pour les routes imbriquees, deep links et shells avances.
+
+Definition of Done:
+
+- l'utilisateur retrouve une navigation principale uniforme dans l'application;
+- les pages secondaires ne collent pas le logo au bouton retour;
+- les tests widget couvrent la navigation principale et au moins une page secondaire avec retour.
+
 ### FRONT-004 - Configurer environnement API
 
 Centraliser la configuration backend.
@@ -276,6 +299,30 @@ Definition of Done:
 - un utilisateur peut rechercher les entreprises actives;
 - les filtres backend disponibles sont exploites.
 - la recherche est le contenu principal de l'accueil client.
+
+### PUBLIC-FRONT-005 - Transformer l'accueil entreprises en flux de decouverte
+
+Issue GitHub: #37.
+
+Rendre l'accueil entreprises plus convivial et plus fluide, proche d'un flux marketplace type Uber Eats ou DoorDash.
+
+Inclure:
+
+- recherche compacte, visible sans dominer tout l'ecran;
+- filtres de domaine sous forme de chips horizontaux;
+- cartes entreprises plus faciles a parcourir;
+- sections ou presentation de flux permettant une navigation naturelle entre les entreprises;
+- conservation des filtres ville, region et pays dans une zone secondaire;
+- conservation des etats chargement, vide, erreur et pagination;
+- action QR code secondaire mais accessible;
+- absence du raccourci `Consulter un ticket par code`, qui reste dans l'onglet `Tickets`;
+- aucune librairie externe obligatoire pour le MVP.
+
+Definition of Done:
+
+- l'utilisateur peut parcourir les entreprises dans un flux plus naturel;
+- la recherche publique branchee sur le backend reste fonctionnelle;
+- les tests widget couvrent le nouveau flux d'accueil.
 
 ### QR-FRONT-001 - Scanner ou ouvrir un lien QR code
 

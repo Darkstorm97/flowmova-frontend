@@ -33,7 +33,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Trouvez une entreprise'), findsOneWidget);
+    expect(find.text('Decouvrez autour de vous'), findsOneWidget);
     expect(find.text('Accueil'), findsAtLeastNWidgets(1));
     expect(find.text('Tickets'), findsOneWidget);
     expect(find.text('Profil'), findsOneWidget);
@@ -73,7 +73,7 @@ void main() {
     await tester.pumpAndSettle();
 
     Navigator.of(
-      tester.element(find.text('Trouvez une entreprise')),
+      tester.element(find.text('Decouvrez autour de vous')),
     ).pushNamed('/route/inconnue');
     await tester.pumpAndSettle();
 

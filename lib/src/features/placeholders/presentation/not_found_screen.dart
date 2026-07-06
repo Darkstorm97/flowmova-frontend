@@ -15,7 +15,11 @@ class NotFoundScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const FlowMovaAppBarTitle(title: 'Page introuvable'),
+        titleSpacing: Navigator.canPop(context) ? 4 : null,
+        title: FlowMovaAppBarTitle(
+          title: 'Page introuvable',
+          showLogo: !Navigator.canPop(context),
+        ),
       ),
       body: SafeArea(
         child: Center(
