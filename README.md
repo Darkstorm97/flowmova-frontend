@@ -43,5 +43,6 @@ http://localhost:8080/swagger-ui/index.html
 
 ## Documentation
 
+- Project workflow: [docs/project-workflow.md](docs/project-workflow.md)
 - Brand guidelines MVP: [docs/brand/flowmova-brand-guidelines.md](docs/brand/flowmova-brand-guidelines.md)
 - Frontend MVP backlog: [docs/frontend/frontend-mvp-backlog.md](docs/frontend/frontend-mvp-backlog.md)
