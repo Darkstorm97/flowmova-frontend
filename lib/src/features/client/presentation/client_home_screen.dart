@@ -547,7 +547,10 @@ class _CompanyFeedCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _CompanyAvatar(type: company.businessType),
+              _CompanyAvatar(
+                type: company.businessType,
+                imageUrl: company.imageUrl,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -607,21 +610,35 @@ class _CompanyFeedCard extends StatelessWidget {
 }
 
 class _CompanyAvatar extends StatelessWidget {
-  const _CompanyAvatar({required this.type});
+  const _CompanyAvatar({required this.type, required this.imageUrl});
 
   final String type;
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
+    final fallback = ColoredBox(
+      color: _businessTypeColor(type).withValues(alpha: 0.16),
+      child: Icon(_businessTypeIcon(type), color: _businessTypeColor(type)),
+    );
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: _businessTypeColor(type).withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
       ),
-      child: SizedBox(
-        width: 46,
-        height: 46,
-        child: Icon(_businessTypeIcon(type), color: _businessTypeColor(type)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+        child: SizedBox(
+          width: 46,
+          height: 46,
+          child: imageUrl == null || imageUrl!.trim().isEmpty
+              ? fallback
+              : Image.network(
+                  imageUrl!.trim(),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => fallback,
+                ),
+        ),
       ),
     );
   }

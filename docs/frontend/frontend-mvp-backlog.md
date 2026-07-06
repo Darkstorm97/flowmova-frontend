@@ -345,6 +345,26 @@ Definition of Done:
 - les cartes entreprises sont plus lisibles;
 - les tests widget restent a jour.
 
+### PUBLIC-FRONT-007 - Afficher l'image entreprise dans le flux d'accueil
+
+Issue GitHub: #39.
+
+Afficher l'image publique d'une entreprise dans les cartes du flux d'accueil lorsque le backend fournit `imageUrl`.
+
+Inclure:
+
+- lecture du champ optionnel `imageUrl` dans le modele frontend entreprise;
+- affichage de l'image entreprise dans les cartes du flux;
+- fallback visuel par domaine lorsque `imageUrl` est absent ou impossible a charger;
+- conservation d'une carte compacte et lisible;
+- tests de mapping et de rendu.
+
+Definition of Done:
+
+- une entreprise avec image affiche cette image dans le flux;
+- une entreprise sans image garde un fallback propre;
+- les tests frontend restent verts.
+
 ### QR-FRONT-001 - Scanner ou ouvrir un lien QR code
 
 Ajouter une entree QR code depuis l'accueil client pour acceder rapidement au parcours public d'une unite de service ou d'un emplacement.

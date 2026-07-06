@@ -125,6 +125,7 @@ class CompanySummary {
     required this.businessType,
     required this.status,
     this.description,
+    this.imageUrl,
     this.city,
     this.region,
     this.country,
@@ -135,6 +136,7 @@ class CompanySummary {
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
+      imageUrl: json['imageUrl'] as String?,
       currency: json['currency'] as String,
       businessType: json['businessType'] as String,
       city: json['city'] as String?,
@@ -147,6 +149,7 @@ class CompanySummary {
   final String id;
   final String name;
   final String? description;
+  final String? imageUrl;
   final String currency;
   final String businessType;
   final String? city;

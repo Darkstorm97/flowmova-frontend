@@ -29,6 +29,8 @@ void main() {
                         'id': 'company-1',
                         'name': 'Cafe Flow',
                         'description': 'Coffee and service queue.',
+                        'imageUrl':
+                            'https://cdn.flowmova.test/companies/cafe-flow.jpg',
                         'currency': 'CAD',
                         'businessType': 'RESTAURANT',
                         'city': 'Montreal',
@@ -74,6 +76,10 @@ void main() {
 
       expect(result.items, hasLength(1));
       expect(result.items.single.name, 'Cafe Flow');
+      expect(
+        result.items.single.imageUrl,
+        'https://cdn.flowmova.test/companies/cafe-flow.jpg',
+      );
       expect(result.items.single.locationLabel, 'Montreal, Quebec, CA');
       expect(result.page, 1);
       expect(result.totalItems, 12);
