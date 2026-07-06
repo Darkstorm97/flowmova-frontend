@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/flow_mova_colors.dart';
+import '../../../shared/widgets/flow_mova_app_bar_title.dart';
 
 class FeaturePlaceholderScreen extends StatelessWidget {
   const FeaturePlaceholderScreen({
@@ -17,7 +18,7 @@ class FeaturePlaceholderScreen extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: FlowMovaAppBarTitle(title: title)),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

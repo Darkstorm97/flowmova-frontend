@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/app_routes.dart';
 import '../../../core/theme/flow_mova_colors.dart';
+import '../../../shared/widgets/flow_mova_app_bar_title.dart';
 import '../../../shared/widgets/flow_mova_logo.dart';
 
 class FlowMovaNavigationShell extends StatelessWidget {
@@ -26,13 +27,7 @@ class FlowMovaNavigationShell extends StatelessWidget {
 
         if (useBottomNavigation) {
           return Scaffold(
-            appBar: AppBar(
-              title: const FlowMovaLogo(
-                variant: FlowMovaLogoVariant.mark,
-                width: 44,
-                height: 44,
-              ),
-            ),
+            appBar: AppBar(title: FlowMovaAppBarTitle(title: _pageTitle)),
             body: content,
             bottomNavigationBar: NavigationBar(
               selectedIndex: _selectedIndex,
@@ -117,6 +112,13 @@ class FlowMovaNavigationShell extends StatelessWidget {
     AppRoutes.profile => 2,
     AppRoutes.business => 3,
     _ => 0,
+  };
+
+  String get _pageTitle => switch (selectedRoute) {
+    AppRoutes.tickets => 'Tickets',
+    AppRoutes.profile => 'Profil',
+    AppRoutes.business => 'Entreprise',
+    _ => 'Accueil',
   };
 
   void _goToIndex(BuildContext context, int index) {

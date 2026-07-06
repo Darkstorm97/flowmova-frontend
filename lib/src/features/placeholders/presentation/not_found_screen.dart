@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/app_routes.dart';
 import '../../../core/theme/flow_mova_colors.dart';
+import '../../../shared/widgets/flow_mova_app_bar_title.dart';
 
 class NotFoundScreen extends StatelessWidget {
   const NotFoundScreen({required this.routeName, super.key});
@@ -13,7 +14,9 @@ class NotFoundScreen extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Page introuvable')),
+      appBar: AppBar(
+        title: const FlowMovaAppBarTitle(title: 'Page introuvable'),
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

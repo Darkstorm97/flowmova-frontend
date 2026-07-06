@@ -11,7 +11,7 @@ void main() {
       find.text('Trouvez une entreprise et creez votre demande.'),
       findsOneWidget,
     );
-    expect(find.text('Accueil'), findsOneWidget);
+    expect(find.text('Accueil'), findsAtLeastNWidgets(1));
     expect(find.text('Tickets'), findsOneWidget);
     expect(find.text('Profil'), findsOneWidget);
     expect(find.text('Entreprise'), findsOneWidget);

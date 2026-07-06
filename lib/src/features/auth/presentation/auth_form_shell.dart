@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/flow_mova_colors.dart';
 import '../../../core/theme/flow_mova_radii.dart';
+import '../../../shared/widgets/flow_mova_app_bar_title.dart';
 import '../../../shared/widgets/flow_mova_logo.dart';
 
 class AuthFormShell extends StatelessWidget {
@@ -23,13 +24,7 @@ class AuthFormShell extends StatelessWidget {
     final wideLayout = mediaQuery.size.width >= 840;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const FlowMovaLogo(
-          variant: FlowMovaLogoVariant.mark,
-          width: 44,
-          height: 44,
-        ),
-      ),
+      appBar: AppBar(title: FlowMovaAppBarTitle(title: title)),
       body: SafeArea(
         child: ColoredBox(
           color: FlowMovaColors.cloud,
