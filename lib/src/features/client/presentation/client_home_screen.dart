@@ -551,7 +551,7 @@ class _CompanyFeedCard extends StatelessWidget {
                 type: company.businessType,
                 imageUrl: company.imageUrl,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -629,8 +629,8 @@ class _CompanyAvatar extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
         child: SizedBox(
-          width: 46,
-          height: 46,
+          width: 76,
+          height: 76,
           child: imageUrl == null || imageUrl!.trim().isEmpty
               ? fallback
               : Image.network(
