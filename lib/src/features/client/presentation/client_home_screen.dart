@@ -66,8 +66,6 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
           onSubmit: () => _search(page: 0),
           onReset: _resetFilters,
         ),
-        const SizedBox(height: 20),
-        _ResultsHeader(results: _results, loading: _loading),
         const SizedBox(height: 12),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
@@ -419,42 +417,6 @@ class _FilterTextField extends StatelessWidget {
       controller: controller,
       textCapitalization: textCapitalization,
       decoration: InputDecoration(prefixIcon: Icon(icon), labelText: label),
-    );
-  }
-}
-
-class _ResultsHeader extends StatelessWidget {
-  const _ResultsHeader({required this.results, required this.loading});
-
-  final CompanySearchPage? results;
-  final bool loading;
-
-  @override
-  Widget build(BuildContext context) {
-    final totalItems = results?.totalItems;
-    final label = totalItems == null
-        ? 'Entreprises a explorer'
-        : totalItems <= 1
-        ? '$totalItems entreprise active'
-        : '$totalItems entreprises actives';
-
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-          ),
-        ),
-        if (loading)
-          const SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-      ],
     );
   }
 }
