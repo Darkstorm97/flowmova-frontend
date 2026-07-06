@@ -536,90 +536,134 @@ class _CompanyFeedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => Navigator.pushNamed(context, AppRoutes.companyDetail),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _CompanyAvatar(
-                type: company.businessType,
-                imageUrl: company.imageUrl,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 520;
+
+            if (compact) {
+              return Padding(
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            company.name,
-                            style: textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _OpenBadge(),
-                      ],
+                    _CompanyAvatar(
+                      type: company.businessType,
+                      imageUrl: company.imageUrl,
+                      width: double.infinity,
+                      height: 142,
                     ),
-                    const SizedBox(height: 7),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _InfoPill(
-                          icon: _businessTypeIcon(company.businessType),
-                          label: _businessTypeLabel(company.businessType),
-                        ),
-                        _InfoPill(
-                          icon: Icons.place_outlined,
-                          label: company.locationLabel,
-                        ),
-                      ],
-                    ),
-                    if (company.description != null &&
-                        company.description!.trim().isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        company.description!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: FlowMovaColors.slate,
-                        ),
-                      ),
-                    ],
+                    const SizedBox(height: 12),
+                    _CompanyFeedCardContent(company: company),
                   ],
                 ),
+              );
+            }
+
+            return Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _CompanyAvatar(
+                    type: company.businessType,
+                    imageUrl: company.imageUrl,
+                    width: 124,
+                    height: 96,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(child: _CompanyFeedCardContent(company: company)),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
   }
 }
 
+class _CompanyFeedCardContent extends StatelessWidget {
+  const _CompanyFeedCardContent({required this.company});
+
+  final CompanySummary company;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                company.name,
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            _OpenBadge(),
+          ],
+        ),
+        const SizedBox(height: 7),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _InfoPill(
+              icon: _businessTypeIcon(company.businessType),
+              label: _businessTypeLabel(company.businessType),
+            ),
+            _InfoPill(icon: Icons.place_outlined, label: company.locationLabel),
+          ],
+        ),
+        if (company.description != null &&
+            company.description!.trim().isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            company.description!,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: textTheme.bodyMedium?.copyWith(color: FlowMovaColors.slate),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _CompanyAvatar extends StatelessWidget {
-  const _CompanyAvatar({required this.type, required this.imageUrl});
+  const _CompanyAvatar({
+    required this.type,
+    required this.imageUrl,
+    required this.width,
+    required this.height,
+  });
 
   final String type;
   final String? imageUrl;
+  final double width;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     final fallback = ColoredBox(
       color: _businessTypeColor(type).withValues(alpha: 0.16),
-      child: Icon(_businessTypeIcon(type), color: _businessTypeColor(type)),
+      child: Center(
+        child: Icon(
+          _businessTypeIcon(type),
+          size: 32,
+          color: _businessTypeColor(type),
+        ),
+      ),
     );
 
     return DecoratedBox(
@@ -629,8 +673,8 @@ class _CompanyAvatar extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
         child: SizedBox(
-          width: 76,
-          height: 76,
+          width: width,
+          height: height,
           child: imageUrl == null || imageUrl!.trim().isEmpty
               ? fallback
               : Image.network(
