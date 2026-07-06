@@ -257,6 +257,8 @@ Objectif: permettre a un client de trouver une entreprise, consulter ses service
 
 ### PUBLIC-FRONT-001 - Rechercher et lister les entreprises actives
 
+Issue GitHub: #9.
+
 Brancher la recherche publique d'entreprises.
 
 Inclure:

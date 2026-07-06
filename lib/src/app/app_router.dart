@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/business/presentation/business_home_screen.dart';
+import '../features/client/data/company_search_gateway.dart';
 import '../features/client/presentation/client_home_screen.dart';
 import '../features/navigation/presentation/flow_mova_navigation_shell.dart';
 import '../features/placeholders/presentation/feature_placeholder_screen.dart';
@@ -12,14 +13,16 @@ import '../features/tickets/presentation/tickets_home_screen.dart';
 import 'app_routes.dart';
 
 abstract final class AppRouter {
-  static Route<dynamic> onGenerateRoute(RouteSettings settings) {
+  static Route<dynamic> onGenerateRoute(
+    RouteSettings settings, {
+    CompanySearchGateway? companySearchGateway,
+  }) {
     final routeName = settings.name ?? AppRoutes.client;
 
     final Widget page = switch (routeName) {
-      AppRoutes.client ||
-      AppRoutes.clientAlias => const FlowMovaNavigationShell(
+      AppRoutes.client || AppRoutes.clientAlias => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.client,
-        child: ClientHomeScreen(),
+        child: ClientHomeScreen(searchGateway: companySearchGateway),
       ),
       AppRoutes.profile => const FlowMovaNavigationShell(
         selectedRoute: AppRoutes.profile,
