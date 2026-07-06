@@ -121,9 +121,9 @@ class _AuthIntro extends StatelessWidget {
       children: [
         const Align(
           alignment: Alignment.centerLeft,
-          child: FlowMovaLogo(width: 164, height: 112),
+          child: FlowMovaLogo(width: 132, height: 92),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         Text(
           title,
           style: textTheme.headlineMedium?.copyWith(

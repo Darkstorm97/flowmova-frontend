@@ -74,6 +74,11 @@ abstract final class FlowMovaTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: FlowMovaColors.white,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
           borderSide: const BorderSide(color: FlowMovaColors.border),

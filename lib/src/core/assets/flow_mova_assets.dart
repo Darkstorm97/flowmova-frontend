@@ -1,10 +1,10 @@
 abstract final class FlowMovaAssets {
   static const logoWithTextColor =
-      'assets/brand/flowmova-regenerated-logo/vector-preview/flowmova-logo-with-text-color-aligned.png';
+      'assets/brand/flowmova-regenerated-logo/flowmova-logo-with-text-color-aligned.svg';
   static const logoMarkColor =
-      'assets/brand/flowmova-regenerated-logo/vector-preview/flowmova-logo-mark-color-aligned.png';
+      'assets/brand/flowmova-regenerated-logo/flowmova-logo-mark-color-aligned.svg';
   static const logoMarkMonochrome =
-      'assets/brand/flowmova-regenerated-logo/vector-preview/flowmova-logo-mark-monochrome.png';
+      'assets/brand/flowmova-regenerated-logo/flowmova-logo-mark-monochrome.svg';
   static const appIconColor =
-      'assets/brand/flowmova-regenerated-logo/vector-preview/flowmova-app-icon-color.png';
+      'assets/brand/flowmova-regenerated-logo/flowmova-app-icon-color.svg';
 }

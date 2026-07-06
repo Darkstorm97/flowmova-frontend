@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/assets/flow_mova_assets.dart';
 
@@ -18,7 +19,7 @@ class FlowMovaLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SvgPicture.asset(
       switch (variant) {
         FlowMovaLogoVariant.withText => FlowMovaAssets.logoWithTextColor,
         FlowMovaLogoVariant.mark => FlowMovaAssets.logoMarkColor,
@@ -28,8 +29,6 @@ class FlowMovaLogo extends StatelessWidget {
       width: width,
       height: height,
       fit: BoxFit.contain,
-      filterQuality: FilterQuality.high,
-      isAntiAlias: true,
     );
   }
 }

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../app/app_routes.dart';
 import '../../../core/theme/flow_mova_colors.dart';
 import '../../../core/theme/flow_mova_radii.dart';
-import '../../../shared/widgets/flow_mova_logo.dart';
 
 class ClientHomeScreen extends StatelessWidget {
   const ClientHomeScreen({super.key});
@@ -14,8 +13,6 @@ class ClientHomeScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const FlowMovaLogo(width: 188),
-        const SizedBox(height: 32),
         Text(
           'Trouvez une entreprise et creez votre demande.',
           style: textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w800),
