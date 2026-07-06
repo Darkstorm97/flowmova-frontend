@@ -19,11 +19,20 @@ class FlowMovaNavigationShell extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final useBottomNavigation = constraints.maxWidth < 720;
-        final content = _NavigationContent(child: child);
+        final content = _NavigationContent(
+          selectedRoute: selectedRoute,
+          child: child,
+        );
 
         if (useBottomNavigation) {
           return Scaffold(
-            appBar: AppBar(title: const FlowMovaLogo(width: 116)),
+            appBar: AppBar(
+              title: const FlowMovaLogo(
+                variant: FlowMovaLogoVariant.mark,
+                width: 44,
+                height: 44,
+              ),
+            ),
             body: content,
             bottomNavigationBar: NavigationBar(
               selectedIndex: _selectedIndex,
@@ -67,6 +76,7 @@ class FlowMovaNavigationShell extends StatelessWidget {
                     child: FlowMovaLogo(
                       variant: FlowMovaLogoVariant.mark,
                       width: 72,
+                      height: 72,
                     ),
                   ),
                   destinations: const [
@@ -126,8 +136,9 @@ class FlowMovaNavigationShell extends StatelessWidget {
 }
 
 class _NavigationContent extends StatelessWidget {
-  const _NavigationContent({required this.child});
+  const _NavigationContent({required this.selectedRoute, required this.child});
 
+  final String selectedRoute;
   final Widget child;
 
   @override
@@ -140,7 +151,28 @@ class _NavigationContent extends StatelessWidget {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 760),
-              child: Padding(padding: const EdgeInsets.all(24), child: child),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    final offset = Tween<Offset>(
+                      begin: const Offset(0, 0.015),
+                      end: Offset.zero,
+                    ).animate(animation);
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(position: offset, child: child),
+                    );
+                  },
+                  child: KeyedSubtree(
+                    key: ValueKey(selectedRoute),
+                    child: child,
+                  ),
+                ),
+              ),
             ),
           ),
         ),

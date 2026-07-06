@@ -78,6 +78,34 @@ abstract final class AppRouter {
       _ => NotFoundScreen(routeName: routeName),
     };
 
-    return MaterialPageRoute<void>(settings: settings, builder: (_) => page);
+    return PageRouteBuilder<void>(
+      settings: settings,
+      pageBuilder: (_, _, _) => page,
+      transitionDuration: const Duration(milliseconds: 240),
+      reverseTransitionDuration: const Duration(milliseconds: 180),
+      transitionsBuilder: (_, animation, secondaryAnimation, child) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        final incomingOffset = Tween<Offset>(
+          begin: const Offset(0.025, 0),
+          end: Offset.zero,
+        ).animate(curvedAnimation);
+        final outgoingOpacity = Tween<double>(
+          begin: 1,
+          end: 0.92,
+        ).animate(secondaryAnimation);
+
+        return FadeTransition(
+          opacity: animation,
+          child: FadeTransition(
+            opacity: outgoingOpacity,
+            child: SlideTransition(position: incomingOffset, child: child),
+          ),
+        );
+      },
+    );
   }
 }

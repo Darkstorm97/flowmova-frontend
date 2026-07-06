@@ -86,19 +86,31 @@ class _LoginScreenState extends State<LoginScreen> {
               onFieldSubmitted: (_) => _submit(),
               validator: _validateRequiredPassword,
             ),
-            if (_formError != null) ...[
-              const SizedBox(height: 14),
-              _AuthErrorMessage(message: _formError!),
-            ],
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              child: _formError == null
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      key: ValueKey(_formError),
+                      padding: const EdgeInsets.only(top: 14),
+                      child: _AuthErrorMessage(message: _formError!),
+                    ),
+            ),
             const SizedBox(height: 20),
             FilledButton(
               onPressed: _isSubmitting ? null : _submit,
-              child: _isSubmitting
-                  ? const SizedBox.square(
-                      dimension: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Se connecter'),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 160),
+                child: _isSubmitting
+                    ? const SizedBox.square(
+                        key: ValueKey('loading'),
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Se connecter', key: ValueKey('label')),
+              ),
             ),
             const SizedBox(height: 12),
             TextButton(
@@ -206,11 +218,21 @@ class _AuthErrorMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      message,
-      style: Theme.of(
-        context,
-      ).textTheme.bodyMedium?.copyWith(color: FlowMovaColors.error),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.error.withValues(alpha: 0.08),
+        border: Border.all(color: FlowMovaColors.error.withValues(alpha: 0.22)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Text(
+          message,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: FlowMovaColors.error),
+        ),
+      ),
     );
   }
 }

@@ -8,11 +8,13 @@ class FlowMovaLogo extends StatelessWidget {
   const FlowMovaLogo({
     this.variant = FlowMovaLogoVariant.withText,
     this.width,
+    this.height,
     super.key,
   });
 
   final FlowMovaLogoVariant variant;
   final double? width;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
@@ -24,8 +26,10 @@ class FlowMovaLogo extends StatelessWidget {
         FlowMovaLogoVariant.appIcon => FlowMovaAssets.appIconColor,
       },
       width: width,
+      height: height,
       fit: BoxFit.contain,
       filterQuality: FilterQuality.high,
+      isAntiAlias: true,
     );
   }
 }
