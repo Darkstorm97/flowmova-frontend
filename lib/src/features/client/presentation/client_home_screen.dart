@@ -539,7 +539,11 @@ class _CompanyFeedCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => Navigator.pushNamed(context, AppRoutes.companyDetail),
+        onTap: () => Navigator.pushNamed(
+          context,
+          AppRoutes.companyDetail,
+          arguments: company.id,
+        ),
         child: LayoutBuilder(
           builder: (context, constraints) {
             final compact = constraints.maxWidth < 520;

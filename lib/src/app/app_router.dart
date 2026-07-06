@@ -4,6 +4,7 @@ import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/business/presentation/business_home_screen.dart';
 import '../features/client/data/company_search_gateway.dart';
+import '../features/client/presentation/company_detail_screen.dart';
 import '../features/client/presentation/client_home_screen.dart';
 import '../features/navigation/presentation/flow_mova_navigation_shell.dart';
 import '../features/placeholders/presentation/feature_placeholder_screen.dart';
@@ -43,11 +44,7 @@ abstract final class AppRouter {
         description:
             'Le dashboard admin sera branche avec les features entreprise.',
       ),
-      AppRoutes.companyDetail => const FeaturePlaceholderScreen(
-        title: 'Detail entreprise',
-        description:
-            'La fiche publique entreprise sera implementee dans PUBLIC-FRONT-002.',
-      ),
+      AppRoutes.companyDetail => _companyDetailPage(settings.arguments),
       AppRoutes.serviceUnitDetail => const FeaturePlaceholderScreen(
         title: 'Detail unite de service',
         description:
@@ -110,5 +107,18 @@ abstract final class AppRouter {
         );
       },
     );
+  }
+
+  static Widget _companyDetailPage(Object? arguments) {
+    final companyId = arguments is String ? arguments : null;
+    if (companyId == null || companyId.trim().isEmpty) {
+      return const FeaturePlaceholderScreen(
+        title: 'Entreprise introuvable',
+        description:
+            'Revenez a l accueil et selectionnez une entreprise dans le flux.',
+      );
+    }
+
+    return CompanyDetailScreen(companyId: companyId);
   }
 }

@@ -388,18 +388,27 @@ Definition of Done:
 
 ### PUBLIC-FRONT-002 - Consulter la fiche publique entreprise
 
+Issue GitHub: #40.
+
 Afficher le detail public d'une entreprise active.
 
 Inclure:
 
-- nom, description, domaine, devise;
-- adresse si renseignee;
-- unites de service visibles;
-- categories/catalogues accessibles selon le parcours valide.
+- navigation depuis une carte du flux d'accueil vers la fiche de l'entreprise selectionnee;
+- chargement du detail public via `GET /api/companies/{companyId}`;
+- affichage image entreprise, nom, description, domaine, localisation et etat;
+- affichage des catalogues publics via `GET /api/companies/{companyId}/catalogs`;
+- affichage des unites de service publiques via `GET /api/companies/{companyId}/service-units`;
+- etats chargement, vide et erreur;
+- actions preparees vers les prochaines etapes: consulter une unite de service et creer une demande/ticket;
+- compatibilite mobile et web avec une presentation fluide.
 
 Definition of Done:
 
-- la fiche entreprise permet de comprendre ou creer une demande.
+- le clic sur une carte d'accueil ouvre une vraie fiche entreprise;
+- la fiche entreprise permet de comprendre les services disponibles;
+- les catalogues et unites de service publiques sont affiches lorsque le backend en retourne;
+- les tests frontend couvrent le mapping API et la navigation depuis l'accueil.
 
 ### PUBLIC-FRONT-003 - Consulter une unite de service et ses emplacements
 

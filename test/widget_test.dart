@@ -1,6 +1,7 @@
 import 'package:flowmova_frontend/src/app/flow_mova_app.dart';
 import 'package:flowmova_frontend/src/core/session/session_scope.dart';
 import 'package:flowmova_frontend/src/features/client/data/company_search_gateway.dart';
+import 'package:flowmova_frontend/src/features/client/presentation/client_home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -64,6 +65,34 @@ void main() {
     await tester.tap(find.text('Entreprise'));
     await tester.pumpAndSettle();
     expect(find.text('Administration entreprise'), findsOneWidget);
+  });
+
+  testWidgets('company card opens the public company detail route', (
+    tester,
+  ) async {
+    Object? capturedArguments;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ClientHomeScreen(searchGateway: companySearchGateway),
+        ),
+        onGenerateRoute: (settings) {
+          capturedArguments = settings.arguments;
+          return MaterialPageRoute<void>(
+            builder: (_) => const Scaffold(body: Text('Detail entreprise')),
+            settings: settings,
+          );
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Cafe Flow'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Detail entreprise'), findsOneWidget);
+    expect(capturedArguments, 'company-1');
   });
 
   testWidgets('unknown route shows a clean not found page', (tester) async {
