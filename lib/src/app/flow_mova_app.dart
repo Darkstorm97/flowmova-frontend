@@ -20,6 +20,12 @@ class _FlowMovaAppState extends State<FlowMovaApp> {
       widget.sessionController ?? AuthSessionController.inMemory();
 
   @override
+  void initState() {
+    super.initState();
+    _sessionController.initialize();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SessionScope(
       controller: _sessionController,
