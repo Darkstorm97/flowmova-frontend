@@ -391,6 +391,9 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
 
   Widget _buildForm(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final canChangeService = widget.bundle.serviceUnits.length > 1;
+    final canChangeLocation =
+        _serviceUnitDetail != null && _serviceUnitDetail!.locations.length > 1;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -423,7 +426,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
           label: 'Service',
           value: _selectedServiceUnit?.name ?? 'A selectionner',
           actionLabel: _selectedServiceUnit == null ? 'Choisir' : 'Modifier',
-          onTap: widget.bundle.serviceUnits.isEmpty ? null : _openServicePicker,
+          onTap: canChangeService ? _openServicePicker : null,
         ),
         const SizedBox(height: 12),
         if (_loadingServiceUnit) ...[
@@ -434,9 +437,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
             label: 'Emplacement',
             value: _selectedLocation?.name ?? 'A selectionner',
             actionLabel: _selectedLocation == null ? 'Choisir' : 'Modifier',
-            onTap: _serviceUnitDetail!.locations.isEmpty
-                ? null
-                : _openLocationPicker,
+            onTap: canChangeLocation ? _openLocationPicker : null,
           ),
           const SizedBox(height: 12),
           _SelectedItemsSummary(
@@ -721,7 +722,9 @@ class _ChoiceSummaryTile extends StatelessWidget {
         leading: Icon(icon),
         title: Text(label),
         subtitle: Text(value),
-        trailing: TextButton(onPressed: onTap, child: Text(actionLabel)),
+        trailing: onTap == null
+            ? null
+            : TextButton(onPressed: onTap, child: Text(actionLabel)),
         onTap: onTap,
       ),
     );

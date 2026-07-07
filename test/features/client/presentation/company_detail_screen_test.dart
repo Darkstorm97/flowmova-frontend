@@ -74,6 +74,7 @@ void main() {
 
     expect(find.text('Emplacement'), findsOneWidget);
     expect(find.text('Accueil'), findsWidgets);
+    expect(find.widgetWithText(TextButton, 'Modifier'), findsNothing);
 
     await tester.enterText(find.widgetWithText(TextField, 'Nom'), 'Marc');
     await tester.ensureVisible(find.text('Creer mon ticket'));
