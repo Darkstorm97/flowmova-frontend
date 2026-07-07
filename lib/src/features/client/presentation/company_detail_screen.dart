@@ -1271,33 +1271,22 @@ class _ServiceUnitsSection extends StatelessWidget {
       title: 'Services disponibles',
       emptyMessage: 'Aucun service ouvert pour le moment.',
       isEmpty: serviceUnits.isEmpty,
-      child: Column(
-        children: [
-          for (final serviceUnit in visibleServiceUnits) ...[
-            _ServiceUnitTile(serviceUnit: serviceUnit),
-            if (serviceUnit != visibleServiceUnits.last)
-              const SizedBox(height: 10),
-          ],
-          if (serviceUnits.length > _visibleServiceUnitLimit) ...[
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'La liste complete des services avec recherche arrive bientot.',
-                      ),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.list_alt_outlined),
-                label: Text('Voir plus (${serviceUnits.length})'),
-              ),
-            ),
-          ],
-        ],
+      child: SizedBox(
+        height: 136,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount:
+              visibleServiceUnits.length +
+              (serviceUnits.length > _visibleServiceUnitLimit ? 1 : 0),
+          separatorBuilder: (_, _) => const SizedBox(width: 10),
+          itemBuilder: (context, index) {
+            if (index < visibleServiceUnits.length) {
+              return _ServiceUnitTile(serviceUnit: visibleServiceUnits[index]);
+            }
+
+            return _MoreServicesTile(totalServices: serviceUnits.length);
+          },
+        ),
       ),
     );
   }
@@ -1310,21 +1299,92 @@ class _ServiceUnitTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: ListTile(
-        leading: const Icon(Icons.room_service_outlined),
-        title: Text(serviceUnit.name),
-        subtitle: Text(
-          [
-            if (serviceUnit.location != null &&
-                serviceUnit.location!.trim().isNotEmpty)
-              serviceUnit.location!,
-            serviceUnit.status,
-          ].join(' - '),
+    return SizedBox(
+      width: 236,
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: InkWell(
+          onTap: () =>
+              Navigator.pushNamed(context, AppRoutes.serviceUnitDetail),
+          borderRadius: BorderRadius.circular(FlowMovaRadii.small),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.room_service_outlined),
+                const Spacer(),
+                Text(
+                  serviceUnit.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  [
+                    if (serviceUnit.location != null &&
+                        serviceUnit.location!.trim().isNotEmpty)
+                      serviceUnit.location!,
+                    serviceUnit.status,
+                  ].join(' - '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: FlowMovaColors.slate,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => Navigator.pushNamed(context, AppRoutes.serviceUnitDetail),
+      ),
+    );
+  }
+}
+
+class _MoreServicesTile extends StatelessWidget {
+  const _MoreServicesTile({required this.totalServices});
+
+  final int totalServices;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 176,
+      child: OutlinedButton(
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'La liste complete des services avec recherche arrive bientot.',
+              ),
+            ),
+          );
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.list_alt_outlined),
+            const SizedBox(height: 8),
+            Text(
+              'Voir plus',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '$totalServices services',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: FlowMovaColors.slate),
+            ),
+          ],
+        ),
       ),
     );
   }

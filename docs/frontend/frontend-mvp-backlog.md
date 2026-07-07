@@ -401,7 +401,7 @@ Inclure:
 - affichage des catalogues publics via `GET /api/companies/{companyId}/catalogs`;
 - onglets catalogue par categorie avec `Tout` en premier et recherche locale par nom/description;
 - affichage des unites de service publiques via `GET /api/companies/{companyId}/service-units`;
-- liste courte des premiers services disponibles avec action `Voir plus` preparee pour la liste complete avec recherche;
+- rail horizontal des premiers services disponibles avec action `Voir plus` en fin de liste, preparee pour la liste complete avec recherche;
 - etats chargement, vide et erreur;
 - actions preparees vers les prochaines etapes: consulter une unite de service et creer une demande/ticket;
 - compatibilite mobile et web avec une presentation fluide.
