@@ -10,6 +10,7 @@ import '../features/navigation/presentation/flow_mova_navigation_shell.dart';
 import '../features/placeholders/presentation/feature_placeholder_screen.dart';
 import '../features/placeholders/presentation/not_found_screen.dart';
 import '../features/profile/presentation/profile_home_screen.dart';
+import '../features/tickets/data/recent_ticket_storage.dart';
 import '../features/tickets/presentation/tickets_home_screen.dart';
 import 'app_routes.dart';
 
@@ -17,6 +18,7 @@ abstract final class AppRouter {
   static Route<dynamic> onGenerateRoute(
     RouteSettings settings, {
     CompanySearchGateway? companySearchGateway,
+    RecentTicketStorage? recentTicketStorage,
   }) {
     final routeName = settings.name ?? AppRoutes.client;
 
@@ -29,9 +31,9 @@ abstract final class AppRouter {
         selectedRoute: AppRoutes.profile,
         child: ProfileHomeScreen(),
       ),
-      AppRoutes.tickets => const FlowMovaNavigationShell(
+      AppRoutes.tickets => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.tickets,
-        child: TicketsHomeScreen(),
+        child: TicketsHomeScreen(recentTicketStorage: recentTicketStorage),
       ),
       AppRoutes.business => const FlowMovaNavigationShell(
         selectedRoute: AppRoutes.business,
@@ -44,7 +46,10 @@ abstract final class AppRouter {
         description:
             'Le dashboard admin sera branche avec les features entreprise.',
       ),
-      AppRoutes.companyDetail => _companyDetailPage(settings.arguments),
+      AppRoutes.companyDetail => _companyDetailPage(
+        settings.arguments,
+        recentTicketStorage: recentTicketStorage,
+      ),
       AppRoutes.serviceUnitDetail => const FeaturePlaceholderScreen(
         title: 'Detail unite de service',
         description:
@@ -109,7 +114,10 @@ abstract final class AppRouter {
     );
   }
 
-  static Widget _companyDetailPage(Object? arguments) {
+  static Widget _companyDetailPage(
+    Object? arguments, {
+    RecentTicketStorage? recentTicketStorage,
+  }) {
     final companyId = arguments is String ? arguments : null;
     if (companyId == null || companyId.trim().isEmpty) {
       return const FeaturePlaceholderScreen(
@@ -119,6 +127,9 @@ abstract final class AppRouter {
       );
     }
 
-    return CompanyDetailScreen(companyId: companyId);
+    return CompanyDetailScreen(
+      companyId: companyId,
+      recentTicketStorage: recentTicketStorage,
+    );
   }
 }

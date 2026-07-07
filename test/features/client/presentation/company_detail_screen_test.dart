@@ -1,5 +1,6 @@
 import 'package:flowmova_frontend/src/features/client/data/company_detail_gateway.dart';
 import 'package:flowmova_frontend/src/features/client/presentation/company_detail_screen.dart';
+import 'package:flowmova_frontend/src/features/tickets/data/recent_ticket_storage.dart';
 import 'package:flowmova_frontend/src/features/tickets/data/ticket_creation_gateway.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,7 +24,7 @@ void main() {
     expect(find.text('Cafe Flow'), findsOneWidget);
     expect(find.text('Restauration'), findsOneWidget);
     expect(find.text('Services disponibles'), findsOneWidget);
-    expect(find.text('Comptoir principal'), findsOneWidget);
+    expect(find.text('Comptoir principal'), findsWidgets);
     expect(find.text('Catalogue'), findsOneWidget);
     expect(find.text('Tout'), findsOneWidget);
     expect(find.text('Boissons'), findsOneWidget);
@@ -57,12 +58,15 @@ void main() {
   testWidgets('company detail creates a ticket from the guided sheet', (
     tester,
   ) async {
+    final recentTicketStorage = InMemoryRecentTicketStorage();
+
     await tester.pumpWidget(
       MaterialApp(
         home: CompanyDetailScreen(
           companyId: 'company-1',
           detailGateway: const _FakeCompanyDetailGateway(),
           ticketCreationGateway: const _FakeTicketCreationGateway(),
+          recentTicketStorage: recentTicketStorage,
         ),
       ),
     );
@@ -84,6 +88,15 @@ void main() {
     expect(find.text('Ticket cree'), findsOneWidget);
     expect(find.text('FM-0001'), findsOneWidget);
     expect(find.text('ABC123'), findsOneWidget);
+    expect(find.text('Comptoir principal'), findsWidgets);
+    expect(find.text('Accueil'), findsWidgets);
+    expect(find.textContaining('Conservez ce code'), findsOneWidget);
+
+    final recentTickets = await recentTicketStorage.load();
+    expect(recentTickets, hasLength(1));
+    expect(recentTickets.single.ticketNumber, 'FM-0001');
+    expect(recentTickets.single.serviceUnitName, 'Comptoir principal');
+    expect(recentTickets.single.locationName, 'Accueil');
   });
 
   testWidgets('company detail searches and selects optional ticket items', (

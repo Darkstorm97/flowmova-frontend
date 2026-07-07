@@ -495,6 +495,7 @@ Inclure:
 - choix emplacement;
 - lignes d'articles avec quantite optionnelle par defaut a 1;
 - affichage numero de ticket et code d'acces si applicable;
+- recapitulatif de confirmation avec service, emplacement, articles commandes si applicable et rappel de conserver le code d'acces;
 - enregistrement local du ticket cree dans `Recents sur cet appareil` si un `accessCode` est retourne ou si les informations minimales sont disponibles;
 - application du mode `AUTHENTICATED_OR_GUEST_RECENT_ONE_OPEN_TICKET` pour les visiteurs non authentifies: si un ticket recent ouvert existe deja localement pour la meme unite, proposer d'ouvrir le ticket existant au lieu de recreer.
 
@@ -547,6 +548,8 @@ Definition of Done:
 - un client non authentifie peut retrouver son ticket avec les informations necessaires.
 
 ### TICKET-FRONT-004 - Gerer les tickets recents sur cet appareil
+
+Issue GitHub: #32.
 
 Permettre a l'utilisateur de retrouver les tickets crees localement depuis le navigateur ou l'application mobile.
 

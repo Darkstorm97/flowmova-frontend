@@ -7,6 +7,7 @@ import '../../../core/session/session_scope.dart';
 import '../../../core/theme/flow_mova_colors.dart';
 import '../../../core/theme/flow_mova_radii.dart';
 import '../../../shared/widgets/flow_mova_app_bar_title.dart';
+import '../../tickets/data/recent_ticket_storage.dart';
 import '../../tickets/data/ticket_creation_gateway.dart';
 import '../data/company_detail_gateway.dart';
 
@@ -16,11 +17,13 @@ class CompanyDetailScreen extends StatefulWidget {
     super.key,
     this.detailGateway,
     this.ticketCreationGateway,
+    this.recentTicketStorage,
   });
 
   final String companyId;
   final CompanyDetailGateway? detailGateway;
   final TicketCreationGateway? ticketCreationGateway;
+  final RecentTicketStorage? recentTicketStorage;
 
   @override
   State<CompanyDetailScreen> createState() => _CompanyDetailScreenState();
@@ -29,6 +32,9 @@ class CompanyDetailScreen extends StatefulWidget {
 class _CompanyDetailScreenState extends State<CompanyDetailScreen> {
   late final CompanyDetailGateway _detailGateway =
       widget.detailGateway ?? BackendCompanyDetailGateway(ApiClient());
+
+  late final RecentTicketStorage _recentTicketStorage =
+      widget.recentTicketStorage ?? InMemoryRecentTicketStorage();
 
   late Future<CompanyDetailBundle> _detailFuture;
 
@@ -84,6 +90,7 @@ class _CompanyDetailScreenState extends State<CompanyDetailScreen> {
                         bundle: bundle,
                         detailGateway: _detailGateway,
                         ticketCreationGateway: ticketCreationGateway,
+                        recentTicketStorage: _recentTicketStorage,
                       ),
                     ),
                   ),
@@ -123,11 +130,13 @@ class _CompanyDetailContent extends StatelessWidget {
     required this.bundle,
     required this.detailGateway,
     required this.ticketCreationGateway,
+    required this.recentTicketStorage,
   });
 
   final CompanyDetailBundle bundle;
   final CompanyDetailGateway detailGateway;
   final TicketCreationGateway ticketCreationGateway;
+  final RecentTicketStorage recentTicketStorage;
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +150,7 @@ class _CompanyDetailContent extends StatelessWidget {
           bundle: bundle,
           detailGateway: detailGateway,
           ticketCreationGateway: ticketCreationGateway,
+          recentTicketStorage: recentTicketStorage,
         ),
         const SizedBox(height: 16),
         _ServiceUnitsSection(serviceUnits: bundle.serviceUnits),
@@ -160,12 +170,14 @@ class _CompanyHero extends StatelessWidget {
     required this.bundle,
     required this.detailGateway,
     required this.ticketCreationGateway,
+    required this.recentTicketStorage,
   });
 
   final CompanyDetail company;
   final CompanyDetailBundle bundle;
   final CompanyDetailGateway detailGateway;
   final TicketCreationGateway ticketCreationGateway;
+  final RecentTicketStorage recentTicketStorage;
 
   @override
   Widget build(BuildContext context) {
@@ -248,6 +260,7 @@ class _CompanyHero extends StatelessWidget {
                       bundle: bundle,
                       detailGateway: detailGateway,
                       ticketCreationGateway: ticketCreationGateway,
+                      recentTicketStorage: recentTicketStorage,
                     ),
                   ],
                 ),
@@ -296,11 +309,13 @@ class _CreateOrderButton extends StatelessWidget {
     required this.bundle,
     required this.detailGateway,
     required this.ticketCreationGateway,
+    required this.recentTicketStorage,
   });
 
   final CompanyDetailBundle bundle;
   final CompanyDetailGateway detailGateway;
   final TicketCreationGateway ticketCreationGateway;
+  final RecentTicketStorage recentTicketStorage;
 
   @override
   Widget build(BuildContext context) {
@@ -316,6 +331,7 @@ class _CreateOrderButton extends StatelessWidget {
                 bundle: bundle,
                 detailGateway: detailGateway,
                 ticketCreationGateway: ticketCreationGateway,
+                recentTicketStorage: recentTicketStorage,
               ),
             )
           : null,
@@ -330,11 +346,13 @@ class _CreateTicketSheet extends StatefulWidget {
     required this.bundle,
     required this.detailGateway,
     required this.ticketCreationGateway,
+    required this.recentTicketStorage,
   });
 
   final CompanyDetailBundle bundle;
   final CompanyDetailGateway detailGateway;
   final TicketCreationGateway ticketCreationGateway;
+  final RecentTicketStorage recentTicketStorage;
 
   @override
   State<_CreateTicketSheet> createState() => _CreateTicketSheetState();
@@ -350,7 +368,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
   CompanyServiceUnitItem? _selectedServiceUnit;
   CompanyServiceUnitDetail? _serviceUnitDetail;
   CompanyServiceUnitLocation? _selectedLocation;
-  TicketCreationResult? _createdTicket;
+  _TicketConfirmation? _createdTicket;
   String? _errorMessage;
   bool _loadingServiceUnit = false;
   bool _submitting = false;
@@ -381,7 +399,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               child: _createdTicket == null
                   ? _buildForm(context)
-                  : _TicketCreatedSummary(ticket: _createdTicket!),
+                  : _TicketCreatedSummary(confirmation: _createdTicket!),
             ),
           );
         },
@@ -502,6 +520,17 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
     return items
         .where((item) => _selectedItemIds.contains(item.id))
         .toList(growable: false);
+  }
+
+  List<_TicketConfirmationItem> get _selectedConfirmationItems {
+    return [
+      for (final item in _selectedItems)
+        _TicketConfirmationItem(
+          itemId: item.id,
+          name: item.catalog.name,
+          quantity: _itemQuantities[item.id] ?? 1,
+        ),
+    ];
   }
 
   Future<void> _openServicePicker() async {
@@ -647,6 +676,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
     });
 
     try {
+      final selectedItems = _selectedConfirmationItems;
       final result = await widget.ticketCreationGateway.createTicket(
         serviceUnit.id,
         CreateTicketCommand(
@@ -663,9 +693,18 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
           ],
         ),
       );
+      final confirmation = _TicketConfirmation(
+        ticket: result,
+        company: widget.bundle.company,
+        serviceUnit: serviceUnit,
+        location: location,
+        items: selectedItems,
+      );
+
+      await _saveRecentTicket(confirmation);
 
       if (mounted) {
-        setState(() => _createdTicket = result);
+        setState(() => _createdTicket = confirmation);
       }
     } on ApiException catch (error) {
       if (mounted) {
@@ -683,6 +722,14 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
       if (mounted) {
         setState(() => _submitting = false);
       }
+    }
+  }
+
+  Future<void> _saveRecentTicket(_TicketConfirmation confirmation) async {
+    try {
+      await widget.recentTicketStorage.save(confirmation.toRecentTicketEntry());
+    } catch (_) {
+      // Local recents are helpful but should never block ticket creation.
     }
   }
 
@@ -1228,13 +1275,72 @@ class _InlineError extends StatelessWidget {
   }
 }
 
-class _TicketCreatedSummary extends StatelessWidget {
-  const _TicketCreatedSummary({required this.ticket});
+class _TicketConfirmation {
+  const _TicketConfirmation({
+    required this.ticket,
+    required this.company,
+    required this.serviceUnit,
+    required this.location,
+    required this.items,
+  });
 
   final TicketCreationResult ticket;
+  final CompanyDetail company;
+  final CompanyServiceUnitItem serviceUnit;
+  final CompanyServiceUnitLocation location;
+  final List<_TicketConfirmationItem> items;
+
+  RecentTicketEntry toRecentTicketEntry() {
+    return RecentTicketEntry(
+      id: ticket.id,
+      ticketNumber: ticket.ticketNumber,
+      accessCode: ticket.accessCode,
+      guestName: ticket.guestName,
+      customerPhone: ticket.customerPhone,
+      serviceUnitId: serviceUnit.id,
+      locationId: location.id,
+      companyId: company.id,
+      status: ticket.status,
+      createdAt: DateTime.now(),
+      companyName: company.name,
+      serviceUnitName: serviceUnit.name,
+      locationName: location.name,
+      totalLabel: ticket.totalLabel,
+      items: [
+        for (final item in items)
+          RecentTicketItemEntry(
+            itemId: item.itemId,
+            name: item.name,
+            quantity: item.quantity,
+          ),
+      ],
+    );
+  }
+}
+
+class _TicketConfirmationItem {
+  const _TicketConfirmationItem({
+    required this.itemId,
+    required this.name,
+    required this.quantity,
+  });
+
+  final String itemId;
+  final String name;
+  final int quantity;
+
+  String get label => '$name x$quantity';
+}
+
+class _TicketCreatedSummary extends StatelessWidget {
+  const _TicketCreatedSummary({required this.confirmation});
+
+  final _TicketConfirmation confirmation;
 
   @override
   Widget build(BuildContext context) {
+    final ticket = confirmation.ticket;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1266,6 +1372,32 @@ class _TicketCreatedSummary extends StatelessWidget {
             label: 'Code acces',
             value: ticket.accessCode!,
           ),
+          const SizedBox(height: 10),
+          const _InfoMessage(
+            icon: Icons.info_outline,
+            message:
+                'Conservez ce code. Il permettra de confirmer et retrouver votre commande depuis cet appareil ou avec le numero du ticket.',
+          ),
+        ],
+        const SizedBox(height: 10),
+        _SelectedSummary(
+          icon: Icons.room_service_outlined,
+          label: 'Service',
+          value: confirmation.serviceUnit.name,
+        ),
+        const SizedBox(height: 10),
+        _SelectedSummary(
+          icon: Icons.place_outlined,
+          label: 'Emplacement',
+          value: confirmation.location.name,
+        ),
+        if (confirmation.items.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          _SelectedSummary(
+            icon: Icons.shopping_bag_outlined,
+            label: 'Articles commandes',
+            value: confirmation.items.map((item) => item.label).join(', '),
+          ),
         ],
         const SizedBox(height: 10),
         _SelectedSummary(
@@ -1279,6 +1411,42 @@ class _TicketCreatedSummary extends StatelessWidget {
           child: const Text('Fermer'),
         ),
       ],
+    );
+  }
+}
+
+class _InfoMessage extends StatelessWidget {
+  const _InfoMessage({required this.icon, required this.message});
+
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.primaryAqua.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 20, color: FlowMovaColors.primaryAqua),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: FlowMovaColors.ink,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
