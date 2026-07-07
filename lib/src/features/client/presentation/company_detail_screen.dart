@@ -207,7 +207,7 @@ class _CompanyHero extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    _StatusPill(status: company.status),
+                    _OperationalStatusPill(status: company.operationalStatus),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -234,6 +234,10 @@ class _CompanyHero extends StatelessWidget {
                       color: FlowMovaColors.slate,
                     ),
                   ),
+                ],
+                if (!company.isOperationallyOpen) ...[
+                  const SizedBox(height: 12),
+                  const _CompanyClosedNotice(),
                 ],
                 const SizedBox(height: 12),
                 Row(
@@ -320,9 +324,11 @@ class _CreateOrderButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasService = bundle.serviceUnits.isNotEmpty;
+    final companyIsOpen = bundle.company.isOperationallyOpen;
+    final canCreate = hasService && companyIsOpen;
 
     return FilledButton.icon(
-      onPressed: hasService
+      onPressed: canCreate
           ? () => showModalBottomSheet<void>(
               context: context,
               isScrollControlled: true,
@@ -335,8 +341,16 @@ class _CreateOrderButton extends StatelessWidget {
               ),
             )
           : null,
-      icon: const Icon(Icons.add_task_outlined),
-      label: Text(hasService ? 'Creer une commande' : 'Aucun service ouvert'),
+      icon: Icon(
+        companyIsOpen ? Icons.add_task_outlined : Icons.do_not_disturb_on,
+      ),
+      label: Text(
+        !companyIsOpen
+            ? 'Entreprise fermee'
+            : hasService
+            ? 'Creer une commande'
+            : 'Aucun service ouvert',
+      ),
     );
   }
 }
@@ -1859,24 +1873,65 @@ class _Section extends StatelessWidget {
   }
 }
 
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.status});
-
-  final String status;
+class _CompanyClosedNotice extends StatelessWidget {
+  const _CompanyClosedNotice();
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: FlowMovaColors.leafGreen.withValues(alpha: 0.14),
+        color: FlowMovaColors.error.withValues(alpha: 0.09),
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+        border: Border.all(color: FlowMovaColors.error.withValues(alpha: 0.18)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(
+              Icons.info_outline,
+              size: 20,
+              color: FlowMovaColors.error,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Cette entreprise n accepte pas de commandes pour le moment.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: FlowMovaColors.ink,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OperationalStatusPill extends StatelessWidget {
+  const _OperationalStatusPill({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final isOpen = status == 'OPEN';
+    final color = isOpen ? FlowMovaColors.leafGreen : FlowMovaColors.error;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(FlowMovaRadii.pill),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         child: Text(
-          status == 'ACTIVE' ? 'Active' : status,
+          isOpen ? 'Ouvert' : 'Ferme',
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: FlowMovaColors.leafGreen,
+            color: color,
             fontWeight: FontWeight.w800,
           ),
         ),

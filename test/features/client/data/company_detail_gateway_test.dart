@@ -34,6 +34,7 @@ void main() {
               'postalCode': 'H2X 1Y4',
               'country': 'CA',
               'status': 'ACTIVE',
+              'operationalStatus': 'CLOSED',
             },
             '/api/companies/company-1/catalog-categories' => [
               {
@@ -90,6 +91,8 @@ void main() {
       '/api/companies/company-1/service-units',
     ]);
     expect(result.company.name, 'Cafe Flow');
+    expect(result.company.operationalStatus, 'CLOSED');
+    expect(result.company.isOperationallyOpen, isFalse);
     expect(result.company.addressLabel, contains('123 Flow Street'));
     expect(result.catalogCategories.single.name, 'Boissons');
     expect(result.catalogs.single.name, 'Cafe filtre');

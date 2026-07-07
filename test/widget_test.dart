@@ -19,6 +19,7 @@ void main() {
           region: 'Quebec',
           country: 'CA',
           status: 'ACTIVE',
+          operationalStatus: 'OPEN',
         ),
       ],
       page: 0,
@@ -40,6 +41,7 @@ void main() {
     expect(find.text('Profil'), findsOneWidget);
     expect(find.text('Entreprise'), findsOneWidget);
     expect(find.text('Cafe Flow'), findsOneWidget);
+    expect(find.text('Ouvert'), findsOneWidget);
     expect(find.byTooltip('Scanner un QR code'), findsOneWidget);
     expect(find.text('Consulter un ticket'), findsNothing);
   });

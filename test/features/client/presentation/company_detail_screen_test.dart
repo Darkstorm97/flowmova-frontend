@@ -23,6 +23,7 @@ void main() {
 
     expect(find.text('Cafe Flow'), findsOneWidget);
     expect(find.text('Restauration'), findsOneWidget);
+    expect(find.text('Ouvert'), findsOneWidget);
     expect(find.text('Services disponibles'), findsOneWidget);
     expect(find.text('Comptoir principal'), findsWidgets);
     expect(find.text('Catalogue'), findsOneWidget);
@@ -31,6 +32,30 @@ void main() {
     expect(find.text('Cafe filtre'), findsOneWidget);
     expect(find.text('4.50 \$'), findsOneWidget);
     expect(find.text('Creer une commande'), findsOneWidget);
+  });
+
+  testWidgets('company detail disables order creation when company is closed', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CompanyDetailScreen(
+          companyId: 'company-1',
+          detailGateway: const _ClosedCompanyDetailGateway(),
+          ticketCreationGateway: const _FakeTicketCreationGateway(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ferme'), findsOneWidget);
+    expect(
+      find.text('Cette entreprise n accepte pas de commandes pour le moment.'),
+      findsOneWidget,
+    );
+    expect(find.text('Entreprise fermee'), findsOneWidget);
+    expect(find.text('Creer une commande'), findsNothing);
   });
 
   testWidgets('company detail filters catalogs by search', (tester) async {
@@ -247,6 +272,48 @@ class _FakeTicketCreationGateway implements TicketCreationGateway {
       currency: 'CAD',
       totalAmount: 0,
     );
+  }
+}
+
+class _ClosedCompanyDetailGateway implements CompanyDetailGateway {
+  const _ClosedCompanyDetailGateway();
+
+  @override
+  Future<CompanyDetailBundle> getDetail(String companyId) async {
+    return const CompanyDetailBundle(
+      company: CompanyDetail(
+        id: 'company-1',
+        name: 'Cafe Flow',
+        description: 'Cafe and service queue.',
+        currency: 'CAD',
+        businessType: 'RESTAURANT',
+        city: 'Montreal',
+        region: 'Quebec',
+        country: 'CA',
+        status: 'ACTIVE',
+        operationalStatus: 'CLOSED',
+      ),
+      catalogCategories: [],
+      catalogs: [],
+      serviceUnits: [
+        CompanyServiceUnitItem(
+          id: 'service-unit-1',
+          name: 'Comptoir principal',
+          location: 'Accueil',
+          type: 'TICKET_QUEUE',
+          status: 'OPEN',
+          ticketCreationGuardMode: 'NONE',
+        ),
+      ],
+    );
+  }
+
+  @override
+  Future<CompanyServiceUnitDetail> getServiceUnitDetail(
+    String companyId,
+    String serviceUnitId,
+  ) async {
+    throw UnimplementedError();
   }
 }
 

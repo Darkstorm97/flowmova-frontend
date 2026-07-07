@@ -614,7 +614,7 @@ class _CompanyFeedCardContent extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            _OpenBadge(),
+            _OperationalBadge(status: company.operationalStatus),
           ],
         ),
         const SizedBox(height: 7),
@@ -692,14 +692,19 @@ class _CompanyAvatar extends StatelessWidget {
   }
 }
 
-class _OpenBadge extends StatelessWidget {
-  const _OpenBadge();
+class _OperationalBadge extends StatelessWidget {
+  const _OperationalBadge({required this.status});
+
+  final String status;
 
   @override
   Widget build(BuildContext context) {
+    final isOpen = status == 'OPEN';
+    final color = isOpen ? FlowMovaColors.leafGreen : FlowMovaColors.error;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: FlowMovaColors.leafGreen.withValues(alpha: 0.14),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(FlowMovaRadii.pill),
       ),
       child: Padding(
@@ -708,9 +713,17 @@ class _OpenBadge extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.chevron_right,
+              isOpen ? Icons.check_circle_outline : Icons.do_not_disturb_on,
               size: 16,
-              color: FlowMovaColors.leafGreen,
+              color: color,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              isOpen ? 'Ouvert' : 'Ferme',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ],
         ),

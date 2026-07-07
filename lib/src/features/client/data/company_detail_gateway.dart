@@ -105,6 +105,7 @@ class CompanyDetail {
     required this.currency,
     required this.businessType,
     required this.status,
+    this.operationalStatus = 'OPEN',
     this.description,
     this.imageUrl,
     this.addressLine1,
@@ -130,6 +131,7 @@ class CompanyDetail {
       postalCode: json['postalCode'] as String?,
       country: json['country'] as String?,
       status: json['status'] as String,
+      operationalStatus: json['operationalStatus'] as String? ?? 'OPEN',
     );
   }
 
@@ -146,6 +148,9 @@ class CompanyDetail {
   final String? postalCode;
   final String? country;
   final String status;
+  final String operationalStatus;
+
+  bool get isOperationallyOpen => operationalStatus == 'OPEN';
 
   String get locationLabel {
     final parts = [city, region, country]
@@ -179,6 +184,7 @@ class CompanyDetail {
       region: region,
       country: country,
       status: status,
+      operationalStatus: operationalStatus,
     );
   }
 }

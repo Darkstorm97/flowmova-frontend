@@ -37,6 +37,7 @@ void main() {
                         'region': 'Quebec',
                         'country': 'CA',
                         'status': 'ACTIVE',
+                        'operationalStatus': 'CLOSED',
                       },
                     ],
                     'page': 1,
@@ -76,6 +77,8 @@ void main() {
 
       expect(result.items, hasLength(1));
       expect(result.items.single.name, 'Cafe Flow');
+      expect(result.items.single.operationalStatus, 'CLOSED');
+      expect(result.items.single.isOperationallyOpen, isFalse);
       expect(
         result.items.single.imageUrl,
         'https://cdn.flowmova.test/companies/cafe-flow.jpg',
