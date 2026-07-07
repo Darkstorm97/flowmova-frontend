@@ -27,7 +27,7 @@ Le frontend doit rester aligne avec:
 La navigation principale MVP doit etre organisee autour de quatre entrees:
 
 - `Accueil`: entree par defaut de l'application. Elle contient la recherche d'entreprises actives, les filtres publics, l'acces aux fiches entreprises, aux unites de service et a la creation de ticket. Elle expose aussi une action secondaire `Scanner un QR code` pour ouvrir rapidement un lien public d'emplacement ou d'unite de service. Elle ne doit pas contenir le raccourci `Consulter un ticket par code`.
-- `Tickets`: espace dedie au suivi des tickets. Il contient `Mes tickets`, reserve aux tickets du compte authentifie, `Recents sur cet appareil`, disponible authentifie ou non avec les tickets crees localement dans le navigateur ou l'application mobile du client, ainsi que `Voir un ticket avec le code`, accessible aux utilisateurs authentifies ou non.
+- `Tickets`: espace dedie au suivi des tickets. Il contient `Mes tickets`, reserve aux tickets du compte authentifie, `Tickets recents`, disponible authentifie ou non avec les tickets crees localement dans le navigateur ou l'application mobile du client, ainsi que `Voir un ticket avec le code`, accessible aux utilisateurs authentifies ou non.
 - `Entreprise`: espace admin/entreprise. Si l'utilisateur n'est pas connecte, il propose `Se connecter` et `Creer un compte`. Si l'utilisateur est connecte, il contient `Creer une entreprise`, la liste des entreprises de l'utilisateur avec recherche/filtre, puis l'acces a la page d'administration d'une entreprise.
 - `Profil`: espace compte. Si l'utilisateur n'est pas connecte, il propose `Se connecter` et `Creer un compte`. Si l'utilisateur est connecte, il contient `Mes infos profil`, les parametres, la deconnexion et les futures options de compte.
 
@@ -571,6 +571,25 @@ Definition of Done:
 - un ticket recent peut etre ouvert sans retaper manuellement le numero et le code;
 - le stockage local n'est jamais considere comme une preuve d'identite par le frontend.
 
+### TICKET-FRONT-007 - Dedicacer un ecran aux tickets recents
+
+Issue GitHub: #44.
+
+Eviter d'afficher la liste des tickets recents directement dans l'onglet `Tickets`.
+
+Inclure:
+
+- remplacer la liste directe par une entree `Tickets recents`;
+- ouvrir un ecran dedie aux tickets recents locaux;
+- conserver l'etat vide, l'action `Vider` et l'ouverture rapide d'un ticket recent dans cet ecran;
+- conserver `Voir un ticket avec le code` comme entree separee.
+
+Definition of Done:
+
+- l'onglet `Tickets` affiche des entrees simples;
+- les tickets locaux ne sont visibles que dans l'ecran `Tickets recents`;
+- les tests widget couvrent l'onglet et l'ecran dedie.
+
 ### TICKET-FRONT-005 - Limiter les creations invitees avec les tickets recents
 
 Appliquer cote frontend le mode `AUTHENTICATED_OR_GUEST_RECENT_ONE_OPEN_TICKET` pour les visiteurs non authentifies.
@@ -664,6 +683,26 @@ Definition of Done:
 
 - un admin peut mettre a jour son entreprise.
 
+### COMPANY-FRONT-004 - Afficher et respecter compagnie ouverte ou fermee
+
+Issue GitHub: #46.
+
+Adapter le frontend a la disponibilite operationnelle `OPEN` / `CLOSED` d'une compagnie.
+
+Inclure:
+
+- lire la disponibilite operationnelle exposee par le backend;
+- afficher un badge `Ouvert` / `Ferme` sur le flux d'accueil et la fiche entreprise;
+- lorsqu'une compagnie est `CLOSED`, masquer ou desactiver la creation de commande depuis la fiche;
+- afficher un message clair indiquant que l'entreprise n'accepte pas de commandes pour le moment;
+- appliquer la meme regle dans le futur parcours QR.
+
+Definition of Done:
+
+- l'utilisateur voit clairement si la compagnie est fermee;
+- aucune action de creation n'est disponible cote frontend quand elle est `CLOSED`;
+- les compagnies `OPEN` gardent le comportement actuel.
+
 ### CATCAT-FRONT-001 - Gerer les categories de catalogue
 
 Permettre la creation et la consultation des categories.
@@ -711,6 +750,26 @@ Inclure:
 Definition of Done:
 
 - un admin peut configurer une unite de service.
+
+### SERVICE-FRONT-002 - Afficher et respecter les unites QR seulement
+
+Issue GitHub: #45.
+
+Adapter le frontend au mode `QR_ONLY` des unites de service.
+
+Inclure:
+
+- lire le nouveau mode expose par le backend sur les unites de service;
+- afficher les unites `QR_ONLY` sur la fiche entreprise;
+- desactiver la creation de commande depuis la fiche entreprise pour `QR_ONLY`;
+- afficher un message clair, par exemple `Commande disponible uniquement via QR code sur place`;
+- autoriser la creation dans le futur parcours QR/emplacement.
+
+Definition of Done:
+
+- l'utilisateur comprend qu'il doit scanner le QR code pour cette unite;
+- aucune creation depuis la fiche entreprise n'est proposee pour `QR_ONLY`;
+- les unites `PUBLIC_AND_QR` gardent le comportement actuel.
 
 ### LOCATION-FRONT-001 - Gerer les emplacements
 

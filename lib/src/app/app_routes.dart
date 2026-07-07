@@ -13,6 +13,7 @@ abstract final class AppRoutes {
   static const publicLocationDetail = '/locations/public';
   static const createTicket = '/tickets/create';
   static const ticketLookup = '/tickets/lookup';
+  static const recentTickets = '/tickets/recent';
   static const myTickets = '/users/me/tickets';
   static const myCompanies = '/users/me/companies';
 }

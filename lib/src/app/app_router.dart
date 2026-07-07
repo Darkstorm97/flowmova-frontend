@@ -11,6 +11,7 @@ import '../features/placeholders/presentation/feature_placeholder_screen.dart';
 import '../features/placeholders/presentation/not_found_screen.dart';
 import '../features/profile/presentation/profile_home_screen.dart';
 import '../features/tickets/data/recent_ticket_storage.dart';
+import '../features/tickets/presentation/recent_tickets_screen.dart';
 import '../features/tickets/presentation/ticket_lookup_screen.dart';
 import '../features/tickets/presentation/tickets_home_screen.dart';
 import 'app_routes.dart';
@@ -72,6 +73,10 @@ abstract final class AppRouter {
           arguments: _ticketLookupArguments(settings.arguments),
           recentTicketStorage: recentTicketStorage,
         ),
+      ),
+      AppRoutes.recentTickets => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.tickets,
+        child: RecentTicketsScreen(recentTicketStorage: recentTicketStorage),
       ),
       AppRoutes.myTickets => const FeaturePlaceholderScreen(
         title: 'Mes tickets',

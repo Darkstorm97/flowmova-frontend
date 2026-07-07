@@ -1,10 +1,10 @@
 import 'package:flowmova_frontend/src/features/tickets/data/recent_ticket_storage.dart';
-import 'package:flowmova_frontend/src/features/tickets/presentation/tickets_home_screen.dart';
+import 'package:flowmova_frontend/src/features/tickets/presentation/recent_tickets_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('tickets home links to recent tickets without listing them', (
+  testWidgets('recent tickets screen shows and clears local tickets', (
     tester,
   ) async {
     final storage = InMemoryRecentTicketStorage([
@@ -33,15 +33,22 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(body: TicketsHomeScreen(recentTicketStorage: storage)),
+        home: Scaffold(body: RecentTicketsScreen(recentTicketStorage: storage)),
       ),
     );
     await tester.pumpAndSettle();
 
     expect(find.text('Tickets recents'), findsOneWidget);
-    expect(find.text('Voir un ticket avec le code'), findsOneWidget);
-    expect(find.text('FM-0001'), findsNothing);
-    expect(find.textContaining('Latte glace x1'), findsNothing);
-    expect(find.text('Vider'), findsNothing);
+    expect(find.text('Recents sur cet appareil'), findsOneWidget);
+    expect(find.text('FM-0001'), findsOneWidget);
+    expect(find.textContaining('Latte glace x1'), findsOneWidget);
+
+    await tester.tap(find.text('Vider'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Aucun ticket recent sur cet appareil pour le moment.'),
+      findsOneWidget,
+    );
   });
 }

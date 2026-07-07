@@ -55,7 +55,7 @@ void main() {
     await tester.tap(find.text('Tickets'));
     await tester.pumpAndSettle();
     expect(find.text('Mes tickets'), findsOneWidget);
-    expect(find.text('Recents sur cet appareil'), findsOneWidget);
+    expect(find.text('Tickets recents'), findsOneWidget);
     expect(find.text('Voir un ticket avec le code'), findsOneWidget);
 
     await tester.tap(find.text('Profil'));
