@@ -443,11 +443,22 @@ Definition of Done:
 
 ### TICKET-FRONT-001 - Creer un ticket public ou authentifie
 
+Issue GitHub: #41.
+
 Brancher la creation de ticket.
 
 Inclure:
 
-- implementation dans l'onglet `Tickets`;
+- implementation depuis la fiche publique entreprise sous forme de panneau guide court;
+- bouton principal `Creer une demande` sur la fiche entreprise;
+- selection du service dans le panneau si plusieurs services ouverts existent;
+- auto-selection du service si un seul service ouvert existe;
+- chargement du detail service public via `GET /api/companies/{companyId}/service-units/{serviceUnitId}`;
+- selection d'une location active, incluant les locations non defaut;
+- auto-selection de la location si une seule location active existe;
+- affichage des articles disponibles de l'unite de service lorsque le backend en retourne;
+- quantite optionnelle par article, avec valeur par defaut a 1 lorsque selectionne;
+- implementation dans l'onglet `Tickets` plus tard pour les entrees directes;
 - support utilisateur connecte;
 - support invite avec `guestName` requis;
 - telephone optionnel;
@@ -459,7 +470,9 @@ Inclure:
 
 Definition of Done:
 
-- un client peut creer un ticket depuis l'application ou un QR code;
+- un client peut creer un ticket depuis la fiche entreprise sans quitter le contexte de l'entreprise;
+- le parcours reste court: choix service/location seulement lorsqu'il y a plusieurs options;
+- un client peut creer un ticket dans une location non defaut;
 - le retour backend est affiche clairement;
 - les tickets invites crees depuis le navigateur ou l'application mobile sont conserves dans les recents locaux.
 

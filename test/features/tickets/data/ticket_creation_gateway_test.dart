@@ -1,0 +1,72 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:flowmova_frontend/src/core/api/api_client.dart';
+import 'package:flowmova_frontend/src/core/config/app_environment.dart';
+import 'package:flowmova_frontend/src/features/tickets/data/ticket_creation_gateway.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+
+void main() {
+  const environment = AppEnvironment(apiBaseUrl: 'http://localhost:8080');
+
+  test('createTicket posts service unit ticket payload', () async {
+    late Uri capturedUrl;
+    late Map<String, dynamic> capturedBody;
+
+    final gateway = BackendTicketCreationGateway(
+      ApiClient(
+        environment: environment,
+        httpClient: MockClient.streaming((request, bodyStream) async {
+          capturedUrl = request.url;
+          capturedBody =
+              jsonDecode(await utf8.decodeStream(bodyStream))
+                  as Map<String, dynamic>;
+
+          return http.StreamedResponse(
+            Stream.value(
+              utf8.encode(
+                jsonEncode({
+                  'id': 'ticket-1',
+                  'ticketNumber': 'FM-0001',
+                  'accessCode': 'ABC123',
+                  'guestName': 'Marc',
+                  'customerPhone': '+15145550000',
+                  'serviceUnitId': 'service-unit-1',
+                  'locationId': 'location-2',
+                  'status': 'CREATED',
+                  'currency': 'CAD',
+                  'totalAmount': 9.5,
+                }),
+              ),
+            ),
+            201,
+          );
+        }),
+      ),
+    );
+
+    final result = await gateway.createTicket(
+      'service-unit-1',
+      const CreateTicketCommand(
+        locationId: 'location-2',
+        guestName: ' Marc ',
+        customerPhone: '+15145550000',
+        notes: ' Table 12 ',
+        lines: [CreateTicketLineCommand(itemId: 'item-1', quantity: 2)],
+      ),
+    );
+
+    expect(capturedUrl.path, '/api/service-units/service-unit-1/tickets');
+    expect(capturedBody['locationId'], 'location-2');
+    expect(capturedBody['guestName'], 'Marc');
+    expect(capturedBody['notes'], 'Table 12');
+    expect(capturedBody['lines'], [
+      {'itemId': 'item-1', 'quantity': 2},
+    ]);
+    expect(result.ticketNumber, 'FM-0001');
+    expect(result.accessCode, 'ABC123');
+    expect(result.totalLabel, '9.50 CAD');
+  });
+}

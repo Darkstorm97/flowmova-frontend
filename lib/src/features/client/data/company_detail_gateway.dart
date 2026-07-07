@@ -3,6 +3,11 @@ import 'company_search_gateway.dart';
 
 abstract interface class CompanyDetailGateway {
   Future<CompanyDetailBundle> getDetail(String companyId);
+
+  Future<CompanyServiceUnitDetail> getServiceUnitDetail(
+    String companyId,
+    String serviceUnitId,
+  );
 }
 
 class BackendCompanyDetailGateway implements CompanyDetailGateway {
@@ -45,6 +50,24 @@ class BackendCompanyDetailGateway implements CompanyDetailGateway {
           .map(CompanyServiceUnitItem.fromJson)
           .toList(growable: false),
     );
+  }
+
+  @override
+  Future<CompanyServiceUnitDetail> getServiceUnitDetail(
+    String companyId,
+    String serviceUnitId,
+  ) async {
+    final response = await _apiClient.get(
+      '/api/companies/$companyId/service-units/$serviceUnitId',
+    );
+
+    if (response is! Map<String, dynamic>) {
+      throw const FormatException(
+        'Invalid company service unit detail response payload.',
+      );
+    }
+
+    return CompanyServiceUnitDetail.fromJson(response);
   }
 }
 
@@ -212,4 +235,134 @@ class CompanyServiceUnitItem {
   final String type;
   final String status;
   final String ticketCreationGuardMode;
+}
+
+class CompanyServiceUnitDetail {
+  const CompanyServiceUnitDetail({
+    required this.id,
+    required this.companyId,
+    required this.name,
+    required this.type,
+    required this.status,
+    required this.ticketCreationGuardMode,
+    required this.locations,
+    required this.items,
+    this.description,
+    this.location,
+    this.defaultLocation,
+  });
+
+  factory CompanyServiceUnitDetail.fromJson(Map<String, dynamic> json) {
+    final rawLocations = json['locations'];
+    final rawItems = json['items'];
+
+    if (rawLocations is! List) {
+      throw const FormatException('Invalid service unit locations payload.');
+    }
+
+    if (rawItems is! List) {
+      throw const FormatException('Invalid service unit items payload.');
+    }
+
+    return CompanyServiceUnitDetail(
+      id: json['id'] as String,
+      companyId: json['companyId'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      location: json['location'] as String?,
+      type: json['type'] as String,
+      status: json['status'] as String,
+      ticketCreationGuardMode: json['ticketCreationGuardMode'] as String,
+      defaultLocation: json['defaultLocation'] is Map<String, dynamic>
+          ? CompanyServiceUnitLocation.fromJson(
+              json['defaultLocation'] as Map<String, dynamic>,
+            )
+          : null,
+      locations: rawLocations
+          .whereType<Map<String, dynamic>>()
+          .map(CompanyServiceUnitLocation.fromJson)
+          .toList(growable: false),
+      items: rawItems
+          .whereType<Map<String, dynamic>>()
+          .map(CompanyServiceUnitAvailableItem.fromJson)
+          .toList(growable: false),
+    );
+  }
+
+  final String id;
+  final String companyId;
+  final String name;
+  final String? description;
+  final String? location;
+  final String type;
+  final String status;
+  final String ticketCreationGuardMode;
+  final CompanyServiceUnitLocation? defaultLocation;
+  final List<CompanyServiceUnitLocation> locations;
+  final List<CompanyServiceUnitAvailableItem> items;
+}
+
+class CompanyServiceUnitLocation {
+  const CompanyServiceUnitLocation({
+    required this.id,
+    required this.serviceUnitId,
+    required this.name,
+    required this.type,
+    required this.defaultLocation,
+    required this.status,
+    this.description,
+  });
+
+  factory CompanyServiceUnitLocation.fromJson(Map<String, dynamic> json) {
+    return CompanyServiceUnitLocation(
+      id: json['id'] as String,
+      serviceUnitId: json['serviceUnitId'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      type: json['type'] as String,
+      defaultLocation: json['defaultLocation'] as bool,
+      status: json['status'] as String,
+    );
+  }
+
+  final String id;
+  final String serviceUnitId;
+  final String name;
+  final String? description;
+  final String type;
+  final bool defaultLocation;
+  final String status;
+}
+
+class CompanyServiceUnitAvailableItem {
+  const CompanyServiceUnitAvailableItem({
+    required this.id,
+    required this.catalog,
+    required this.priceAmount,
+    required this.availability,
+    required this.status,
+  });
+
+  factory CompanyServiceUnitAvailableItem.fromJson(Map<String, dynamic> json) {
+    final catalog = json['catalog'];
+    if (catalog is! Map<String, dynamic>) {
+      throw const FormatException('Invalid service unit item catalog payload.');
+    }
+
+    return CompanyServiceUnitAvailableItem(
+      id: json['id'] as String,
+      catalog: CompanyCatalogItem.fromJson(catalog),
+      priceAmount: json['priceAmount'] as num,
+      availability: json['availability'] as String,
+      status: json['status'] as String,
+    );
+  }
+
+  final String id;
+  final CompanyCatalogItem catalog;
+  final num priceAmount;
+  final String availability;
+  final String status;
+
+  String get priceLabel => '${priceAmount.toStringAsFixed(2)} \$';
 }
