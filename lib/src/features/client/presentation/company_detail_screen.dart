@@ -225,21 +225,31 @@ class _CompanyHero extends StatelessWidget {
                 ],
                 const SizedBox(height: 12),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Icon(Icons.map_outlined, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(company.addressLabel)),
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.map_outlined, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              company.addressLabel,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    _CreateOrderButton(
+                      bundle: bundle,
+                      detailGateway: detailGateway,
+                      ticketCreationGateway: ticketCreationGateway,
+                    ),
                   ],
-                ),
-                const SizedBox(height: 14),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: _CreateOrderButton(
-                    bundle: bundle,
-                    detailGateway: detailGateway,
-                    ticketCreationGateway: ticketCreationGateway,
-                  ),
                 ),
               ],
             ),
@@ -1288,7 +1298,7 @@ class _ServiceUnitsSection extends StatelessWidget {
       emptyMessage: 'Aucun service ouvert pour le moment.',
       isEmpty: serviceUnits.isEmpty,
       child: SizedBox(
-        height: 124,
+        height: 86,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount:
@@ -1316,7 +1326,7 @@ class _ServiceUnitTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 188,
+      width: 204,
       child: Card(
         margin: EdgeInsets.zero,
         child: InkWell(
@@ -1324,33 +1334,40 @@ class _ServiceUnitTile extends StatelessWidget {
               Navigator.pushNamed(context, AppRoutes.serviceUnitDetail),
           borderRadius: BorderRadius.circular(FlowMovaRadii.small),
           child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.all(10),
+            child: Row(
               children: [
                 const Icon(Icons.room_service_outlined, size: 20),
-                const SizedBox(height: 10),
-                Text(
-                  serviceUnit.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  [
-                    if (serviceUnit.location != null &&
-                        serviceUnit.location!.trim().isNotEmpty)
-                      serviceUnit.location!,
-                    serviceUnit.status,
-                  ].join(' - '),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: FlowMovaColors.slate,
-                    fontWeight: FontWeight.w600,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        serviceUnit.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        [
+                          if (serviceUnit.location != null &&
+                              serviceUnit.location!.trim().isNotEmpty)
+                            serviceUnit.location!,
+                          serviceUnit.status,
+                        ].join(' - '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: FlowMovaColors.slate,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -1370,7 +1387,7 @@ class _MoreServicesTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 144,
+      width: 132,
       child: OutlinedButton(
         onPressed: () {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1384,8 +1401,8 @@ class _MoreServicesTile extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.list_alt_outlined),
-            const SizedBox(height: 8),
+            const Icon(Icons.list_alt_outlined, size: 20),
+            const SizedBox(height: 4),
             Text(
               'Voir plus',
               style: Theme.of(
