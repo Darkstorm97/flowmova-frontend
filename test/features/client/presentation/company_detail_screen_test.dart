@@ -84,6 +84,42 @@ void main() {
     expect(find.text('FM-0001'), findsOneWidget);
     expect(find.text('ABC123'), findsOneWidget);
   });
+
+  testWidgets('company detail searches and selects optional ticket items', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CompanyDetailScreen(
+          companyId: 'company-1',
+          detailGateway: const _RichCompanyDetailGateway(),
+          ticketCreationGateway: const _FakeTicketCreationGateway(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Creer une demande'));
+    await tester.tap(find.text('Creer une demande'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Choisir'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Rechercher un article'),
+      'latte',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Latte glace'), findsOneWidget);
+
+    await tester.tap(find.text('Latte glace'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Valider (1)'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Latte glace x1'), findsOneWidget);
+  });
 }
 
 class _FakeCompanyDetailGateway implements CompanyDetailGateway {
@@ -196,6 +232,81 @@ class _FakeTicketCreationGateway implements TicketCreationGateway {
       status: 'CREATED',
       currency: 'CAD',
       totalAmount: 0,
+    );
+  }
+}
+
+class _RichCompanyDetailGateway implements CompanyDetailGateway {
+  const _RichCompanyDetailGateway();
+
+  @override
+  Future<CompanyDetailBundle> getDetail(String companyId) async {
+    return const _FakeCompanyDetailGateway().getDetail(companyId);
+  }
+
+  @override
+  Future<CompanyServiceUnitDetail> getServiceUnitDetail(
+    String companyId,
+    String serviceUnitId,
+  ) async {
+    return const CompanyServiceUnitDetail(
+      id: 'service-unit-1',
+      companyId: 'company-1',
+      name: 'Comptoir principal',
+      location: 'Accueil',
+      type: 'TICKET_QUEUE',
+      status: 'OPEN',
+      ticketCreationGuardMode: 'NONE',
+      locations: [
+        CompanyServiceUnitLocation(
+          id: 'location-1',
+          serviceUnitId: 'service-unit-1',
+          name: 'Accueil',
+          type: 'DEFAULT',
+          defaultLocation: true,
+          status: 'ACTIVE',
+        ),
+        CompanyServiceUnitLocation(
+          id: 'location-2',
+          serviceUnitId: 'service-unit-1',
+          name: 'Terrasse',
+          type: 'TABLE',
+          defaultLocation: false,
+          status: 'ACTIVE',
+        ),
+      ],
+      items: [
+        CompanyServiceUnitAvailableItem(
+          id: 'item-1',
+          catalog: CompanyCatalogItem(
+            id: 'catalog-3',
+            name: 'Latte glace',
+            catalogCategoryId: 'category-1',
+            description: 'Cafe froid au lait.',
+            imageUrl: 'https://cdn.flowmova.test/catalogs/latte-glace.jpg',
+            priceAmount: 5.75,
+            status: 'ACTIVE',
+          ),
+          priceAmount: 5.75,
+          availability: 'AVAILABLE',
+          status: 'ACTIVE',
+        ),
+        CompanyServiceUnitAvailableItem(
+          id: 'item-2',
+          catalog: CompanyCatalogItem(
+            id: 'catalog-2',
+            name: 'Sandwich matin',
+            catalogCategoryId: 'category-2',
+            description: 'Pain grille et oeufs.',
+            imageUrl: 'https://cdn.flowmova.test/catalogs/sandwich.jpg',
+            priceAmount: 8.25,
+            status: 'ACTIVE',
+          ),
+          priceAmount: 8.25,
+          availability: 'AVAILABLE',
+          status: 'ACTIVE',
+        ),
+      ],
     );
   }
 }

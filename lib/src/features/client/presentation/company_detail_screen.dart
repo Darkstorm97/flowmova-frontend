@@ -392,29 +392,32 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
           style: textTheme.bodyLarge?.copyWith(color: FlowMovaColors.slate),
         ),
         const SizedBox(height: 18),
-        _ServicePicker(
-          serviceUnits: widget.bundle.serviceUnits,
-          selectedServiceUnit: _selectedServiceUnit,
-          onSelected: _selectServiceUnit,
+        _ChoiceSummaryTile(
+          icon: Icons.room_service_outlined,
+          label: 'Service',
+          value: _selectedServiceUnit?.name ?? 'A selectionner',
+          actionLabel: _selectedServiceUnit == null ? 'Choisir' : 'Modifier',
+          onTap: widget.bundle.serviceUnits.isEmpty ? null : _openServicePicker,
         ),
-        const SizedBox(height: 16),
-        if (_loadingServiceUnit)
-          const Center(child: CircularProgressIndicator())
-        else if (_serviceUnitDetail != null) ...[
-          _LocationPicker(
-            locations: _serviceUnitDetail!.locations,
-            selectedLocation: _selectedLocation,
-            onSelected: (location) => setState(() {
-              _selectedLocation = location;
-            }),
+        const SizedBox(height: 12),
+        if (_loadingServiceUnit) ...[
+          const Center(child: CircularProgressIndicator()),
+        ] else if (_serviceUnitDetail != null) ...[
+          _ChoiceSummaryTile(
+            icon: Icons.place_outlined,
+            label: 'Emplacement',
+            value: _selectedLocation?.name ?? 'A selectionner',
+            actionLabel: _selectedLocation == null ? 'Choisir' : 'Modifier',
+            onTap: _serviceUnitDetail!.locations.isEmpty
+                ? null
+                : _openLocationPicker,
           ),
-          const SizedBox(height: 16),
-          _ItemsPicker(
-            items: _serviceUnitDetail!.items,
-            selectedItemIds: _selectedItemIds,
+          const SizedBox(height: 12),
+          _SelectedItemsSummary(
+            selectedItems: _selectedItems,
             itemQuantities: _itemQuantities,
-            onToggle: _toggleItem,
-            onQuantityChanged: _setItemQuantity,
+            canSelect: _serviceUnitDetail!.items.isNotEmpty,
+            onTap: _openItemsPicker,
           ),
           const SizedBox(height: 16),
           TextField(
@@ -464,6 +467,77 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
         ],
       ],
     );
+  }
+
+  List<CompanyServiceUnitAvailableItem> get _selectedItems {
+    final items =
+        _serviceUnitDetail?.items ?? const <CompanyServiceUnitAvailableItem>[];
+    return items
+        .where((item) => _selectedItemIds.contains(item.id))
+        .toList(growable: false);
+  }
+
+  Future<void> _openServicePicker() async {
+    final serviceUnit = await showModalBottomSheet<CompanyServiceUnitItem>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _ServiceSearchSheet(
+        serviceUnits: widget.bundle.serviceUnits,
+        selectedServiceUnit: _selectedServiceUnit,
+      ),
+    );
+
+    if (serviceUnit != null) {
+      await _selectServiceUnit(serviceUnit);
+    }
+  }
+
+  Future<void> _openLocationPicker() async {
+    final detail = _serviceUnitDetail;
+    if (detail == null) {
+      return;
+    }
+
+    final location = await showModalBottomSheet<CompanyServiceUnitLocation>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _LocationSearchSheet(
+        locations: detail.locations,
+        selectedLocation: _selectedLocation,
+      ),
+    );
+
+    if (location != null) {
+      setState(() => _selectedLocation = location);
+    }
+  }
+
+  Future<void> _openItemsPicker() async {
+    final detail = _serviceUnitDetail;
+    if (detail == null || detail.items.isEmpty) {
+      return;
+    }
+
+    final result = await showModalBottomSheet<_ItemPickerResult>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _ItemsSearchSheet(
+        items: detail.items,
+        selectedItemIds: _selectedItemIds,
+        itemQuantities: _itemQuantities,
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedItemIds
+          ..clear()
+          ..addAll(result.selectedItemIds);
+        _itemQuantities
+          ..clear()
+          ..addAll(result.itemQuantities);
+      });
+    }
   }
 
   Future<void> _selectServiceUnit(CompanyServiceUnitItem serviceUnit) async {
@@ -521,24 +595,6 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
       (location) => location.defaultLocation,
       orElse: () => detail.locations.first,
     );
-  }
-
-  void _toggleItem(CompanyServiceUnitAvailableItem item, bool selected) {
-    setState(() {
-      if (selected) {
-        _selectedItemIds.add(item.id);
-        _itemQuantities[item.id] = _itemQuantities[item.id] ?? 1;
-      } else {
-        _selectedItemIds.remove(item.id);
-        _itemQuantities.remove(item.id);
-      }
-    });
-  }
-
-  void _setItemQuantity(CompanyServiceUnitAvailableItem item, int quantity) {
-    setState(() {
-      _itemQuantities[item.id] = quantity.clamp(1, 99);
-    });
   }
 
   Future<void> _submit() async {
@@ -612,104 +668,186 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
   }
 }
 
-class _ServicePicker extends StatelessWidget {
-  const _ServicePicker({
-    required this.serviceUnits,
-    required this.selectedServiceUnit,
-    required this.onSelected,
+class _ChoiceSummaryTile extends StatelessWidget {
+  const _ChoiceSummaryTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.actionLabel,
+    required this.onTap,
   });
 
-  final List<CompanyServiceUnitItem> serviceUnits;
-  final CompanyServiceUnitItem? selectedServiceUnit;
-  final ValueChanged<CompanyServiceUnitItem> onSelected;
+  final IconData icon;
+  final String label;
+  final String value;
+  final String actionLabel;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    if (serviceUnits.length == 1) {
-      return _SelectedSummary(
-        icon: Icons.room_service_outlined,
-        label: 'Service',
-        value: serviceUnits.single.name,
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Choisir un service',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 8),
-        for (final serviceUnit in serviceUnits) ...[
-          _SelectableTile(
-            selected: selectedServiceUnit?.id == serviceUnit.id,
-            icon: Icons.room_service_outlined,
-            title: serviceUnit.name,
-            subtitle: serviceUnit.location,
-            onTap: () => onSelected(serviceUnit),
-          ),
-          const SizedBox(height: 8),
-        ],
-      ],
+    return Material(
+      color: FlowMovaColors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+        side: const BorderSide(color: FlowMovaColors.border),
+      ),
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(label),
+        subtitle: Text(value),
+        trailing: TextButton(onPressed: onTap, child: Text(actionLabel)),
+        onTap: onTap,
+      ),
     );
   }
 }
 
-class _LocationPicker extends StatelessWidget {
-  const _LocationPicker({
+class _SelectedItemsSummary extends StatelessWidget {
+  const _SelectedItemsSummary({
+    required this.selectedItems,
+    required this.itemQuantities,
+    required this.canSelect,
+    required this.onTap,
+  });
+
+  final List<CompanyServiceUnitAvailableItem> selectedItems;
+  final Map<String, int> itemQuantities;
+  final bool canSelect;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = selectedItems.isEmpty
+        ? canSelect
+              ? 'Aucun article selectionne'
+              : 'Aucun article disponible'
+        : selectedItems
+              .map((item) {
+                final quantity = itemQuantities[item.id] ?? 1;
+                return '${item.catalog.name} x$quantity';
+              })
+              .join(', ');
+
+    return _ChoiceSummaryTile(
+      icon: Icons.shopping_bag_outlined,
+      label: 'Articles optionnels',
+      value: value,
+      actionLabel: selectedItems.isEmpty ? 'Choisir' : 'Modifier',
+      onTap: canSelect ? onTap : null,
+    );
+  }
+}
+
+class _ServiceSearchSheet extends StatefulWidget {
+  const _ServiceSearchSheet({
+    required this.serviceUnits,
+    required this.selectedServiceUnit,
+  });
+
+  final List<CompanyServiceUnitItem> serviceUnits;
+  final CompanyServiceUnitItem? selectedServiceUnit;
+
+  @override
+  State<_ServiceSearchSheet> createState() => _ServiceSearchSheetState();
+}
+
+class _ServiceSearchSheetState extends State<_ServiceSearchSheet> {
+  String _query = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = widget.serviceUnits
+        .where((serviceUnit) {
+          final query = _query.trim().toLowerCase();
+          return query.isEmpty ||
+              serviceUnit.name.toLowerCase().contains(query) ||
+              (serviceUnit.location?.toLowerCase().contains(query) ?? false) ||
+              (serviceUnit.description?.toLowerCase().contains(query) ?? false);
+        })
+        .toList(growable: false);
+
+    return _PickerSheetScaffold(
+      title: 'Choisir un service',
+      searchHint: 'Rechercher un service',
+      onSearchChanged: (value) => setState(() => _query = value),
+      child: filtered.isEmpty
+          ? const _StateBox(
+              icon: Icons.search_off_outlined,
+              title: 'Aucun service trouve',
+              message: 'Essayez une autre recherche.',
+            )
+          : Column(
+              children: [
+                for (final serviceUnit in filtered) ...[
+                  _SelectableTile(
+                    selected: widget.selectedServiceUnit?.id == serviceUnit.id,
+                    icon: Icons.room_service_outlined,
+                    title: serviceUnit.name,
+                    subtitle: serviceUnit.location,
+                    onTap: () => Navigator.pop(context, serviceUnit),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ],
+            ),
+    );
+  }
+}
+
+class _LocationSearchSheet extends StatefulWidget {
+  const _LocationSearchSheet({
     required this.locations,
     required this.selectedLocation,
-    required this.onSelected,
   });
 
   final List<CompanyServiceUnitLocation> locations;
   final CompanyServiceUnitLocation? selectedLocation;
-  final ValueChanged<CompanyServiceUnitLocation> onSelected;
+
+  @override
+  State<_LocationSearchSheet> createState() => _LocationSearchSheetState();
+}
+
+class _LocationSearchSheetState extends State<_LocationSearchSheet> {
+  String _query = '';
 
   @override
   Widget build(BuildContext context) {
-    if (locations.isEmpty) {
-      return const _StateBox(
-        icon: Icons.place_outlined,
-        title: 'Aucun emplacement disponible',
-        message: 'Ce service ne peut pas encore recevoir de demande.',
-      );
-    }
+    final filtered = widget.locations
+        .where((location) {
+          final query = _query.trim().toLowerCase();
+          return query.isEmpty ||
+              location.name.toLowerCase().contains(query) ||
+              location.type.toLowerCase().contains(query) ||
+              (location.description?.toLowerCase().contains(query) ?? false);
+        })
+        .toList(growable: false);
 
-    if (locations.length == 1) {
-      return _SelectedSummary(
-        icon: Icons.place_outlined,
-        label: 'Emplacement',
-        value: locations.single.name,
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Choisir un emplacement',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 8),
-        for (final location in locations) ...[
-          _SelectableTile(
-            selected: selectedLocation?.id == location.id,
-            icon: Icons.place_outlined,
-            title: location.name,
-            subtitle: location.defaultLocation
-                ? 'Emplacement par defaut'
-                : location.type,
-            onTap: () => onSelected(location),
-          ),
-          const SizedBox(height: 8),
-        ],
-      ],
+    return _PickerSheetScaffold(
+      title: 'Choisir un emplacement',
+      searchHint: 'Rechercher un emplacement',
+      onSearchChanged: (value) => setState(() => _query = value),
+      child: filtered.isEmpty
+          ? const _StateBox(
+              icon: Icons.search_off_outlined,
+              title: 'Aucun emplacement trouve',
+              message: 'Essayez une autre recherche.',
+            )
+          : Column(
+              children: [
+                for (final location in filtered) ...[
+                  _SelectableTile(
+                    selected: widget.selectedLocation?.id == location.id,
+                    icon: Icons.place_outlined,
+                    title: location.name,
+                    subtitle: location.defaultLocation
+                        ? 'Emplacement par defaut'
+                        : location.type,
+                    onTap: () => Navigator.pop(context, location),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ],
+            ),
     );
   }
 }
@@ -749,68 +887,260 @@ class _SelectableTile extends StatelessWidget {
   }
 }
 
-class _ItemsPicker extends StatelessWidget {
-  const _ItemsPicker({
+class _ItemsSearchSheet extends StatefulWidget {
+  const _ItemsSearchSheet({
     required this.items,
     required this.selectedItemIds,
     required this.itemQuantities,
-    required this.onToggle,
-    required this.onQuantityChanged,
   });
 
   final List<CompanyServiceUnitAvailableItem> items;
   final Set<String> selectedItemIds;
   final Map<String, int> itemQuantities;
-  final void Function(CompanyServiceUnitAvailableItem item, bool selected)
-  onToggle;
-  final void Function(CompanyServiceUnitAvailableItem item, int quantity)
-  onQuantityChanged;
+
+  @override
+  State<_ItemsSearchSheet> createState() => _ItemsSearchSheetState();
+}
+
+class _ItemsSearchSheetState extends State<_ItemsSearchSheet> {
+  late final Set<String> _selectedItemIds;
+  late final Map<String, int> _itemQuantities;
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedItemIds = {...widget.selectedItemIds};
+    _itemQuantities = {...widget.itemQuantities};
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    final filtered = widget.items
+        .where((item) {
+          final query = _query.trim().toLowerCase();
+          return query.isEmpty ||
+              item.catalog.name.toLowerCase().contains(query) ||
+              (item.catalog.description?.toLowerCase().contains(query) ??
+                  false);
+        })
+        .toList(growable: false);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Articles optionnels',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 8),
-        for (final item in items)
-          CheckboxListTile(
-            value: selectedItemIds.contains(item.id),
-            onChanged: (selected) => onToggle(item, selected ?? false),
-            title: Text(item.catalog.name),
-            subtitle: Text(item.priceLabel),
-            secondary: selectedItemIds.contains(item.id)
-                ? SizedBox(
-                    width: 84,
-                    child: DropdownButton<int>(
-                      value: itemQuantities[item.id] ?? 1,
-                      isExpanded: true,
-                      items: [
-                        for (var quantity = 1; quantity <= 9; quantity++)
-                          DropdownMenuItem(
-                            value: quantity,
-                            child: Text('x$quantity'),
-                          ),
-                      ],
-                      onChanged: (quantity) {
-                        if (quantity != null) {
-                          onQuantityChanged(item, quantity);
-                        }
-                      },
-                    ),
-                  )
-                : null,
+    return _PickerSheetScaffold(
+      title: 'Choisir des articles',
+      searchHint: 'Rechercher un article',
+      onSearchChanged: (value) => setState(() => _query = value),
+      footer: FilledButton.icon(
+        onPressed: () => Navigator.pop(
+          context,
+          _ItemPickerResult(
+            selectedItemIds: _selectedItemIds,
+            itemQuantities: _itemQuantities,
           ),
-      ],
+        ),
+        icon: const Icon(Icons.check),
+        label: Text('Valider (${_selectedItemIds.length})'),
+      ),
+      child: filtered.isEmpty
+          ? const _StateBox(
+              icon: Icons.search_off_outlined,
+              title: 'Aucun article trouve',
+              message: 'Essayez une autre recherche.',
+            )
+          : Column(
+              children: [
+                for (final item in filtered) ...[
+                  _ItemSelectionTile(
+                    item: item,
+                    selected: _selectedItemIds.contains(item.id),
+                    quantity: _itemQuantities[item.id] ?? 1,
+                    onToggle: (selected) => setState(() {
+                      if (selected) {
+                        _selectedItemIds.add(item.id);
+                        _itemQuantities[item.id] =
+                            _itemQuantities[item.id] ?? 1;
+                      } else {
+                        _selectedItemIds.remove(item.id);
+                        _itemQuantities.remove(item.id);
+                      }
+                    }),
+                    onQuantityChanged: (quantity) => setState(() {
+                      _selectedItemIds.add(item.id);
+                      _itemQuantities[item.id] = quantity.clamp(1, 99);
+                    }),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ],
+            ),
+    );
+  }
+}
+
+class _PickerSheetScaffold extends StatelessWidget {
+  const _PickerSheetScaffold({
+    required this.title,
+    required this.searchHint,
+    required this.onSearchChanged,
+    required this.child,
+    this.footer,
+  });
+
+  final String title;
+  final String searchHint;
+  final ValueChanged<String> onSearchChanged;
+  final Widget child;
+  final Widget? footer;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.78,
+        minChildSize: 0.45,
+        maxChildSize: 0.94,
+        builder: (context, scrollController) {
+          return SingleChildScrollView(
+            controller: scrollController,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: FlowMovaColors.border,
+                        borderRadius: BorderRadius.circular(FlowMovaRadii.pill),
+                      ),
+                      child: const SizedBox(width: 48, height: 4),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: FlowMovaColors.logoInk,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    autofocus: true,
+                    textInputAction: TextInputAction.search,
+                    onChanged: onSearchChanged,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      hintText: searchHint,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  child,
+                  if (footer != null) ...[const SizedBox(height: 16), footer!],
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ItemPickerResult {
+  const _ItemPickerResult({
+    required this.selectedItemIds,
+    required this.itemQuantities,
+  });
+
+  final Set<String> selectedItemIds;
+  final Map<String, int> itemQuantities;
+}
+
+class _ItemSelectionTile extends StatelessWidget {
+  const _ItemSelectionTile({
+    required this.item,
+    required this.selected,
+    required this.quantity,
+    required this.onToggle,
+    required this.onQuantityChanged,
+  });
+
+  final CompanyServiceUnitAvailableItem item;
+  final bool selected;
+  final int quantity;
+  final ValueChanged<bool> onToggle;
+  final ValueChanged<int> onQuantityChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      color: selected
+          ? FlowMovaColors.primaryAqua.withValues(alpha: 0.08)
+          : null,
+      child: InkWell(
+        onTap: () => onToggle(!selected),
+        borderRadius: BorderRadius.circular(FlowMovaRadii.small),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            children: [
+              Checkbox(
+                value: selected,
+                onChanged: (value) => onToggle(value ?? false),
+              ),
+              const SizedBox(width: 4),
+              _CatalogThumb(catalog: item.catalog),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.catalog.name,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      item.priceLabel,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: FlowMovaColors.slate,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (selected)
+                SizedBox(
+                  width: 76,
+                  child: DropdownButton<int>(
+                    value: quantity,
+                    isExpanded: true,
+                    items: [
+                      for (var quantity = 1; quantity <= 9; quantity++)
+                        DropdownMenuItem(
+                          value: quantity,
+                          child: Text('x$quantity'),
+                        ),
+                    ],
+                    onChanged: (quantity) {
+                      if (quantity != null) {
+                        onQuantityChanged(quantity);
+                      }
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

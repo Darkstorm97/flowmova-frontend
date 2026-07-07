@@ -506,6 +506,30 @@ Definition of Done:
 - le retour backend est affiche clairement;
 - les tickets invites crees depuis le navigateur ou l'application mobile sont conserves dans les recents locaux.
 
+### TICKET-FRONT-006 - Fluidifier la creation de ticket depuis la fiche entreprise
+
+Issue GitHub: #43.
+
+Rendre la creation de ticket plus compacte lorsque l'entreprise expose beaucoup de services, emplacements ou articles.
+
+Inclure:
+
+- modal principale sous forme de resume compact;
+- sous-modal avec recherche pour choisir le service;
+- sous-modal avec recherche pour choisir l'emplacement du service selectionne;
+- sous-modal avec recherche pour selectionner plusieurs articles;
+- affichage de l'image des articles lorsque disponible;
+- affichage des articles selectionnes dans le resume principal;
+- conservation des auto-selections lorsqu'il n'existe qu'un seul choix;
+- conservation du formulaire court: nom, telephone optionnel, notes optionnelles.
+
+Definition of Done:
+
+- l'utilisateur ne doit pas parcourir de longues listes dans la modal principale;
+- services, emplacements et articles sont recherchables localement;
+- les articles selectionnes restent visibles avant la creation;
+- les tests widget couvrent le parcours principal et au moins une recherche dans une sous-modal.
+
 ### TICKET-FRONT-002 - Consulter un ticket par numero
 
 Permettre la consultation simple d'un ticket par son numero plateforme.
