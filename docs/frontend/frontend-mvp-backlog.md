@@ -414,6 +414,32 @@ Definition of Done:
 - les catalogues et unites de service publiques sont affiches lorsque le backend en retourne;
 - les tests frontend couvrent le mapping API et la navigation depuis l'accueil.
 
+### PUBLIC-FRONT-008 - Consommer les catalogues publics pagines
+
+Issue GitHub: #42.
+
+Adapter la fiche publique entreprise pour consommer les catalogues publics par page lorsque le backend exposera la pagination.
+
+Dependance backend:
+
+- `CATALOG-060` / `flowmova-backend#102`.
+
+Inclure:
+
+- chargement initial d'une premiere page raisonnable de catalogues;
+- envoi de la categorie selectionnee au backend via `catalogCategoryId`;
+- envoi de la recherche textuelle au backend;
+- chargement progressif ou infinite scroll dans la section catalogue;
+- conservation des onglets `Tout` et categories;
+- etats chargement, vide et erreur dans la zone catalogue.
+
+Definition of Done:
+
+- la fiche entreprise ne charge plus tous les catalogues d'un coup;
+- la recherche et le filtre categorie declenchent une requete serveur;
+- l'utilisateur peut charger plus d'articles sans quitter la fiche entreprise;
+- les tests couvrent le mapping API pagine et les interactions widget.
+
 ### PUBLIC-FRONT-003 - Consulter une unite de service et ses emplacements
 
 Afficher une unite de service et ses emplacements disponibles.
