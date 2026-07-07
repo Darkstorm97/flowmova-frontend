@@ -29,7 +29,7 @@ void main() {
     expect(find.text('Boissons'), findsOneWidget);
     expect(find.text('Cafe filtre'), findsOneWidget);
     expect(find.text('4.50 \$'), findsOneWidget);
-    expect(find.text('Creer une demande'), findsOneWidget);
+    expect(find.text('Creer une commande'), findsOneWidget);
   });
 
   testWidgets('company detail filters catalogs by search', (tester) async {
@@ -68,8 +68,8 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Creer une demande'));
-    await tester.tap(find.text('Creer une demande'));
+    await tester.ensureVisible(find.text('Creer une commande'));
+    await tester.tap(find.text('Creer une commande'));
     await tester.pumpAndSettle();
 
     expect(find.text('Emplacement'), findsOneWidget);
@@ -99,8 +99,8 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Creer une demande'));
-    await tester.tap(find.text('Creer une demande'));
+    await tester.ensureVisible(find.text('Creer une commande'));
+    await tester.tap(find.text('Creer une commande'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.widgetWithText(TextButton, 'Choisir'));

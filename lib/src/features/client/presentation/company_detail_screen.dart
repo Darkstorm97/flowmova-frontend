@@ -136,14 +136,13 @@ class _CompanyDetailContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _CompanyHero(company: company),
-        const SizedBox(height: 16),
-        _QuickActions(
+        _CompanyHero(
+          company: company,
           bundle: bundle,
           detailGateway: detailGateway,
           ticketCreationGateway: ticketCreationGateway,
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         _ServiceUnitsSection(serviceUnits: bundle.serviceUnits),
         const SizedBox(height: 18),
         _CatalogSection(
@@ -156,9 +155,17 @@ class _CompanyDetailContent extends StatelessWidget {
 }
 
 class _CompanyHero extends StatelessWidget {
-  const _CompanyHero({required this.company});
+  const _CompanyHero({
+    required this.company,
+    required this.bundle,
+    required this.detailGateway,
+    required this.ticketCreationGateway,
+  });
 
   final CompanyDetail company;
+  final CompanyDetailBundle bundle;
+  final CompanyDetailGateway detailGateway;
+  final TicketCreationGateway ticketCreationGateway;
 
   @override
   Widget build(BuildContext context) {
@@ -225,6 +232,15 @@ class _CompanyHero extends StatelessWidget {
                     Expanded(child: Text(company.addressLabel)),
                   ],
                 ),
+                const SizedBox(height: 14),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: _CreateOrderButton(
+                    bundle: bundle,
+                    detailGateway: detailGateway,
+                    ticketCreationGateway: ticketCreationGateway,
+                  ),
+                ),
               ],
             ),
           ),
@@ -265,8 +281,8 @@ class _DetailImage extends StatelessWidget {
   }
 }
 
-class _QuickActions extends StatelessWidget {
-  const _QuickActions({
+class _CreateOrderButton extends StatelessWidget {
+  const _CreateOrderButton({
     required this.bundle,
     required this.detailGateway,
     required this.ticketCreationGateway,
@@ -294,7 +310,7 @@ class _QuickActions extends StatelessWidget {
             )
           : null,
       icon: const Icon(Icons.add_task_outlined),
-      label: Text(hasService ? 'Creer une demande' : 'Aucun service ouvert'),
+      label: Text(hasService ? 'Creer une commande' : 'Aucun service ouvert'),
     );
   }
 }
@@ -380,7 +396,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
         ),
         const SizedBox(height: 18),
         Text(
-          'Creer une demande',
+          'Creer une commande',
           style: textTheme.headlineSmall?.copyWith(
             color: FlowMovaColors.logoInk,
             fontWeight: FontWeight.w800,
@@ -1272,7 +1288,7 @@ class _ServiceUnitsSection extends StatelessWidget {
       emptyMessage: 'Aucun service ouvert pour le moment.',
       isEmpty: serviceUnits.isEmpty,
       child: SizedBox(
-        height: 136,
+        height: 124,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount:
@@ -1300,7 +1316,7 @@ class _ServiceUnitTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 236,
+      width: 188,
       child: Card(
         margin: EdgeInsets.zero,
         child: InkWell(
@@ -1308,12 +1324,12 @@ class _ServiceUnitTile extends StatelessWidget {
               Navigator.pushNamed(context, AppRoutes.serviceUnitDetail),
           borderRadius: BorderRadius.circular(FlowMovaRadii.small),
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.room_service_outlined),
-                const Spacer(),
+                const Icon(Icons.room_service_outlined, size: 20),
+                const SizedBox(height: 10),
                 Text(
                   serviceUnit.name,
                   maxLines: 2,
@@ -1354,7 +1370,7 @@ class _MoreServicesTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 176,
+      width: 144,
       child: OutlinedButton(
         onPressed: () {
           ScaffoldMessenger.of(context).showSnackBar(

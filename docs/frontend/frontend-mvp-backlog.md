@@ -480,7 +480,7 @@ Brancher la creation de ticket.
 Inclure:
 
 - implementation depuis la fiche publique entreprise sous forme de panneau guide court;
-- bouton principal `Creer une demande` sur la fiche entreprise;
+- bouton principal `Creer une commande` dans la tuile principale de la fiche entreprise;
 - selection du service dans le panneau si plusieurs services ouverts existent;
 - auto-selection du service si un seul service ouvert existe;
 - chargement du detail service public via `GET /api/companies/{companyId}/service-units/{serviceUnitId}`;
