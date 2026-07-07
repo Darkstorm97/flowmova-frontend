@@ -4,6 +4,7 @@ import '../../../app/app_routes.dart';
 import '../../../core/theme/flow_mova_colors.dart';
 import '../../../core/theme/flow_mova_radii.dart';
 import '../data/recent_ticket_storage.dart';
+import 'ticket_lookup_screen.dart';
 
 class TicketsHomeScreen extends StatefulWidget {
   const TicketsHomeScreen({super.key, this.recentTicketStorage});
@@ -195,7 +196,13 @@ class _RecentTicketTile extends StatelessWidget {
             context,
           ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
-        onTap: () => Navigator.pushNamed(context, AppRoutes.ticketLookup),
+        onTap: ticket.accessCode == null
+            ? null
+            : () => Navigator.pushNamed(
+                context,
+                AppRoutes.ticketLookup,
+                arguments: TicketLookupArguments(recentTicket: ticket),
+              ),
       ),
     );
   }

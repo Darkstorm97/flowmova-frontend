@@ -559,7 +559,7 @@ Inclure:
 - disponible pour utilisateur authentifie ou non;
 - stockage local des references utiles: `ticketNumber`, `accessCode` si applicable, `serviceUnitId`, `locationId`, `companyId`, `status`, `createdAt`, `companyName`, `serviceUnitName`, `locationName` lorsque disponibles;
 - ouverture rapide d'un ticket recent avec les informations stockees;
-- rafraichissement du statut depuis le backend lors de l'ouverture d'un ticket recent;
+- rafraichissement du statut depuis le backend lors de l'ouverture d'un ticket recent via `POST /api/tickets/guest-access`;
 - option `Vider les tickets recents`;
 - message d'aide indiquant que ces tickets sont conserves uniquement dans le navigateur ou l'application mobile du client;
 - suppression locale uniquement: vider les recents ne supprime jamais les tickets backend.

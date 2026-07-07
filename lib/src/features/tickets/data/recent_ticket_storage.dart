@@ -161,6 +161,42 @@ class RecentTicketEntry {
       'items': items.map((item) => item.toJson()).toList(growable: false),
     };
   }
+
+  RecentTicketEntry copyWith({
+    String? id,
+    String? ticketNumber,
+    String? accessCode,
+    String? guestName,
+    String? customerPhone,
+    String? serviceUnitId,
+    String? locationId,
+    String? companyId,
+    String? status,
+    DateTime? createdAt,
+    String? companyName,
+    String? serviceUnitName,
+    String? locationName,
+    String? totalLabel,
+    List<RecentTicketItemEntry>? items,
+  }) {
+    return RecentTicketEntry(
+      id: id ?? this.id,
+      ticketNumber: ticketNumber ?? this.ticketNumber,
+      accessCode: accessCode ?? this.accessCode,
+      guestName: guestName ?? this.guestName,
+      customerPhone: customerPhone ?? this.customerPhone,
+      serviceUnitId: serviceUnitId ?? this.serviceUnitId,
+      locationId: locationId ?? this.locationId,
+      companyId: companyId ?? this.companyId,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      companyName: companyName ?? this.companyName,
+      serviceUnitName: serviceUnitName ?? this.serviceUnitName,
+      locationName: locationName ?? this.locationName,
+      totalLabel: totalLabel ?? this.totalLabel,
+      items: items ?? this.items,
+    );
+  }
 }
 
 class RecentTicketItemEntry {

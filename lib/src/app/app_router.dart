@@ -11,6 +11,7 @@ import '../features/placeholders/presentation/feature_placeholder_screen.dart';
 import '../features/placeholders/presentation/not_found_screen.dart';
 import '../features/profile/presentation/profile_home_screen.dart';
 import '../features/tickets/data/recent_ticket_storage.dart';
+import '../features/tickets/presentation/ticket_lookup_screen.dart';
 import '../features/tickets/presentation/tickets_home_screen.dart';
 import 'app_routes.dart';
 
@@ -65,10 +66,12 @@ abstract final class AppRouter {
         description:
             'La creation de ticket sera implementee dans TICKET-FRONT-001.',
       ),
-      AppRoutes.ticketLookup => const FeaturePlaceholderScreen(
-        title: 'Consulter un ticket',
-        description:
-            'La recherche par numero sera implementee dans TICKET-FRONT-002.',
+      AppRoutes.ticketLookup => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.tickets,
+        child: TicketLookupScreen(
+          arguments: _ticketLookupArguments(settings.arguments),
+          recentTicketStorage: recentTicketStorage,
+        ),
       ),
       AppRoutes.myTickets => const FeaturePlaceholderScreen(
         title: 'Mes tickets',
@@ -131,5 +134,12 @@ abstract final class AppRouter {
       companyId: companyId,
       recentTicketStorage: recentTicketStorage,
     );
+  }
+
+  static TicketLookupArguments? _ticketLookupArguments(Object? arguments) {
+    if (arguments is TicketLookupArguments) {
+      return arguments;
+    }
+    return null;
   }
 }
