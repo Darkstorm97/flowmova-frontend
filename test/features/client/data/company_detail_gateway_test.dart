@@ -35,6 +35,16 @@ void main() {
               'country': 'CA',
               'status': 'ACTIVE',
             },
+            '/api/companies/company-1/catalog-categories' => [
+              {
+                'id': 'category-1',
+                'companyId': 'company-1',
+                'name': 'Boissons',
+                'description': 'Cafe et boissons chaudes.',
+                'displayOrder': 1,
+                'status': 'ACTIVE',
+              },
+            ],
             '/api/companies/company-1/catalogs' => [
               {
                 'id': 'catalog-1',
@@ -75,11 +85,13 @@ void main() {
 
     expect(capturedPaths, [
       '/api/companies/company-1',
+      '/api/companies/company-1/catalog-categories',
       '/api/companies/company-1/catalogs',
       '/api/companies/company-1/service-units',
     ]);
     expect(result.company.name, 'Cafe Flow');
     expect(result.company.addressLabel, contains('123 Flow Street'));
+    expect(result.catalogCategories.single.name, 'Boissons');
     expect(result.catalogs.single.name, 'Cafe filtre');
     expect(result.catalogs.single.priceLabel, '4.50 \$');
     expect(result.serviceUnits.single.name, 'Comptoir principal');

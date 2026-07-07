@@ -146,7 +146,10 @@ class _CompanyDetailContent extends StatelessWidget {
         const SizedBox(height: 18),
         _ServiceUnitsSection(serviceUnits: bundle.serviceUnits),
         const SizedBox(height: 18),
-        _CatalogSection(catalogs: bundle.catalogs),
+        _CatalogSection(
+          catalogs: bundle.catalogs,
+          categories: bundle.catalogCategories,
+        ),
       ],
     );
   }
@@ -924,19 +927,45 @@ class _TicketCreatedSummary extends StatelessWidget {
 class _ServiceUnitsSection extends StatelessWidget {
   const _ServiceUnitsSection({required this.serviceUnits});
 
+  static const _visibleServiceUnitLimit = 5;
+
   final List<CompanyServiceUnitItem> serviceUnits;
 
   @override
   Widget build(BuildContext context) {
+    final visibleServiceUnits = serviceUnits
+        .take(_visibleServiceUnitLimit)
+        .toList(growable: false);
+
     return _Section(
       title: 'Services disponibles',
       emptyMessage: 'Aucun service ouvert pour le moment.',
       isEmpty: serviceUnits.isEmpty,
       child: Column(
         children: [
-          for (final serviceUnit in serviceUnits) ...[
+          for (final serviceUnit in visibleServiceUnits) ...[
             _ServiceUnitTile(serviceUnit: serviceUnit),
-            if (serviceUnit != serviceUnits.last) const SizedBox(height: 10),
+            if (serviceUnit != visibleServiceUnits.last)
+              const SizedBox(height: 10),
+          ],
+          if (serviceUnits.length > _visibleServiceUnitLimit) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'La liste complete des services avec recherche arrive bientot.',
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.list_alt_outlined),
+                label: Text('Voir plus (${serviceUnits.length})'),
+              ),
+            ),
           ],
         ],
       ),
@@ -962,7 +991,7 @@ class _ServiceUnitTile extends StatelessWidget {
                 serviceUnit.location!.trim().isNotEmpty)
               serviceUnit.location!,
             serviceUnit.status,
-          ].join(' • '),
+          ].join(' - '),
         ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => Navigator.pushNamed(context, AppRoutes.serviceUnitDetail),
@@ -971,24 +1000,142 @@ class _ServiceUnitTile extends StatelessWidget {
   }
 }
 
-class _CatalogSection extends StatelessWidget {
-  const _CatalogSection({required this.catalogs});
+class _CatalogSection extends StatefulWidget {
+  const _CatalogSection({required this.catalogs, required this.categories});
 
   final List<CompanyCatalogItem> catalogs;
+  final List<CompanyCatalogCategory> categories;
+
+  @override
+  State<_CatalogSection> createState() => _CatalogSectionState();
+}
+
+class _CatalogSectionState extends State<_CatalogSection> {
+  String? _selectedCategoryId;
+  String _query = '';
+
+  List<CompanyCatalogCategory> get _visibleCategories {
+    final categories = widget.categories
+        .where((category) => category.status == 'ACTIVE')
+        .toList(growable: false);
+    return [...categories]..sort((left, right) {
+      final orderComparison = left.displayOrder.compareTo(right.displayOrder);
+      if (orderComparison != 0) {
+        return orderComparison;
+      }
+      return left.name.compareTo(right.name);
+    });
+  }
+
+  List<CompanyCatalogItem> get _filteredCatalogs {
+    final normalizedQuery = _query.trim().toLowerCase();
+    return widget.catalogs
+        .where((catalog) {
+          final matchesCategory =
+              _selectedCategoryId == null ||
+              catalog.catalogCategoryId == _selectedCategoryId;
+          final matchesQuery =
+              normalizedQuery.isEmpty ||
+              catalog.name.toLowerCase().contains(normalizedQuery) ||
+              (catalog.description?.toLowerCase().contains(normalizedQuery) ??
+                  false);
+          return matchesCategory && matchesQuery;
+        })
+        .toList(growable: false);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final categories = _visibleCategories;
+    final filteredCatalogs = _filteredCatalogs;
+
     return _Section(
       title: 'Catalogue',
       emptyMessage: 'Aucun element de catalogue disponible.',
-      isEmpty: catalogs.isEmpty,
+      isEmpty: widget.catalogs.isEmpty,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final catalog in catalogs) ...[
-            _CatalogTile(catalog: catalog),
-            if (catalog != catalogs.last) const SizedBox(height: 10),
+          TextField(
+            onChanged: (value) => setState(() {
+              _query = value;
+            }),
+            textInputAction: TextInputAction.search,
+            decoration: const InputDecoration(
+              prefixIcon: Icon(Icons.search),
+              hintText: 'Rechercher dans le catalogue',
+            ),
+          ),
+          if (categories.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _CatalogCategoryChip(
+                    label: 'Tout',
+                    selected: _selectedCategoryId == null,
+                    onSelected: () => setState(() {
+                      _selectedCategoryId = null;
+                    }),
+                  ),
+                  for (final category in categories) ...[
+                    const SizedBox(width: 8),
+                    _CatalogCategoryChip(
+                      label: category.name,
+                      selected: _selectedCategoryId == category.id,
+                      onSelected: () => setState(() {
+                        _selectedCategoryId = category.id;
+                      }),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
+          const SizedBox(height: 12),
+          if (filteredCatalogs.isEmpty)
+            const _StateBox(
+              icon: Icons.search_off_outlined,
+              title: 'Aucun article trouve',
+              message: 'Essayez une autre recherche ou une autre categorie.',
+            )
+          else
+            for (final catalog in filteredCatalogs) ...[
+              _CatalogTile(catalog: catalog),
+              if (catalog != filteredCatalogs.last) const SizedBox(height: 10),
+            ],
         ],
+      ),
+    );
+  }
+}
+
+class _CatalogCategoryChip extends StatelessWidget {
+  const _CatalogCategoryChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onSelected(),
+      selectedColor: FlowMovaColors.primaryAqua.withValues(alpha: 0.14),
+      backgroundColor: FlowMovaColors.white,
+      side: BorderSide(
+        color: selected ? FlowMovaColors.primaryAqua : FlowMovaColors.border,
+      ),
+      labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+        color: selected ? FlowMovaColors.ink : FlowMovaColors.slate,
+        fontWeight: FontWeight.w800,
       ),
     );
   }

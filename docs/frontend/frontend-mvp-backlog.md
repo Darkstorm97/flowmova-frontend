@@ -397,8 +397,11 @@ Inclure:
 - navigation depuis une carte du flux d'accueil vers la fiche de l'entreprise selectionnee;
 - chargement du detail public via `GET /api/companies/{companyId}`;
 - affichage image entreprise, nom, description, domaine, localisation et etat;
+- affichage des categories publiques via `GET /api/companies/{companyId}/catalog-categories`;
 - affichage des catalogues publics via `GET /api/companies/{companyId}/catalogs`;
+- onglets catalogue par categorie avec `Tout` en premier et recherche locale par nom/description;
 - affichage des unites de service publiques via `GET /api/companies/{companyId}/service-units`;
+- liste courte des premiers services disponibles avec action `Voir plus` preparee pour la liste complete avec recherche;
 - etats chargement, vide et erreur;
 - actions preparees vers les prochaines etapes: consulter une unite de service et creer une demande/ticket;
 - compatibilite mobile et web avec une presentation fluide.
@@ -407,6 +410,7 @@ Definition of Done:
 
 - le clic sur une carte d'accueil ouvre une vraie fiche entreprise;
 - la fiche entreprise permet de comprendre les services disponibles;
+- les catalogues peuvent etre filtres par categorie et recherche;
 - les catalogues et unites de service publiques sont affiches lorsque le backend en retourne;
 - les tests frontend couvrent le mapping API et la navigation depuis l'accueil.
 

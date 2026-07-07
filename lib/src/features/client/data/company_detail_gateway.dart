@@ -18,6 +18,9 @@ class BackendCompanyDetailGateway implements CompanyDetailGateway {
   @override
   Future<CompanyDetailBundle> getDetail(String companyId) async {
     final companyResponse = await _apiClient.get('/api/companies/$companyId');
+    final catalogCategoriesResponse = await _apiClient.get(
+      '/api/companies/$companyId/catalog-categories',
+    );
     final catalogsResponse = await _apiClient.get(
       '/api/companies/$companyId/catalogs',
     );
@@ -33,6 +36,12 @@ class BackendCompanyDetailGateway implements CompanyDetailGateway {
       throw const FormatException('Invalid company catalogs response payload.');
     }
 
+    if (catalogCategoriesResponse is! List) {
+      throw const FormatException(
+        'Invalid company catalog categories response payload.',
+      );
+    }
+
     if (serviceUnitsResponse is! List) {
       throw const FormatException(
         'Invalid company service units response payload.',
@@ -41,6 +50,10 @@ class BackendCompanyDetailGateway implements CompanyDetailGateway {
 
     return CompanyDetailBundle(
       company: CompanyDetail.fromJson(companyResponse),
+      catalogCategories: catalogCategoriesResponse
+          .whereType<Map<String, dynamic>>()
+          .map(CompanyCatalogCategory.fromJson)
+          .toList(growable: false),
       catalogs: catalogsResponse
           .whereType<Map<String, dynamic>>()
           .map(CompanyCatalogItem.fromJson)
@@ -74,11 +87,13 @@ class BackendCompanyDetailGateway implements CompanyDetailGateway {
 class CompanyDetailBundle {
   const CompanyDetailBundle({
     required this.company,
+    required this.catalogCategories,
     required this.catalogs,
     required this.serviceUnits,
   });
 
   final CompanyDetail company;
+  final List<CompanyCatalogCategory> catalogCategories;
   final List<CompanyCatalogItem> catalogs;
   final List<CompanyServiceUnitItem> serviceUnits;
 }
@@ -168,11 +183,41 @@ class CompanyDetail {
   }
 }
 
+class CompanyCatalogCategory {
+  const CompanyCatalogCategory({
+    required this.id,
+    required this.companyId,
+    required this.name,
+    required this.displayOrder,
+    required this.status,
+    this.description,
+  });
+
+  factory CompanyCatalogCategory.fromJson(Map<String, dynamic> json) {
+    return CompanyCatalogCategory(
+      id: json['id'] as String,
+      companyId: json['companyId'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      displayOrder: json['displayOrder'] as int,
+      status: json['status'] as String,
+    );
+  }
+
+  final String id;
+  final String companyId;
+  final String name;
+  final String? description;
+  final int displayOrder;
+  final String status;
+}
+
 class CompanyCatalogItem {
   const CompanyCatalogItem({
     required this.id,
     required this.name,
     required this.status,
+    required this.catalogCategoryId,
     this.description,
     this.imageUrl,
     this.priceAmount,
@@ -182,6 +227,7 @@ class CompanyCatalogItem {
     return CompanyCatalogItem(
       id: json['id'] as String,
       name: json['name'] as String,
+      catalogCategoryId: json['catalogCategoryId'] as String,
       description: json['description'] as String?,
       imageUrl: json['imageUrl'] as String?,
       priceAmount: json['priceAmount'] as num?,
@@ -191,6 +237,7 @@ class CompanyCatalogItem {
 
   final String id;
   final String name;
+  final String catalogCategoryId;
   final String? description;
   final String? imageUrl;
   final num? priceAmount;

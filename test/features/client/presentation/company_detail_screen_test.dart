@@ -25,9 +25,33 @@ void main() {
     expect(find.text('Services disponibles'), findsOneWidget);
     expect(find.text('Comptoir principal'), findsOneWidget);
     expect(find.text('Catalogue'), findsOneWidget);
+    expect(find.text('Tout'), findsOneWidget);
+    expect(find.text('Boissons'), findsOneWidget);
     expect(find.text('Cafe filtre'), findsOneWidget);
     expect(find.text('4.50 \$'), findsOneWidget);
     expect(find.text('Creer une demande'), findsOneWidget);
+  });
+
+  testWidgets('company detail filters catalogs by search', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CompanyDetailScreen(
+          companyId: 'company-1',
+          detailGateway: const _FakeCompanyDetailGateway(),
+          ticketCreationGateway: const _FakeTicketCreationGateway(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Rechercher dans le catalogue'),
+      'sandwich',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sandwich matin'), findsOneWidget);
+    expect(find.text('Cafe filtre'), findsNothing);
   });
 
   testWidgets('company detail creates a ticket from the guided sheet', (
@@ -51,7 +75,7 @@ void main() {
     expect(find.text('Emplacement'), findsOneWidget);
     expect(find.text('Accueil'), findsWidgets);
 
-    await tester.enterText(find.byType(TextField).first, 'Marc');
+    await tester.enterText(find.widgetWithText(TextField, 'Nom'), 'Marc');
     await tester.ensureVisible(find.text('Creer mon ticket'));
     await tester.tap(find.text('Creer mon ticket'));
     await tester.pumpAndSettle();
@@ -79,12 +103,37 @@ class _FakeCompanyDetailGateway implements CompanyDetailGateway {
         country: 'CA',
         status: 'ACTIVE',
       ),
+      catalogCategories: [
+        CompanyCatalogCategory(
+          id: 'category-1',
+          companyId: 'company-1',
+          name: 'Boissons',
+          displayOrder: 1,
+          status: 'ACTIVE',
+        ),
+        CompanyCatalogCategory(
+          id: 'category-2',
+          companyId: 'company-1',
+          name: 'Repas',
+          displayOrder: 2,
+          status: 'ACTIVE',
+        ),
+      ],
       catalogs: [
         CompanyCatalogItem(
           id: 'catalog-1',
           name: 'Cafe filtre',
+          catalogCategoryId: 'category-1',
           description: 'Grand cafe chaud.',
           priceAmount: 4.5,
+          status: 'ACTIVE',
+        ),
+        CompanyCatalogItem(
+          id: 'catalog-2',
+          name: 'Sandwich matin',
+          catalogCategoryId: 'category-2',
+          description: 'Pain grille et oeufs.',
+          priceAmount: 8.25,
           status: 'ACTIVE',
         ),
       ],
