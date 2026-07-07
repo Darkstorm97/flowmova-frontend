@@ -69,4 +69,57 @@ void main() {
     expect(result.accessCode, 'ABC123');
     expect(result.totalLabel, '9.50 CAD');
   });
+
+  test(
+    'createTicketFromPublicLocation posts QR location ticket payload',
+    () async {
+      late Uri capturedUrl;
+      late Map<String, dynamic> capturedBody;
+
+      final gateway = BackendTicketCreationGateway(
+        ApiClient(
+          environment: environment,
+          httpClient: MockClient.streaming((request, bodyStream) async {
+            capturedUrl = request.url;
+            capturedBody =
+                jsonDecode(await utf8.decodeStream(bodyStream))
+                    as Map<String, dynamic>;
+
+            return http.StreamedResponse(
+              Stream.value(
+                utf8.encode(
+                  jsonEncode({
+                    'id': 'ticket-qr-1',
+                    'ticketNumber': 'FM-QR-0001',
+                    'accessCode': 'QR123ABC',
+                    'guestName': 'Marc',
+                    'serviceUnitId': 'service-unit-1',
+                    'locationId': 'location-qr',
+                    'status': 'CREATED',
+                    'currency': 'CAD',
+                    'totalAmount': 0,
+                  }),
+                ),
+              ),
+              201,
+            );
+          }),
+        ),
+      );
+
+      final result = await gateway.createTicketFromPublicLocation(
+        'loc-public-1',
+        const CreateTicketCommand(
+          locationId: 'location-client-side-ignored',
+          guestName: ' Marc ',
+        ),
+      );
+
+      expect(capturedUrl.path, '/api/public/locations/loc-public-1/tickets');
+      expect(capturedBody.containsKey('locationId'), isFalse);
+      expect(capturedBody['guestName'], 'Marc');
+      expect(result.ticketNumber, 'FM-QR-0001');
+      expect(result.locationId, 'location-qr');
+    },
+  );
 }

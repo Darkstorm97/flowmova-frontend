@@ -265,6 +265,7 @@ class CompanyServiceUnitItem {
     required this.type,
     required this.status,
     required this.ticketCreationGuardMode,
+    this.creationEntryMode = 'PUBLIC_AND_QR',
     this.description,
     this.location,
   });
@@ -278,6 +279,8 @@ class CompanyServiceUnitItem {
       type: json['type'] as String,
       status: json['status'] as String,
       ticketCreationGuardMode: json['ticketCreationGuardMode'] as String,
+      creationEntryMode:
+          json['creationEntryMode'] as String? ?? 'PUBLIC_AND_QR',
     );
   }
 
@@ -288,6 +291,11 @@ class CompanyServiceUnitItem {
   final String type;
   final String status;
   final String ticketCreationGuardMode;
+  final String creationEntryMode;
+
+  bool get requiresQrCode => creationEntryMode == 'QR_ONLY';
+
+  bool get canCreateFromCompanyDetail => !requiresQrCode;
 }
 
 class CompanyServiceUnitDetail {
@@ -300,6 +308,7 @@ class CompanyServiceUnitDetail {
     required this.ticketCreationGuardMode,
     required this.locations,
     required this.items,
+    this.creationEntryMode = 'PUBLIC_AND_QR',
     this.description,
     this.location,
     this.defaultLocation,
@@ -326,6 +335,8 @@ class CompanyServiceUnitDetail {
       type: json['type'] as String,
       status: json['status'] as String,
       ticketCreationGuardMode: json['ticketCreationGuardMode'] as String,
+      creationEntryMode:
+          json['creationEntryMode'] as String? ?? 'PUBLIC_AND_QR',
       defaultLocation: json['defaultLocation'] is Map<String, dynamic>
           ? CompanyServiceUnitLocation.fromJson(
               json['defaultLocation'] as Map<String, dynamic>,
@@ -350,9 +361,12 @@ class CompanyServiceUnitDetail {
   final String type;
   final String status;
   final String ticketCreationGuardMode;
+  final String creationEntryMode;
   final CompanyServiceUnitLocation? defaultLocation;
   final List<CompanyServiceUnitLocation> locations;
   final List<CompanyServiceUnitAvailableItem> items;
+
+  bool get requiresQrCode => creationEntryMode == 'QR_ONLY';
 }
 
 class CompanyServiceUnitLocation {
@@ -364,6 +378,7 @@ class CompanyServiceUnitLocation {
     required this.defaultLocation,
     required this.status,
     this.description,
+    this.publicAccessSlug,
   });
 
   factory CompanyServiceUnitLocation.fromJson(Map<String, dynamic> json) {
@@ -375,6 +390,7 @@ class CompanyServiceUnitLocation {
       type: json['type'] as String,
       defaultLocation: json['defaultLocation'] as bool,
       status: json['status'] as String,
+      publicAccessSlug: json['publicAccessSlug'] as String?,
     );
   }
 
@@ -385,6 +401,7 @@ class CompanyServiceUnitLocation {
   final String type;
   final bool defaultLocation;
   final String status;
+  final String? publicAccessSlug;
 }
 
 class CompanyServiceUnitAvailableItem {

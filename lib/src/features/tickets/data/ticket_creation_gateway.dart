@@ -5,6 +5,11 @@ abstract interface class TicketCreationGateway {
     String serviceUnitId,
     CreateTicketCommand command,
   );
+
+  Future<TicketCreationResult> createTicketFromPublicLocation(
+    String publicAccessSlug,
+    CreateTicketCommand command,
+  );
 }
 
 class BackendTicketCreationGateway implements TicketCreationGateway {
@@ -20,6 +25,23 @@ class BackendTicketCreationGateway implements TicketCreationGateway {
     final response = await _apiClient.post(
       '/api/service-units/$serviceUnitId/tickets',
       body: command.toJson(),
+    );
+
+    if (response is! Map<String, dynamic>) {
+      throw const FormatException('Invalid ticket creation response payload.');
+    }
+
+    return TicketCreationResult.fromJson(response);
+  }
+
+  @override
+  Future<TicketCreationResult> createTicketFromPublicLocation(
+    String publicAccessSlug,
+    CreateTicketCommand command,
+  ) async {
+    final response = await _apiClient.post(
+      '/api/public/locations/$publicAccessSlug/tickets',
+      body: command.toJson(includeLocationId: false),
     );
 
     if (response is! Map<String, dynamic>) {
@@ -45,9 +67,9 @@ class CreateTicketCommand {
   final String? notes;
   final List<CreateTicketLineCommand> lines;
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson({bool includeLocationId = true}) {
     return {
-      'locationId': locationId,
+      if (includeLocationId) 'locationId': locationId,
       if (guestName != null && guestName!.trim().isNotEmpty)
         'guestName': guestName!.trim(),
       if (customerPhone != null && customerPhone!.trim().isNotEmpty)

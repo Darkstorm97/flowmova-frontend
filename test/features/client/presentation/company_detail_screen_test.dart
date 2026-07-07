@@ -58,6 +58,28 @@ void main() {
     expect(find.text('Creer une commande'), findsNothing);
   });
 
+  testWidgets(
+    'company detail blocks QR only services from standard order flow',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CompanyDetailScreen(
+            companyId: 'company-1',
+            detailGateway: const _QrOnlyCompanyDetailGateway(),
+            ticketCreationGateway: const _FakeTicketCreationGateway(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('Comptoir QR'), findsOneWidget);
+      expect(find.textContaining('QR seulement'), findsOneWidget);
+      expect(find.text('QR code requis'), findsOneWidget);
+      expect(find.text('Creer une commande'), findsNothing);
+    },
+  );
+
   testWidgets('company detail filters catalogs by search', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -272,6 +294,66 @@ class _FakeTicketCreationGateway implements TicketCreationGateway {
       currency: 'CAD',
       totalAmount: 0,
     );
+  }
+
+  @override
+  Future<TicketCreationResult> createTicketFromPublicLocation(
+    String publicAccessSlug,
+    CreateTicketCommand command,
+  ) async {
+    return TicketCreationResult(
+      id: 'ticket-qr-1',
+      ticketNumber: 'FM-QR-0001',
+      accessCode: 'QR123',
+      guestName: command.guestName,
+      serviceUnitId: 'service-unit-1',
+      locationId: command.locationId,
+      status: 'CREATED',
+      currency: 'CAD',
+      totalAmount: 0,
+    );
+  }
+}
+
+class _QrOnlyCompanyDetailGateway implements CompanyDetailGateway {
+  const _QrOnlyCompanyDetailGateway();
+
+  @override
+  Future<CompanyDetailBundle> getDetail(String companyId) async {
+    return const CompanyDetailBundle(
+      company: CompanyDetail(
+        id: 'company-1',
+        name: 'Cafe Flow',
+        description: 'Cafe and service queue.',
+        currency: 'CAD',
+        businessType: 'RESTAURANT',
+        city: 'Montreal',
+        region: 'Quebec',
+        country: 'CA',
+        status: 'ACTIVE',
+      ),
+      catalogCategories: [],
+      catalogs: [],
+      serviceUnits: [
+        CompanyServiceUnitItem(
+          id: 'service-unit-qr',
+          name: 'Comptoir QR',
+          location: 'Salle',
+          type: 'TICKET_QUEUE',
+          status: 'OPEN',
+          ticketCreationGuardMode: 'NONE',
+          creationEntryMode: 'QR_ONLY',
+        ),
+      ],
+    );
+  }
+
+  @override
+  Future<CompanyServiceUnitDetail> getServiceUnitDetail(
+    String companyId,
+    String serviceUnitId,
+  ) async {
+    throw UnimplementedError();
   }
 }
 

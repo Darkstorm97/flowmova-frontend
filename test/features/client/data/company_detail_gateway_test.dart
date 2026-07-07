@@ -68,6 +68,7 @@ void main() {
                 'type': 'TICKET_QUEUE',
                 'status': 'OPEN',
                 'ticketCreationGuardMode': 'NONE',
+                'creationEntryMode': 'QR_ONLY',
                 'defaultLocation': null,
               },
             ],
@@ -98,5 +99,7 @@ void main() {
     expect(result.catalogs.single.name, 'Cafe filtre');
     expect(result.catalogs.single.priceLabel, '4.50 \$');
     expect(result.serviceUnits.single.name, 'Comptoir principal');
+    expect(result.serviceUnits.single.creationEntryMode, 'QR_ONLY');
+    expect(result.serviceUnits.single.requiresQrCode, isTrue);
   });
 }

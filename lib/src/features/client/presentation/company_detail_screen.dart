@@ -324,8 +324,11 @@ class _CreateOrderButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasService = bundle.serviceUnits.isNotEmpty;
+    final hasStandardService = bundle.serviceUnits.any(
+      (serviceUnit) => serviceUnit.canCreateFromCompanyDetail,
+    );
     final companyIsOpen = bundle.company.isOperationallyOpen;
-    final canCreate = hasService && companyIsOpen;
+    final canCreate = hasService && hasStandardService && companyIsOpen;
 
     return FilledButton.icon(
       onPressed: canCreate
@@ -348,7 +351,9 @@ class _CreateOrderButton extends StatelessWidget {
         !companyIsOpen
             ? 'Entreprise fermee'
             : hasService
-            ? 'Creer une commande'
+            ? hasStandardService
+                  ? 'Creer une commande'
+                  : 'QR code requis'
             : 'Aucun service ouvert',
       ),
     );
@@ -390,8 +395,11 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.bundle.serviceUnits.length == 1) {
-      _selectServiceUnit(widget.bundle.serviceUnits.single);
+    final standardServiceUnits = widget.bundle.serviceUnits
+        .where((serviceUnit) => serviceUnit.canCreateFromCompanyDetail)
+        .toList(growable: false);
+    if (standardServiceUnits.length == 1) {
+      _selectServiceUnit(standardServiceUnits.single);
     }
   }
 
@@ -472,6 +480,14 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
             onTap: canChangeLocation ? _openLocationPicker : null,
           ),
           const SizedBox(height: 12),
+          if (_serviceUnitDetail!.requiresQrCode) ...[
+            const _InlineNotice(
+              icon: Icons.qr_code_2_outlined,
+              message:
+                  'Ce service accepte les commandes uniquement depuis un QR code emplacement.',
+            ),
+            const SizedBox(height: 12),
+          ],
           _SelectedItemsSummary(
             selectedItems: _selectedItems,
             itemQuantities: _itemQuantities,
@@ -611,6 +627,14 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
   }
 
   Future<void> _selectServiceUnit(CompanyServiceUnitItem serviceUnit) async {
+    if (serviceUnit.requiresQrCode) {
+      setState(() {
+        _errorMessage =
+            'Ce service accepte les commandes uniquement depuis un QR code.';
+      });
+      return;
+    }
+
     setState(() {
       _selectedServiceUnit = serviceUnit;
       _serviceUnitDetail = null;
@@ -673,6 +697,15 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
     if (serviceUnit == null || location == null) {
       setState(
         () => _errorMessage = 'Choisissez un service et un emplacement.',
+      );
+      return;
+    }
+
+    if (serviceUnit.requiresQrCode ||
+        _serviceUnitDetail?.requiresQrCode == true) {
+      setState(
+        () => _errorMessage =
+            'Ce service accepte les commandes uniquement depuis un QR code.',
       );
       return;
     }
@@ -869,13 +902,26 @@ class _ServiceSearchSheetState extends State<_ServiceSearchSheet> {
           : Column(
               children: [
                 for (final serviceUnit in filtered) ...[
-                  _SelectableTile(
-                    selected: widget.selectedServiceUnit?.id == serviceUnit.id,
-                    icon: Icons.room_service_outlined,
-                    title: serviceUnit.name,
-                    subtitle: serviceUnit.location,
-                    onTap: () => Navigator.pop(context, serviceUnit),
-                  ),
+                  if (serviceUnit.requiresQrCode)
+                    _SelectableTile(
+                      selected:
+                          widget.selectedServiceUnit?.id == serviceUnit.id,
+                      enabled: false,
+                      icon: Icons.qr_code_2_outlined,
+                      title: serviceUnit.name,
+                      subtitle:
+                          'QR code requis - impossible depuis la fiche entreprise',
+                      onTap: null,
+                    )
+                  else
+                    _SelectableTile(
+                      selected:
+                          widget.selectedServiceUnit?.id == serviceUnit.id,
+                      icon: Icons.room_service_outlined,
+                      title: serviceUnit.name,
+                      subtitle: serviceUnit.location,
+                      onTap: () => Navigator.pop(context, serviceUnit),
+                    ),
                   const SizedBox(height: 8),
                 ],
               ],
@@ -948,14 +994,16 @@ class _SelectableTile extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.onTap,
+    this.enabled = true,
     this.subtitle,
   });
 
   final bool selected;
+  final bool enabled;
   final IconData icon;
   final String title;
   final String? subtitle;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -965,7 +1013,8 @@ class _SelectableTile extends StatelessWidget {
           ? FlowMovaColors.primaryAqua.withValues(alpha: 0.1)
           : null,
       child: ListTile(
-        onTap: onTap,
+        enabled: enabled,
+        onTap: enabled ? onTap : null,
         leading: Icon(
           selected ? Icons.check_circle : icon,
           color: selected ? FlowMovaColors.primaryAqua : null,
@@ -1289,6 +1338,45 @@ class _InlineError extends StatelessWidget {
   }
 }
 
+class _InlineNotice extends StatelessWidget {
+  const _InlineNotice({required this.icon, required this.message});
+
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.primaryAqua.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+        border: Border.all(
+          color: FlowMovaColors.primaryAqua.withValues(alpha: 0.22),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: FlowMovaColors.primaryAqua),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: FlowMovaColors.logoInk,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _TicketConfirmation {
   const _TicketConfirmation({
     required this.ticket,
@@ -1543,7 +1631,9 @@ class _ServiceUnitTile extends StatelessWidget {
                           if (serviceUnit.location != null &&
                               serviceUnit.location!.trim().isNotEmpty)
                             serviceUnit.location!,
-                          serviceUnit.status,
+                          serviceUnit.requiresQrCode
+                              ? 'QR seulement'
+                              : serviceUnit.status,
                         ].join(' - '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
