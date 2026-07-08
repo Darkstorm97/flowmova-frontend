@@ -14,4 +14,9 @@ class SessionScope extends InheritedNotifier<AuthSessionController> {
     assert(scope != null, 'SessionScope is missing from the widget tree.');
     return scope!.notifier!;
   }
+
+  static AuthSessionController? maybeOf(BuildContext context) {
+    final scope = context.dependOnInheritedWidgetOfExactType<SessionScope>();
+    return scope?.notifier;
+  }
 }

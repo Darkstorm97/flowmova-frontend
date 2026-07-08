@@ -6,6 +6,7 @@ import '../features/business/presentation/business_home_screen.dart';
 import '../features/client/data/company_search_gateway.dart';
 import '../features/client/presentation/company_detail_screen.dart';
 import '../features/client/presentation/client_home_screen.dart';
+import '../features/client/presentation/public_location_screen.dart';
 import '../features/navigation/presentation/flow_mova_navigation_shell.dart';
 import '../features/placeholders/presentation/feature_placeholder_screen.dart';
 import '../features/placeholders/presentation/not_found_screen.dart';
@@ -23,8 +24,13 @@ abstract final class AppRouter {
     RecentTicketStorage? recentTicketStorage,
   }) {
     final routeName = settings.name ?? AppRoutes.client;
+    final routeUri = Uri.tryParse(routeName) ?? Uri(path: routeName);
+    final normalizedPath = routeUri.path.split(';').first;
+    final routePath = normalizedPath.isEmpty
+        ? AppRoutes.client
+        : normalizedPath;
 
-    final Widget page = switch (routeName) {
+    final Widget page = switch (routePath) {
       AppRoutes.client || AppRoutes.clientAlias => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.client,
         child: ClientHomeScreen(searchGateway: companySearchGateway),
@@ -57,10 +63,11 @@ abstract final class AppRouter {
         description:
             'Le detail unite de service sera implemente dans PUBLIC-FRONT-003.',
       ),
-      AppRoutes.publicLocationDetail => const FeaturePlaceholderScreen(
-        title: 'Emplacement public',
-        description:
-            'Le parcours QR code emplacement sera implemente dans PUBLIC-FRONT-004.',
+      AppRoutes.publicLocationDetail => _publicLocationPage(
+        settings.arguments,
+        routeUri: routeUri,
+        routeName: routeName,
+        recentTicketStorage: recentTicketStorage,
       ),
       AppRoutes.createTicket => const FeaturePlaceholderScreen(
         title: 'Creer un ticket',
@@ -120,6 +127,32 @@ abstract final class AppRouter {
         );
       },
     );
+  }
+
+  static Widget _publicLocationPage(
+    Object? arguments, {
+    required Uri routeUri,
+    required String routeName,
+    RecentTicketStorage? recentTicketStorage,
+  }) {
+    final initialSlug = arguments is String
+        ? arguments
+        : routeUri.queryParameters['slug'] ??
+              _matrixParameter(routeName, 'slug');
+
+    return PublicLocationScreen(
+      initialSlug: initialSlug,
+      recentTicketStorage: recentTicketStorage,
+    );
+  }
+
+  static String? _matrixParameter(String routeName, String key) {
+    final match = RegExp('(?:^|;)$key=([^;?]+)').firstMatch(routeName);
+    final value = match?.group(1);
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+    return Uri.decodeComponent(value.trim());
   }
 
   static Widget _companyDetailPage(

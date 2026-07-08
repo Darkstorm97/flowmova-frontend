@@ -97,6 +97,36 @@ void main() {
     expect(capturedArguments, 'company-1');
   });
 
+  testWidgets('QR shortcut opens the public location screen', (tester) async {
+    await tester.pumpWidget(
+      FlowMovaApp(companySearchGateway: companySearchGateway),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Scanner un QR code'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Commande sur place'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Code ou lien QR'), findsOneWidget);
+  });
+
+  testWidgets('public location route accepts web hash matrix parameters', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      FlowMovaApp(companySearchGateway: companySearchGateway),
+    );
+    await tester.pumpAndSettle();
+
+    Navigator.of(
+      tester.element(find.text('Decouvrez autour de vous')),
+    ).pushNamed('/locations/public;preview=true');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Commande sur place'), findsOneWidget);
+    expect(find.text('Route inconnue'), findsNothing);
+  });
+
   testWidgets('unknown route shows a clean not found page', (tester) async {
     await tester.pumpWidget(
       FlowMovaApp(companySearchGateway: companySearchGateway),
