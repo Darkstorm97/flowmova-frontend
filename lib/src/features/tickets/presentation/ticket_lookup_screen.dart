@@ -48,7 +48,9 @@ class _TicketLookupScreenState extends State<TicketLookupScreen> {
   PublicTicket? _ticket;
   RecentTicketEntry? _recentTicket;
   bool _isLoading = false;
+  bool _isActionLoading = false;
   String? _errorMessage;
+  String? _successMessage;
 
   @override
   void initState() {
@@ -74,6 +76,7 @@ class _TicketLookupScreenState extends State<TicketLookupScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _successMessage = null;
     });
 
     try {
@@ -118,6 +121,66 @@ class _TicketLookupScreenState extends State<TicketLookupScreen> {
 
     await _recentTicketStorage.save(refreshed);
     _recentTicket = refreshed;
+  }
+
+  Future<void> _runTicketAction(
+    Future<PublicTicket> Function({
+      required String ticketNumber,
+      required String accessCode,
+    })
+    action, {
+    required String successMessage,
+  }) async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isActionLoading = true;
+      _errorMessage = null;
+      _successMessage = null;
+    });
+
+    try {
+      final ticket = await action(
+        ticketNumber: _ticketNumberController.text,
+        accessCode: _accessCodeController.text,
+      );
+      await _refreshRecentTicket(ticket);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _ticket = ticket;
+        _isActionLoading = false;
+        _successMessage = successMessage;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isActionLoading = false;
+        _errorMessage = _lookupErrorMessage(error);
+      });
+    }
+  }
+
+  Future<void> _cancelTicket() {
+    return _runTicketAction(
+      _lookupGateway.cancelGuestTicket,
+      successMessage: 'Le ticket a ete annule.',
+    );
+  }
+
+  Future<void> _confirmTreatment() {
+    return _runTicketAction(
+      _lookupGateway.confirmGuestTicketTreatment,
+      successMessage: 'Le traitement du ticket a ete confirme.',
+    );
   }
 
   String _lookupErrorMessage(Object error) {
@@ -186,9 +249,19 @@ class _TicketLookupScreenState extends State<TicketLookupScreen> {
                         color: Theme.of(context).colorScheme.error,
                       ),
                     ],
+                    if (_successMessage != null) ...[
+                      const SizedBox(height: 12),
+                      _LookupMessage(
+                        icon: Icons.check_circle_outline,
+                        text: _successMessage!,
+                        color: FlowMovaColors.leafGreen,
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     FilledButton.icon(
-                      onPressed: _isLoading ? null : _lookup,
+                      onPressed: _isLoading || _isActionLoading
+                          ? null
+                          : _lookup,
                       icon: _isLoading
                           ? const SizedBox.square(
                               dimension: 18,
@@ -208,12 +281,28 @@ class _TicketLookupScreenState extends State<TicketLookupScreen> {
           ),
           const SizedBox(height: 16),
           if (_ticket != null)
-            _TicketSummary(ticket: _ticket!, recentTicket: _recentTicket)
+            _TicketSummary(
+              ticket: _ticket!,
+              recentTicket: _recentTicket,
+              actionLoading: _isActionLoading,
+              onCancel: _canCancel(_ticket!) ? _cancelTicket : null,
+              onConfirmTreatment: _canConfirmTreatment(_ticket!)
+                  ? _confirmTreatment
+                  : null,
+            )
           else if (_recentTicket != null)
             _RecentTicketPreview(ticket: _recentTicket!),
         ],
       ),
     );
+  }
+
+  bool _canCancel(PublicTicket ticket) {
+    return ticket.status == 'CREATED' || ticket.status == 'RECEIVED';
+  }
+
+  bool _canConfirmTreatment(PublicTicket ticket) {
+    return ticket.status == 'TREATED';
   }
 
   String? _requiredValidator(String? value) {
@@ -225,10 +314,19 @@ class _TicketLookupScreenState extends State<TicketLookupScreen> {
 }
 
 class _TicketSummary extends StatelessWidget {
-  const _TicketSummary({required this.ticket, required this.recentTicket});
+  const _TicketSummary({
+    required this.ticket,
+    required this.recentTicket,
+    required this.actionLoading,
+    required this.onCancel,
+    required this.onConfirmTreatment,
+  });
 
   final PublicTicket ticket;
   final RecentTicketEntry? recentTicket;
+  final bool actionLoading;
+  final VoidCallback? onCancel;
+  final VoidCallback? onConfirmTreatment;
 
   @override
   Widget build(BuildContext context) {
@@ -236,66 +334,482 @@ class _TicketSummary extends StatelessWidget {
       for (final item in recentTicket?.items ?? const <RecentTicketItemEntry>[])
         item.itemId: item.name,
     };
+    final createdAtLabel = _dateLabel(ticket.createdAt);
+    final updatedAtLabel = ticket.updatedAt == null
+        ? null
+        : _dateLabel(ticket.updatedAt!);
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    ticket.ticketNumber,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: FlowMovaColors.primaryAqua.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(FlowMovaRadii.large),
+                border: Border.all(
+                  color: FlowMovaColors.primaryAqua.withValues(alpha: 0.2),
                 ),
-                _StatusBadge(status: ticket.status),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: FlowMovaColors.white,
+                        borderRadius: BorderRadius.circular(
+                          FlowMovaRadii.medium,
+                        ),
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Icon(Icons.receipt_long_outlined),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            ticket.ticketNumber,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: FlowMovaColors.logoInk,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Cree le $createdAtLabel',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: FlowMovaColors.slate),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _StatusBadge(status: ticket.status),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _TicketProgress(status: ticket.status),
+            const SizedBox(height: 16),
+            Wrap(
+              runSpacing: 10,
+              spacing: 10,
+              children: [
+                _TicketInfoPill(
+                  icon: Icons.room_service_outlined,
+                  label: 'Service',
+                  value: recentTicket?.serviceUnitName ?? ticket.serviceUnitId,
+                ),
+                _TicketInfoPill(
+                  icon: Icons.place_outlined,
+                  label: 'Emplacement',
+                  value: recentTicket?.locationName ?? ticket.locationId,
+                ),
+                if (ticket.guestName != null)
+                  _TicketInfoPill(
+                    icon: Icons.person_outline,
+                    label: 'Client',
+                    value: ticket.guestName!,
+                  ),
+                _TicketInfoPill(
+                  icon: Icons.payments_outlined,
+                  label: 'Total',
+                  value: ticket.totalLabel,
+                ),
+                if (updatedAtLabel != null)
+                  _TicketInfoPill(
+                    icon: Icons.update_outlined,
+                    label: 'Mis a jour',
+                    value: updatedAtLabel,
+                  ),
               ],
             ),
-            const SizedBox(height: 12),
-            _TicketInfoRow(
-              label: 'Service',
-              value: recentTicket?.serviceUnitName ?? ticket.serviceUnitId,
-            ),
-            _TicketInfoRow(
-              label: 'Emplacement',
-              value: recentTicket?.locationName ?? ticket.locationId,
-            ),
-            if (ticket.guestName != null)
-              _TicketInfoRow(label: 'Client', value: ticket.guestName!),
-            _TicketInfoRow(label: 'Total', value: ticket.totalLabel),
-            const SizedBox(height: 12),
-            Text(
-              'Articles commandes',
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            if (ticket.notes != null && ticket.notes!.trim().isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _TicketNote(note: ticket.notes!),
+            ],
+            const SizedBox(height: 18),
+            _SectionTitle(
+              icon: Icons.shopping_bag_outlined,
+              label: 'Articles commandes',
             ),
             const SizedBox(height: 8),
             if (ticket.lines.isEmpty)
-              const Text('Aucun article associe a ce ticket.')
+              const _EmptyLineItems()
             else
               for (final line in ticket.lines)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Text(
-                    '${itemNamesById[line.itemId] ?? line.itemId} x${line.quantity}',
-                  ),
+                _TicketLineTile(
+                  line: line,
+                  name: itemNamesById[line.itemId] ?? line.itemId,
                 ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
+            _TicketActions(
+              actionLoading: actionLoading,
+              onCancel: onCancel,
+              onConfirmTreatment: onConfirmTreatment,
+            ),
+            const SizedBox(height: 12),
             const _LookupMessage(
               icon: Icons.verified_user_outlined,
               text:
-                  'Statut rafraichi depuis le backend. Le code reste necessaire pour les prochaines actions sur ce ticket.',
+                  'Statut rafraichi depuis le backend. Gardez le code d acces pour les prochaines actions.',
               color: FlowMovaColors.primaryAqua,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  static String _dateLabel(DateTime date) {
+    final local = date.toLocal();
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '$day/$month/${local.year} $hour:$minute';
+  }
+}
+
+class _TicketProgress extends StatelessWidget {
+  const _TicketProgress({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    const steps = ['CREATED', 'RECEIVED', 'TREATED', 'CUSTOMER_CONFIRMED'];
+    final activeIndex = steps.indexOf(status);
+    final isCancelled = status == 'CANCELLED';
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.cloud,
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: isCancelled
+            ? const Row(
+                children: [
+                  Icon(Icons.cancel_outlined, color: FlowMovaColors.error),
+                  SizedBox(width: 8),
+                  Expanded(child: Text('Ce ticket a ete annule.')),
+                ],
+              )
+            : Row(
+                children: [
+                  for (var index = 0; index < steps.length; index++) ...[
+                    Expanded(
+                      child: _ProgressStep(
+                        label: _statusLabel(steps[index]),
+                        active: activeIndex >= index,
+                      ),
+                    ),
+                    if (index != steps.length - 1)
+                      Container(
+                        width: 16,
+                        height: 2,
+                        color: activeIndex > index
+                            ? FlowMovaColors.primaryAqua
+                            : FlowMovaColors.border,
+                      ),
+                  ],
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _ProgressStep extends StatelessWidget {
+  const _ProgressStep({required this.label, required this.active});
+
+  final String label;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          active ? Icons.check_circle : Icons.radio_button_unchecked,
+          size: 18,
+          color: active ? FlowMovaColors.primaryAqua : FlowMovaColors.slate,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: active ? FlowMovaColors.logoInk : FlowMovaColors.slate,
+            fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TicketInfoPill extends StatelessWidget {
+  const _TicketInfoPill({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 180, maxWidth: 300),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: FlowMovaColors.cloud,
+          borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, size: 20, color: FlowMovaColors.slate),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: FlowMovaColors.slate,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      value,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: FlowMovaColors.logoInk,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: FlowMovaColors.logoInk),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+        ),
+      ],
+    );
+  }
+}
+
+class _TicketNote extends StatelessWidget {
+  const _TicketNote({required this.note});
+
+  final String note;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.softApricot.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.notes_outlined, color: FlowMovaColors.logoInk),
+            const SizedBox(width: 8),
+            Expanded(child: Text(note)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyLineItems extends StatelessWidget {
+  const _EmptyLineItems();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.cloud,
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.all(12),
+        child: Text('Aucun article associe a ce ticket.'),
+      ),
+    );
+  }
+}
+
+class _TicketLineTile extends StatelessWidget {
+  const _TicketLineTile({required this.line, required this.name});
+
+  final PublicTicketLine line;
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(color: FlowMovaColors.border),
+          borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: FlowMovaColors.primaryAqua.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  child: Text(
+                    'x${line.quantity}',
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: FlowMovaColors.logoInk,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (line.notes != null && line.notes!.trim().isNotEmpty)
+                      Text(
+                        line.notes!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: FlowMovaColors.slate,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Text(
+                line.lineTotalAmount.toStringAsFixed(2),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TicketActions extends StatelessWidget {
+  const _TicketActions({
+    required this.actionLoading,
+    required this.onCancel,
+    required this.onConfirmTreatment,
+  });
+
+  final bool actionLoading;
+  final VoidCallback? onCancel;
+  final VoidCallback? onConfirmTreatment;
+
+  @override
+  Widget build(BuildContext context) {
+    if (onCancel == null && onConfirmTreatment == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SectionTitle(icon: Icons.touch_app_outlined, label: 'Actions'),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            if (onCancel != null)
+              OutlinedButton.icon(
+                onPressed: actionLoading ? null : onCancel,
+                icon: actionLoading
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.cancel_outlined),
+                label: const Text('Annuler le ticket'),
+              ),
+            if (onConfirmTreatment != null)
+              FilledButton.icon(
+                onPressed: actionLoading ? null : onConfirmTreatment,
+                icon: actionLoading
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.verified_outlined),
+                label: const Text('Confirmer le traitement'),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -333,42 +847,6 @@ class _RecentTicketPreview extends StatelessWidget {
   }
 }
 
-class _TicketInfoRow extends StatelessWidget {
-  const _TicketInfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(
-              label,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: FlowMovaColors.slate),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _StatusBadge extends StatelessWidget {
   const _StatusBadge({required this.status});
 
@@ -384,7 +862,7 @@ class _StatusBadge extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         child: Text(
-          status,
+          _statusLabel(status),
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
             color: Theme.of(context).colorScheme.primary,
             fontWeight: FontWeight.w800,
@@ -393,6 +871,18 @@ class _StatusBadge extends StatelessWidget {
       ),
     );
   }
+}
+
+String _statusLabel(String status) {
+  return switch (status) {
+    'CREATED' => 'Cree',
+    'RECEIVED' => 'Recu',
+    'TREATED' => 'Traite',
+    'CUSTOMER_CONFIRMED' => 'Confirme',
+    'CLOSED' => 'Ferme',
+    'CANCELLED' => 'Annule',
+    _ => status,
+  };
 }
 
 class _LookupMessage extends StatelessWidget {

@@ -5,6 +5,16 @@ abstract interface class TicketLookupGateway {
     required String ticketNumber,
     required String accessCode,
   });
+
+  Future<PublicTicket> cancelGuestTicket({
+    required String ticketNumber,
+    required String accessCode,
+  });
+
+  Future<PublicTicket> confirmGuestTicketTreatment({
+    required String ticketNumber,
+    required String accessCode,
+  });
 }
 
 class BackendTicketLookupGateway implements TicketLookupGateway {
@@ -17,14 +27,76 @@ class BackendTicketLookupGateway implements TicketLookupGateway {
     required String ticketNumber,
     required String accessCode,
   }) async {
-    final response = await _apiClient.post(
+    final response = await _postGuestAccess(
       '/api/tickets/guest-access',
-      body: {
-        'ticketNumber': ticketNumber.trim(),
-        'accessCode': accessCode.trim(),
-      },
+      ticketNumber: ticketNumber,
+      accessCode: accessCode,
     );
 
+    return _parsePublicTicket(response);
+  }
+
+  @override
+  Future<PublicTicket> cancelGuestTicket({
+    required String ticketNumber,
+    required String accessCode,
+  }) async {
+    final response = await _patchGuestAccess(
+      '/api/tickets/guest-access/cancel',
+      ticketNumber: ticketNumber,
+      accessCode: accessCode,
+    );
+
+    return _parsePublicTicket(response);
+  }
+
+  @override
+  Future<PublicTicket> confirmGuestTicketTreatment({
+    required String ticketNumber,
+    required String accessCode,
+  }) async {
+    final response = await _patchGuestAccess(
+      '/api/tickets/guest-access/confirm-treatment',
+      ticketNumber: ticketNumber,
+      accessCode: accessCode,
+    );
+
+    return _parsePublicTicket(response);
+  }
+
+  Future<Object?> _postGuestAccess(
+    String path, {
+    required String ticketNumber,
+    required String accessCode,
+  }) {
+    return _apiClient.post(
+      path,
+      body: _guestAccessBody(ticketNumber, accessCode),
+    );
+  }
+
+  Future<Object?> _patchGuestAccess(
+    String path, {
+    required String ticketNumber,
+    required String accessCode,
+  }) {
+    return _apiClient.patch(
+      path,
+      body: _guestAccessBody(ticketNumber, accessCode),
+    );
+  }
+
+  Map<String, dynamic> _guestAccessBody(
+    String ticketNumber,
+    String accessCode,
+  ) {
+    return {
+      'ticketNumber': ticketNumber.trim(),
+      'accessCode': accessCode.trim(),
+    };
+  }
+
+  PublicTicket _parsePublicTicket(Object? response) {
     if (response is! Map<String, dynamic>) {
       throw const FormatException('Invalid ticket lookup response payload.');
     }

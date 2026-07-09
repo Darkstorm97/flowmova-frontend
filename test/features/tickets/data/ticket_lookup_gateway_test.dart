@@ -68,4 +68,86 @@ void main() {
     expect(ticket.totalLabel, '12.50 CAD');
     expect(ticket.lines.single.itemId, 'item-1');
   });
+
+  test('cancelGuestTicket patches guest cancel endpoint', () async {
+    late Uri capturedUrl;
+    late Map<String, dynamic> capturedBody;
+
+    final gateway = BackendTicketLookupGateway(
+      ApiClient(
+        environment: environment,
+        httpClient: MockClient.streaming((request, bodyStream) async {
+          capturedUrl = request.url;
+          capturedBody =
+              jsonDecode(await utf8.decodeStream(bodyStream))
+                  as Map<String, dynamic>;
+
+          return _ticketResponse(status: 'CANCELLED');
+        }),
+      ),
+    );
+
+    final ticket = await gateway.cancelGuestTicket(
+      ticketNumber: ' FM-0001 ',
+      accessCode: ' ABC123 ',
+    );
+
+    expect(capturedUrl.path, '/api/tickets/guest-access/cancel');
+    expect(capturedBody, {'ticketNumber': 'FM-0001', 'accessCode': 'ABC123'});
+    expect(ticket.status, 'CANCELLED');
+  });
+
+  test(
+    'confirmGuestTicketTreatment patches guest confirmation endpoint',
+    () async {
+      late Uri capturedUrl;
+      late Map<String, dynamic> capturedBody;
+
+      final gateway = BackendTicketLookupGateway(
+        ApiClient(
+          environment: environment,
+          httpClient: MockClient.streaming((request, bodyStream) async {
+            capturedUrl = request.url;
+            capturedBody =
+                jsonDecode(await utf8.decodeStream(bodyStream))
+                    as Map<String, dynamic>;
+
+            return _ticketResponse(status: 'CUSTOMER_CONFIRMED');
+          }),
+        ),
+      );
+
+      final ticket = await gateway.confirmGuestTicketTreatment(
+        ticketNumber: ' FM-0001 ',
+        accessCode: ' ABC123 ',
+      );
+
+      expect(capturedUrl.path, '/api/tickets/guest-access/confirm-treatment');
+      expect(capturedBody, {'ticketNumber': 'FM-0001', 'accessCode': 'ABC123'});
+      expect(ticket.status, 'CUSTOMER_CONFIRMED');
+    },
+  );
+}
+
+http.StreamedResponse _ticketResponse({required String status}) {
+  return http.StreamedResponse(
+    Stream.value(
+      utf8.encode(
+        jsonEncode({
+          'ticketNumber': 'FM-0001',
+          'guestName': 'Marc',
+          'customerPhone': '+15145550000',
+          'serviceUnitId': 'service-1',
+          'locationId': 'location-1',
+          'status': status,
+          'currency': 'CAD',
+          'totalAmount': 12.5,
+          'lines': const [],
+          'createdAt': '2026-07-07T12:00:00Z',
+          'updatedAt': '2026-07-07T12:05:00Z',
+        }),
+      ),
+    ),
+    200,
+  );
 }
