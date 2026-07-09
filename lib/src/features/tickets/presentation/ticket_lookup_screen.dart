@@ -420,34 +420,21 @@ class _TicketSummary extends StatelessWidget {
             const SizedBox(height: 16),
             _TicketProgress(status: ticket.status),
             const SizedBox(height: 16),
-            Wrap(
-              runSpacing: 10,
-              spacing: 10,
-              children: [
-                _TicketInfoPill(
-                  icon: Icons.room_service_outlined,
-                  label: 'Service',
-                  value: serviceName ?? ticket.serviceUnitId,
-                ),
-                if (showLocation)
-                  _TicketInfoPill(
-                    icon: Icons.place_outlined,
-                    label: 'Emplacement',
-                    value: locationName ?? ticket.locationId,
-                  ),
+            _TicketInfoGrid(
+              items: [
                 if (ticket.guestName != null)
-                  _TicketInfoPill(
+                  _TicketInfoItem(
                     icon: Icons.person_outline,
                     label: 'Client',
                     value: ticket.guestName!,
                   ),
-                _TicketInfoPill(
+                _TicketInfoItem(
                   icon: Icons.payments_outlined,
                   label: 'Total',
                   value: ticket.totalLabel,
                 ),
                 if (updatedAtLabel != null)
-                  _TicketInfoPill(
+                  _TicketInfoItem(
                     icon: Icons.update_outlined,
                     label: 'Mis a jour',
                     value: updatedAtLabel,
@@ -606,8 +593,38 @@ class _ProgressStep extends StatelessWidget {
   }
 }
 
-class _TicketInfoPill extends StatelessWidget {
-  const _TicketInfoPill({
+class _TicketInfoGrid extends StatelessWidget {
+  const _TicketInfoGrid({required this.items});
+
+  final List<_TicketInfoItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useColumns = constraints.maxWidth >= 520;
+        final itemWidth = useColumns
+            ? (constraints.maxWidth - 10) / 2
+            : constraints.maxWidth;
+
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final item in items) SizedBox(width: itemWidth, child: item),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _TicketInfoItem extends StatelessWidget {
+  const _TicketInfoItem({
     required this.icon,
     required this.label,
     required this.value,
@@ -619,44 +636,40 @@ class _TicketInfoPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 180, maxWidth: 300),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: FlowMovaColors.cloud,
-          borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, size: 20, color: FlowMovaColors.slate),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: FlowMovaColors.slate,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      value,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: FlowMovaColors.logoInk,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.cloud,
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 18, color: FlowMovaColors.slate),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 76,
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: FlowMovaColors.slate,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                value,
+                softWrap: true,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: FlowMovaColors.logoInk,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

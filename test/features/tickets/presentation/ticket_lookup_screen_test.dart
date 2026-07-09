@@ -71,7 +71,8 @@ void main() {
     expect(gateway.accessCode, 'ABC123');
     expect(find.text('Recu'), findsAtLeastNWidgets(1));
     expect(find.text('Cafe Flow - Comptoir principal'), findsOneWidget);
-    expect(find.text('Comptoir principal'), findsOneWidget);
+    expect(find.text('Client'), findsOneWidget);
+    expect(find.text('Total'), findsOneWidget);
     expect(find.text('Accueil'), findsNothing);
     expect(find.text('Latte glace'), findsOneWidget);
     expect(find.text('x2'), findsOneWidget);
