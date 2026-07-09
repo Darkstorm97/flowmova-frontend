@@ -170,17 +170,75 @@ class _TicketLookupScreenState extends State<TicketLookupScreen> {
   }
 
   Future<void> _cancelTicket() {
-    return _runTicketAction(
-      _lookupGateway.cancelGuestTicket,
+    return _confirmThenRun(
+      title: 'Annuler ce ticket ?',
+      message:
+          'Le ticket ${_ticketNumberController.text.trim()} sera annule definitivement. Cette action est irreversible.',
+      confirmLabel: 'Annuler definitivement',
+      destructive: true,
+      action: _lookupGateway.cancelGuestTicket,
       successMessage: 'Le ticket a ete annule.',
     );
   }
 
   Future<void> _confirmTreatment() {
-    return _runTicketAction(
-      _lookupGateway.confirmGuestTicketTreatment,
+    return _confirmThenRun(
+      title: 'Confirmer le traitement ?',
+      message:
+          'Confirmez que le service du ticket ${_ticketNumberController.text.trim()} a bien ete traite.',
+      confirmLabel: 'Confirmer',
+      action: _lookupGateway.confirmGuestTicketTreatment,
       successMessage: 'Le traitement du ticket a ete confirme.',
     );
+  }
+
+  Future<void> _confirmThenRun({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required Future<PublicTicket> Function({
+      required String ticketNumber,
+      required String accessCode,
+    })
+    action,
+    required String successMessage,
+    bool destructive = false,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Retour'),
+          ),
+          if (destructive)
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: FlowMovaColors.error,
+                foregroundColor: FlowMovaColors.white,
+              ),
+              onPressed: () => Navigator.pop(context, true),
+              icon: const Icon(Icons.cancel_outlined),
+              label: Text(confirmLabel),
+            )
+          else
+            FilledButton.icon(
+              onPressed: () => Navigator.pop(context, true),
+              icon: const Icon(Icons.verified_outlined),
+              label: Text(confirmLabel),
+            ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    return _runTicketAction(action, successMessage: successMessage);
   }
 
   String _lookupErrorMessage(Object error) {
@@ -845,6 +903,13 @@ class _TicketActions extends StatelessWidget {
           children: [
             if (onCancel != null)
               OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: FlowMovaColors.error,
+                  side: BorderSide(
+                    color: FlowMovaColors.error.withValues(alpha: 0.45),
+                  ),
+                  backgroundColor: FlowMovaColors.error.withValues(alpha: 0.06),
+                ),
                 onPressed: actionLoading ? null : onCancel,
                 icon: actionLoading
                     ? const SizedBox.square(
@@ -852,7 +917,7 @@ class _TicketActions extends StatelessWidget {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.cancel_outlined),
-                label: const Text('Annuler le ticket'),
+                label: const Text('Annuler'),
               ),
             if (onConfirmTreatment != null)
               FilledButton.icon(

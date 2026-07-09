@@ -127,6 +127,11 @@ void main() {
     await tester.tap(find.text('Confirmer le traitement'));
     await tester.pumpAndSettle();
 
+    expect(gateway.confirmed, isFalse);
+    expect(find.text('Confirmer le traitement ?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Confirmer'));
+    await tester.pumpAndSettle();
+
     expect(gateway.confirmed, isTrue);
     expect(find.text('Confirme'), findsAtLeastNWidgets(1));
     expect(
@@ -136,6 +141,67 @@ void main() {
 
     final refreshedTickets = await storage.load();
     expect(refreshedTickets.single.status, 'CUSTOMER_CONFIRMED');
+  });
+
+  testWidgets('guest ticket cancellation requires confirmation', (
+    tester,
+  ) async {
+    final recentTicket = RecentTicketEntry(
+      id: 'ticket-1',
+      ticketNumber: 'FM-0003',
+      accessCode: 'GHI789',
+      serviceUnitId: 'service-1',
+      locationId: 'location-1',
+      companyId: 'company-1',
+      status: 'RECEIVED',
+      createdAt: DateTime.utc(2026, 7, 7),
+      companyName: 'Cafe Flow',
+      serviceUnitName: 'Comptoir principal',
+      locationName: 'Table 4',
+      totalLabel: '6.25 CAD',
+    );
+    final storage = InMemoryRecentTicketStorage([recentTicket]);
+    final gateway = _ReceivedTicketLookupGateway();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: TicketLookupScreen(
+            arguments: TicketLookupArguments(recentTicket: recentTicket),
+            lookupGateway: gateway,
+            recentTicketStorage: storage,
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Annuler'));
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
+
+    expect(gateway.cancelled, isFalse);
+    expect(find.text('Annuler ce ticket ?'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Retour'));
+    await tester.pumpAndSettle();
+    expect(gateway.cancelled, isFalse);
+
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Annuler definitivement'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(gateway.cancelled, isTrue);
+    expect(find.text('Annule'), findsAtLeastNWidgets(1));
+    expect(find.text('Le ticket a ete annule.'), findsOneWidget);
+
+    final refreshedTickets = await storage.load();
+    expect(refreshedTickets.single.status, 'CANCELLED');
   });
 }
 
@@ -204,6 +270,50 @@ class _ActionTicketLookupGateway implements TicketLookupGateway {
   PublicTicket _ticket({required String status}) {
     return PublicTicket(
       ticketNumber: 'FM-0002',
+      guestName: 'Marc',
+      serviceUnitId: 'service-1',
+      locationId: 'location-1',
+      status: status,
+      currency: 'CAD',
+      totalAmount: 6.25,
+      lines: const [],
+      createdAt: DateTime.utc(2026, 7, 7),
+      updatedAt: DateTime.utc(2026, 7, 7, 12, 5),
+    );
+  }
+}
+
+class _ReceivedTicketLookupGateway implements TicketLookupGateway {
+  bool cancelled = false;
+
+  @override
+  Future<PublicTicket> getGuestTicket({
+    required String ticketNumber,
+    required String accessCode,
+  }) async {
+    return _ticket(status: 'RECEIVED');
+  }
+
+  @override
+  Future<PublicTicket> cancelGuestTicket({
+    required String ticketNumber,
+    required String accessCode,
+  }) async {
+    cancelled = true;
+    return _ticket(status: 'CANCELLED');
+  }
+
+  @override
+  Future<PublicTicket> confirmGuestTicketTreatment({
+    required String ticketNumber,
+    required String accessCode,
+  }) async {
+    return _ticket(status: 'CUSTOMER_CONFIRMED');
+  }
+
+  PublicTicket _ticket({required String status}) {
+    return PublicTicket(
+      ticketNumber: 'FM-0003',
       guestName: 'Marc',
       serviceUnitId: 'service-1',
       locationId: 'location-1',
