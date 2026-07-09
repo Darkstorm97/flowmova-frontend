@@ -338,6 +338,15 @@ class _TicketSummary extends StatelessWidget {
     final updatedAtLabel = ticket.updatedAt == null
         ? null
         : _dateLabel(ticket.updatedAt!);
+    final companyName = recentTicket?.companyName;
+    final serviceName = recentTicket?.serviceUnitName;
+    final locationName = recentTicket?.locationName;
+    final showLocation = !_isDefaultLocationName(locationName);
+    final contextLabel = _ticketContextLabel(
+      companyName: companyName,
+      serviceName: serviceName,
+      locationName: showLocation ? locationName : null,
+    );
 
     return Card(
       margin: EdgeInsets.zero,
@@ -383,6 +392,17 @@ class _TicketSummary extends StatelessWidget {
                                   fontWeight: FontWeight.w800,
                                 ),
                           ),
+                          if (contextLabel != null) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              contextLabel,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: FlowMovaColors.slate,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                          ],
                           const SizedBox(height: 4),
                           Text(
                             'Cree le $createdAtLabel',
@@ -407,13 +427,14 @@ class _TicketSummary extends StatelessWidget {
                 _TicketInfoPill(
                   icon: Icons.room_service_outlined,
                   label: 'Service',
-                  value: recentTicket?.serviceUnitName ?? ticket.serviceUnitId,
+                  value: serviceName ?? ticket.serviceUnitId,
                 ),
-                _TicketInfoPill(
-                  icon: Icons.place_outlined,
-                  label: 'Emplacement',
-                  value: recentTicket?.locationName ?? ticket.locationId,
-                ),
+                if (showLocation)
+                  _TicketInfoPill(
+                    icon: Icons.place_outlined,
+                    label: 'Emplacement',
+                    value: locationName ?? ticket.locationId,
+                  ),
                 if (ticket.guestName != null)
                   _TicketInfoPill(
                     icon: Icons.person_outline,
@@ -477,6 +498,30 @@ class _TicketSummary extends StatelessWidget {
     final hour = local.hour.toString().padLeft(2, '0');
     final minute = local.minute.toString().padLeft(2, '0');
     return '$day/$month/${local.year} $hour:$minute';
+  }
+
+  static String? _ticketContextLabel({
+    required String? companyName,
+    required String? serviceName,
+    required String? locationName,
+  }) {
+    final parts = [companyName, serviceName, locationName]
+        .where((part) => part != null && part.trim().isNotEmpty)
+        .cast<String>()
+        .toList(growable: false);
+    return parts.isEmpty ? null : parts.join(' - ');
+  }
+
+  static bool _isDefaultLocationName(String? locationName) {
+    final normalized = locationName?.trim().toLowerCase();
+    if (normalized == null || normalized.isEmpty) {
+      return true;
+    }
+    return normalized == 'accueil' ||
+        normalized == 'principal' ||
+        normalized == 'default' ||
+        normalized == 'emplacement par defaut' ||
+        normalized == 'emplacement par défaut';
   }
 }
 

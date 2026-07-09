@@ -70,8 +70,9 @@ void main() {
     expect(gateway.ticketNumber, 'FM-0001');
     expect(gateway.accessCode, 'ABC123');
     expect(find.text('Recu'), findsAtLeastNWidgets(1));
+    expect(find.text('Cafe Flow - Comptoir principal'), findsOneWidget);
     expect(find.text('Comptoir principal'), findsOneWidget);
-    expect(find.text('Accueil'), findsOneWidget);
+    expect(find.text('Accueil'), findsNothing);
     expect(find.text('Latte glace'), findsOneWidget);
     expect(find.text('x2'), findsOneWidget);
     expect(find.text('12.50 CAD'), findsOneWidget);
@@ -95,7 +96,7 @@ void main() {
       createdAt: DateTime.utc(2026, 7, 7),
       companyName: 'Cafe Flow',
       serviceUnitName: 'Comptoir principal',
-      locationName: 'Accueil',
+      locationName: 'Table 4',
       totalLabel: '6.25 CAD',
     );
     final storage = InMemoryRecentTicketStorage([recentTicket]);
@@ -117,6 +118,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Traite'), findsAtLeastNWidgets(1));
+    expect(
+      find.text('Cafe Flow - Comptoir principal - Table 4'),
+      findsOneWidget,
+    );
     await tester.ensureVisible(find.text('Confirmer le traitement'));
     await tester.tap(find.text('Confirmer le traitement'));
     await tester.pumpAndSettle();
