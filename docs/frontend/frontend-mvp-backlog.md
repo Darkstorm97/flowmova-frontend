@@ -851,17 +851,39 @@ Definition of Done:
 
 Issue GitHub: #24.
 
-Permettre la creation et la consultation des categories.
+Permettre la creation, consultation, modification et archivage des categories.
 
 Inclure:
 
 - liste categories;
 - creation categorie;
+- modification categorie;
+- archivage categorie;
 - etats chargement/vide/erreur.
 
 Definition of Done:
 
 - un admin peut organiser son catalogue par categories.
+
+### CATALOG-FRONT-002 - Modifier categories et uploader image catalogue
+
+Issue GitHub: #61.
+
+Enrichir l'ecran Catalogue pour gerer les categories et les images locales des elements catalogue.
+
+Inclure:
+
+- actions modifier/archiver sur la categorie selectionnee;
+- photo picker local pour les elements catalogue;
+- upload multipart vers `POST /api/companies/{companyId}/catalogs/{catalogId}/image`;
+- preview/fallback image dans les cartes catalogue;
+- conservation de l'image existante quand aucune nouvelle image n'est selectionnee.
+
+Definition of Done:
+
+- une categorie peut etre modifiee et archivee depuis l'app;
+- un element catalogue peut recevoir ou remplacer une image locale;
+- l'ecran se rafraichit apres sauvegarde.
 
 ### CATALOG-FRONT-001 - Gerer les catalogues
 

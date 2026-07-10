@@ -68,6 +68,51 @@ void main() {
     expect(category.id, 'category-1');
   });
 
+  test('updateCategory and archiveCategory call category endpoints', () async {
+    final capturedUrls = <Uri>[];
+    final capturedBodies = <Map<String, dynamic>>[];
+
+    final gateway = BackendAdminCatalogGateway(
+      ApiClient(
+        environment: environment,
+        httpClient: MockClient.streaming((request, bodyStream) async {
+          capturedUrls.add(request.url);
+          if (request.method == 'PUT') {
+            capturedBodies.add(
+              jsonDecode(await utf8.decodeStream(bodyStream))
+                  as Map<String, dynamic>,
+            );
+          }
+          return _jsonResponse(
+            _categoryJson(
+              status: request.method == 'DELETE' ? 'ARCHIVED' : 'ACTIVE',
+            ),
+          );
+        }),
+      ),
+    );
+
+    final updated = await gateway.updateCategory(
+      'company-1',
+      'category-1',
+      const CatalogCategoryInput(name: 'Cafe', displayOrder: 3),
+    );
+    final archived = await gateway.archiveCategory('company-1', 'category-1');
+
+    expect(
+      capturedUrls[0].path,
+      '/api/companies/company-1/catalog-categories/category-1',
+    );
+    expect(capturedBodies[0]['name'], 'Cafe');
+    expect(capturedBodies[0]['displayOrder'], 3);
+    expect(updated.status, 'ACTIVE');
+    expect(
+      capturedUrls[1].path,
+      '/api/companies/company-1/catalog-categories/category-1',
+    );
+    expect(archived.status, 'ARCHIVED');
+  });
+
   test('create update and archive catalog call catalog endpoints', () async {
     final capturedUrls = <Uri>[];
     final capturedBodies = <Map<String, dynamic>>[];
@@ -127,6 +172,43 @@ void main() {
     expect(capturedUrls[2].path, '/api/companies/company-1/catalogs/catalog-1');
     expect(archived.status, 'ARCHIVED');
   });
+
+  test('uploadCatalogImage posts multipart image payload', () async {
+    late Uri capturedUrl;
+    late String capturedBody;
+
+    final gateway = BackendAdminCatalogGateway(
+      ApiClient(
+        environment: environment,
+        httpClient: MockClient.streaming((request, bodyStream) async {
+          capturedUrl = request.url;
+          capturedBody = await utf8.decodeStream(bodyStream);
+          return _jsonResponse(
+            _catalogJson(imageUrl: '/uploads/catalogs/company-1/catalog-1.png'),
+          );
+        }),
+      ),
+    );
+
+    final catalog = await gateway.uploadCatalogImage(
+      'company-1',
+      'catalog-1',
+      const CatalogImageUpload(
+        bytes: [1, 2, 3],
+        filename: 'catalog.png',
+        contentType: 'image/png',
+      ),
+    );
+
+    expect(
+      capturedUrl.path,
+      '/api/companies/company-1/catalogs/catalog-1/image',
+    );
+    expect(capturedBody, contains('name="image"'));
+    expect(capturedBody, contains('filename="catalog.png"'));
+    expect(capturedBody.toLowerCase(), contains('content-type: image/png'));
+    expect(catalog.imageUrl, '/uploads/catalogs/company-1/catalog-1.png');
+  });
 }
 
 http.StreamedResponse _jsonResponse(Object payload, {int statusCode = 200}) {
@@ -136,25 +218,28 @@ http.StreamedResponse _jsonResponse(Object payload, {int statusCode = 200}) {
   );
 }
 
-Map<String, Object?> _categoryJson() {
+Map<String, Object?> _categoryJson({String status = 'ACTIVE'}) {
   return {
     'id': 'category-1',
     'companyId': 'company-1',
     'name': 'Boissons',
     'description': 'Categorie chaude',
     'displayOrder': 1,
-    'status': 'ACTIVE',
+    'status': status,
   };
 }
 
-Map<String, Object?> _catalogJson({String status = 'ACTIVE'}) {
+Map<String, Object?> _catalogJson({
+  String status = 'ACTIVE',
+  String? imageUrl,
+}) {
   return {
     'id': 'catalog-1',
     'companyId': 'company-1',
     'catalogCategoryId': 'category-1',
     'name': 'Cafe filtre',
     'description': 'Cafe chaud',
-    'imageUrl': null,
+    'imageUrl': imageUrl,
     'priceAmount': 4.5,
     'status': status,
   };

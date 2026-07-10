@@ -1,11 +1,15 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
+import '../../../core/config/app_environment.dart';
 import '../../../core/session/session_scope.dart';
 import '../../../core/theme/flow_mova_colors.dart';
 import '../../client/data/company_detail_gateway.dart';
 import '../data/admin_catalog_gateway.dart';
+import 'company_image_picker.dart';
 
 class BusinessCatalogScreen extends StatefulWidget {
   const BusinessCatalogScreen({
@@ -90,6 +94,15 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
                 selectedCategoryId: _categoryId,
                 onSelected: (value) => setState(() => _categoryId = value),
               ),
+              if (_selectedCategory(bundle.categories)
+                  case final category?) ...[
+                const SizedBox(height: 10),
+                _SelectedCategoryActions(
+                  category: category,
+                  onEdit: () => _openCategoryForm(category: category),
+                  onArchive: () => _archiveCategory(category),
+                ),
+              ],
               const SizedBox(height: 12),
               TextField(
                 onChanged: (value) => setState(() => _query = value),
@@ -148,37 +161,119 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
         .toList(growable: false);
   }
 
-  Future<void> _openCategoryForm() async {
+  CompanyCatalogCategory? _selectedCategory(
+    List<CompanyCatalogCategory> categories,
+  ) {
+    final selectedId = _categoryId;
+    if (selectedId == null) {
+      return null;
+    }
+    for (final category in categories) {
+      if (category.id == selectedId) {
+        return category;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _openCategoryForm({CompanyCatalogCategory? category}) async {
     final input = await showModalBottomSheet<CatalogCategoryInput>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => const _CategoryFormSheet(),
+      builder: (context) => _CategoryFormSheet(category: category),
     );
     if (input == null) {
       return;
     }
-    await _runMutation(() => _gateway!.createCategory(widget.companyId, input));
+    await _runMutation(() {
+      if (category == null) {
+        return _gateway!.createCategory(widget.companyId, input);
+      }
+      return _gateway!.updateCategory(widget.companyId, category.id, input);
+    });
   }
 
   Future<void> _openCatalogForm({
     required AdminCatalogBundle bundle,
     CompanyCatalogItem? catalog,
   }) async {
-    final input = await showModalBottomSheet<CatalogInput>(
+    final result = await showModalBottomSheet<CatalogFormResult>(
       context: context,
       isScrollControlled: true,
       builder: (context) =>
           _CatalogFormSheet(categories: bundle.categories, catalog: catalog),
     );
-    if (input == null) {
+    if (result == null) {
       return;
     }
     await _runMutation(() {
       if (catalog == null) {
-        return _gateway!.createCatalog(widget.companyId, input);
+        return _createCatalogWithOptionalImage(result);
       }
-      return _gateway!.updateCatalog(widget.companyId, catalog.id, input);
+      return _updateCatalogWithOptionalImage(catalog.id, result);
     });
+  }
+
+  Future<CompanyCatalogItem> _createCatalogWithOptionalImage(
+    CatalogFormResult result,
+  ) async {
+    final created = await _gateway!.createCatalog(
+      widget.companyId,
+      result.input,
+    );
+    final image = result.image;
+    if (image == null) {
+      return created;
+    }
+    return _gateway!.uploadCatalogImage(widget.companyId, created.id, image);
+  }
+
+  Future<CompanyCatalogItem> _updateCatalogWithOptionalImage(
+    String catalogId,
+    CatalogFormResult result,
+  ) async {
+    final updated = await _gateway!.updateCatalog(
+      widget.companyId,
+      catalogId,
+      result.input,
+    );
+    final image = result.image;
+    if (image == null) {
+      return updated;
+    }
+    return _gateway!.uploadCatalogImage(widget.companyId, catalogId, image);
+  }
+
+  Future<void> _archiveCategory(CompanyCatalogCategory category) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Archiver cette categorie ?'),
+        content: Text(category.name),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Archiver'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _runMutation(() async {
+        final archived = await _gateway!.archiveCategory(
+          widget.companyId,
+          category.id,
+        );
+        if (_categoryId == category.id) {
+          _categoryId = null;
+        }
+        return archived;
+      });
+    }
   }
 
   Future<void> _archiveCatalog(CompanyCatalogItem catalog) async {
@@ -327,6 +422,51 @@ class _CategoryRail extends StatelessWidget {
   }
 }
 
+class _SelectedCategoryActions extends StatelessWidget {
+  const _SelectedCategoryActions({
+    required this.category,
+    required this.onEdit,
+    required this.onArchive,
+  });
+
+  final CompanyCatalogCategory category;
+  final VoidCallback onEdit;
+  final VoidCallback onArchive;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: FlowMovaColors.cloud,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              category.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Modifier categorie',
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit_outlined),
+          ),
+          IconButton(
+            tooltip: 'Archiver categorie',
+            onPressed: onArchive,
+            icon: const Icon(Icons.archive_outlined),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _CatalogCard extends StatelessWidget {
   const _CatalogCard({
     required this.catalog,
@@ -352,41 +492,54 @@ class _CatalogCard extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              catalog.name,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            _CatalogImagePreview(
+              imageUrl: catalog.imageUrl,
+              width: 82,
+              height: 82,
             ),
-            const SizedBox(height: 6),
-            Text(
-              [?categoryName, catalog.priceLabel].join(' - '),
-              style: const TextStyle(color: FlowMovaColors.slate),
-            ),
-            if (catalog.description != null &&
-                catalog.description!.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(catalog.description!),
-            ],
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Modifier'),
-                ),
-                TextButton.icon(
-                  onPressed: onArchive,
-                  icon: const Icon(Icons.archive_outlined),
-                  label: const Text('Archiver'),
-                ),
-              ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    catalog.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    [?categoryName, catalog.priceLabel].join(' - '),
+                    style: const TextStyle(color: FlowMovaColors.slate),
+                  ),
+                  if (catalog.description != null &&
+                      catalog.description!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(catalog.description!),
+                  ],
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: onEdit,
+                        icon: const Icon(Icons.edit_outlined),
+                        label: const Text('Modifier'),
+                      ),
+                      TextButton.icon(
+                        onPressed: onArchive,
+                        icon: const Icon(Icons.archive_outlined),
+                        label: const Text('Archiver'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -395,22 +548,128 @@ class _CatalogCard extends StatelessWidget {
   }
 }
 
+class _CatalogImagePreview extends StatelessWidget {
+  const _CatalogImagePreview({
+    this.selectedImage,
+    this.imageUrl,
+    this.width,
+    this.height,
+  });
+
+  final _SelectedCatalogImage? selectedImage;
+  final String? imageUrl;
+  final double? width;
+  final double? height;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = selectedImage;
+    final normalizedImageUrl = _absoluteImageUrl(imageUrl);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: width ?? double.infinity,
+        height: height ?? 140,
+        child: selected != null
+            ? Image.memory(selected.bytes, fit: BoxFit.cover)
+            : normalizedImageUrl == null
+            ? const _CatalogImageFallback()
+            : Image.network(
+                normalizedImageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const _CatalogImageFallback(),
+              ),
+      ),
+    );
+  }
+}
+
+class _CatalogImageFallback extends StatelessWidget {
+  const _CatalogImageFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: FlowMovaColors.cloud,
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.inventory_2_outlined,
+        color: FlowMovaColors.primaryAqua,
+      ),
+    );
+  }
+}
+
+String? _absoluteImageUrl(String? value) {
+  final trimmed = value?.trim();
+  if (trimmed == null || trimmed.isEmpty) {
+    return null;
+  }
+  final uri = Uri.tryParse(trimmed);
+  if (uri == null) {
+    return null;
+  }
+  if (uri.hasScheme) {
+    return trimmed;
+  }
+  return Uri.parse(
+    AppEnvironment.current.apiBaseUrl,
+  ).resolveUri(uri).toString();
+}
+
+class CatalogFormResult {
+  const CatalogFormResult({required this.input, this.image});
+
+  final CatalogInput input;
+  final CatalogImageUpload? image;
+}
+
+class _SelectedCatalogImage {
+  const _SelectedCatalogImage({
+    required this.bytes,
+    required this.filename,
+    required this.contentType,
+  });
+
+  final Uint8List bytes;
+  final String filename;
+  final String contentType;
+
+  CatalogImageUpload toUpload() {
+    return CatalogImageUpload(
+      bytes: bytes,
+      filename: filename,
+      contentType: contentType,
+    );
+  }
+}
+
 class _CategoryFormSheet extends StatefulWidget {
-  const _CategoryFormSheet();
+  const _CategoryFormSheet({this.category});
+
+  final CompanyCatalogCategory? category;
 
   @override
   State<_CategoryFormSheet> createState() => _CategoryFormSheetState();
 }
 
 class _CategoryFormSheetState extends State<_CategoryFormSheet> {
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _displayOrderController = TextEditingController(text: '0');
+  late final _nameController = TextEditingController(
+    text: widget.category?.name ?? '',
+  );
+  late final _descriptionController = TextEditingController(
+    text: widget.category?.description ?? '',
+  );
+  late final _displayOrderController = TextEditingController(
+    text: (widget.category?.displayOrder ?? 0).toString(),
+  );
 
   @override
   Widget build(BuildContext context) {
     return _SheetScaffold(
-      title: 'Nouvelle categorie',
+      title: widget.category == null
+          ? 'Nouvelle categorie'
+          : 'Modifier categorie',
       children: [
         TextField(
           controller: _nameController,
@@ -467,12 +726,10 @@ class _CatalogFormSheetState extends State<_CatalogFormSheet> {
   late final _descriptionController = TextEditingController(
     text: widget.catalog?.description ?? '',
   );
-  late final _imageUrlController = TextEditingController(
-    text: widget.catalog?.imageUrl ?? '',
-  );
   late final _priceController = TextEditingController(
     text: widget.catalog?.priceAmount?.toString() ?? '',
   );
+  _SelectedCatalogImage? _selectedImage;
 
   @override
   Widget build(BuildContext context) {
@@ -481,6 +738,24 @@ class _CatalogFormSheetState extends State<_CatalogFormSheet> {
           ? 'Nouveau catalogue'
           : 'Modifier catalogue',
       children: [
+        _CatalogImagePreview(
+          selectedImage: _selectedImage,
+          imageUrl: widget.catalog?.imageUrl,
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: _pickImage,
+          icon: const Icon(Icons.photo_library_outlined),
+          label: Text(_selectedImage == null ? 'Choisir image' : 'Remplacer'),
+        ),
+        if (_selectedImage != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            _selectedImage!.filename,
+            style: const TextStyle(color: FlowMovaColors.slate),
+          ),
+        ],
+        const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           initialValue: _categoryId,
           decoration: const InputDecoration(labelText: 'Categorie'),
@@ -503,11 +778,6 @@ class _CatalogFormSheetState extends State<_CatalogFormSheet> {
         ),
         const SizedBox(height: 10),
         TextField(
-          controller: _imageUrlController,
-          decoration: const InputDecoration(labelText: 'URL image'),
-        ),
-        const SizedBox(height: 10),
-        TextField(
           controller: _priceController,
           keyboardType: TextInputType.number,
           decoration: const InputDecoration(labelText: 'Prix indicatif'),
@@ -515,22 +785,47 @@ class _CatalogFormSheetState extends State<_CatalogFormSheet> {
       ],
       onSubmit: () => Navigator.pop(
         context,
-        CatalogInput(
-          catalogCategoryId: _categoryId,
-          name: _nameController.text,
-          description: _descriptionController.text,
-          imageUrl: _imageUrlController.text,
-          priceAmount: num.tryParse(_priceController.text.trim()),
+        CatalogFormResult(
+          input: CatalogInput(
+            catalogCategoryId: _categoryId,
+            name: _nameController.text,
+            description: _descriptionController.text,
+            imageUrl: widget.catalog?.imageUrl,
+            priceAmount: num.tryParse(_priceController.text.trim()),
+          ),
+          image: _selectedImage?.toUpload(),
         ),
       ),
     );
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final result = await pickCompanyImage();
+      if (result == null || !mounted) {
+        return;
+      }
+      setState(() {
+        _selectedImage = _SelectedCatalogImage(
+          bytes: result.bytes,
+          filename: result.filename,
+          contentType: result.contentType,
+        );
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de lire cette image.')),
+      );
+    }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
-    _imageUrlController.dispose();
     _priceController.dispose();
     super.dispose();
   }

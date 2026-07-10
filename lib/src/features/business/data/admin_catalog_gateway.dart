@@ -9,6 +9,17 @@ abstract interface class AdminCatalogGateway {
     CatalogCategoryInput input,
   );
 
+  Future<CompanyCatalogCategory> updateCategory(
+    String companyId,
+    String categoryId,
+    CatalogCategoryInput input,
+  );
+
+  Future<CompanyCatalogCategory> archiveCategory(
+    String companyId,
+    String categoryId,
+  );
+
   Future<CompanyCatalogItem> createCatalog(
     String companyId,
     CatalogInput input,
@@ -21,6 +32,12 @@ abstract interface class AdminCatalogGateway {
   );
 
   Future<CompanyCatalogItem> archiveCatalog(String companyId, String catalogId);
+
+  Future<CompanyCatalogItem> uploadCatalogImage(
+    String companyId,
+    String catalogId,
+    CatalogImageUpload image,
+  );
 }
 
 class BackendAdminCatalogGateway implements AdminCatalogGateway {
@@ -70,6 +87,36 @@ class BackendAdminCatalogGateway implements AdminCatalogGateway {
   }
 
   @override
+  Future<CompanyCatalogCategory> updateCategory(
+    String companyId,
+    String categoryId,
+    CatalogCategoryInput input,
+  ) async {
+    final response = await _apiClient.put(
+      '/api/companies/$companyId/catalog-categories/$categoryId',
+      body: input.toJson(),
+    );
+    if (response is! Map<String, dynamic>) {
+      throw const FormatException('Invalid catalog category response.');
+    }
+    return CompanyCatalogCategory.fromJson(response);
+  }
+
+  @override
+  Future<CompanyCatalogCategory> archiveCategory(
+    String companyId,
+    String categoryId,
+  ) async {
+    final response = await _apiClient.delete(
+      '/api/companies/$companyId/catalog-categories/$categoryId',
+    );
+    if (response is! Map<String, dynamic>) {
+      throw const FormatException('Invalid catalog category response.');
+    }
+    return CompanyCatalogCategory.fromJson(response);
+  }
+
+  @override
   Future<CompanyCatalogItem> createCatalog(
     String companyId,
     CatalogInput input,
@@ -105,12 +152,40 @@ class BackendAdminCatalogGateway implements AdminCatalogGateway {
     return _catalogFromResponse(response);
   }
 
+  @override
+  Future<CompanyCatalogItem> uploadCatalogImage(
+    String companyId,
+    String catalogId,
+    CatalogImageUpload image,
+  ) async {
+    final response = await _apiClient.postMultipartBytes(
+      '/api/companies/$companyId/catalogs/$catalogId/image',
+      fieldName: 'image',
+      bytes: image.bytes,
+      filename: image.filename,
+      contentType: image.contentType,
+    );
+    return _catalogFromResponse(response);
+  }
+
   CompanyCatalogItem _catalogFromResponse(Object? response) {
     if (response is! Map<String, dynamic>) {
       throw const FormatException('Invalid catalog response.');
     }
     return CompanyCatalogItem.fromJson(response);
   }
+}
+
+class CatalogImageUpload {
+  const CatalogImageUpload({
+    required this.bytes,
+    required this.filename,
+    required this.contentType,
+  });
+
+  final List<int> bytes;
+  final String filename;
+  final String contentType;
 }
 
 class AdminCatalogBundle {
