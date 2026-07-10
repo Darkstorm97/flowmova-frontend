@@ -119,6 +119,10 @@ class PublicTicket {
     this.customerPhone,
     this.notes,
     this.updatedAt,
+    this.companyName = '',
+    this.serviceUnitName = '',
+    this.locationName = '',
+    this.locationDefault = false,
   });
 
   factory PublicTicket.fromJson(Map<String, dynamic> json) {
@@ -126,10 +130,14 @@ class PublicTicket {
 
     return PublicTicket(
       ticketNumber: json['ticketNumber'] as String,
+      companyName: json['companyName'] as String? ?? '',
       guestName: json['guestName'] as String?,
       customerPhone: json['customerPhone'] as String?,
       serviceUnitId: json['serviceUnitId'] as String,
+      serviceUnitName: json['serviceUnitName'] as String? ?? '',
       locationId: json['locationId'] as String,
+      locationName: json['locationName'] as String? ?? '',
+      locationDefault: json['locationDefault'] as bool? ?? false,
       status: json['status'] as String,
       notes: json['notes'] as String?,
       currency: json['currency'] as String,
@@ -148,10 +156,14 @@ class PublicTicket {
   }
 
   final String ticketNumber;
+  final String companyName;
   final String? guestName;
   final String? customerPhone;
   final String serviceUnitId;
+  final String serviceUnitName;
   final String locationId;
+  final String locationName;
+  final bool locationDefault;
   final String status;
   final String? notes;
   final String currency;
@@ -171,6 +183,8 @@ class PublicTicketLine {
     required this.unitPriceAmount,
     required this.lineTotalAmount,
     this.notes,
+    this.itemName,
+    this.itemImageUrl,
   });
 
   factory PublicTicketLine.fromJson(Map<String, dynamic> json) {
@@ -181,6 +195,8 @@ class PublicTicketLine {
       unitPriceAmount: json['unitPriceAmount'] as num,
       lineTotalAmount: json['lineTotalAmount'] as num,
       notes: json['notes'] as String?,
+      itemName: json['itemName'] as String?,
+      itemImageUrl: json['itemImageUrl'] as String?,
     );
   }
 
@@ -190,4 +206,6 @@ class PublicTicketLine {
   final num unitPriceAmount;
   final num lineTotalAmount;
   final String? notes;
+  final String? itemName;
+  final String? itemImageUrl;
 }

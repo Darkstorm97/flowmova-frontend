@@ -117,10 +117,39 @@ class _TicketLookupScreenState extends State<TicketLookupScreen> {
       totalLabel: ticket.totalLabel,
       guestName: ticket.guestName,
       customerPhone: ticket.customerPhone,
+      companyName: _fallbackLabel(ticket.companyName, recent.companyName),
+      serviceUnitName: _fallbackLabel(
+        ticket.serviceUnitName,
+        recent.serviceUnitName,
+      ),
+      locationName: _fallbackLabel(ticket.locationName, recent.locationName),
+      items: ticket.lines
+          .map(
+            (line) => RecentTicketItemEntry(
+              itemId: line.itemId,
+              name: _fallbackLabel(
+                line.itemName,
+                recent.items
+                    .where((item) => item.itemId == line.itemId)
+                    .map((item) => item.name)
+                    .firstOrNull,
+              ),
+              quantity: line.quantity,
+            ),
+          )
+          .toList(growable: false),
     );
 
     await _recentTicketStorage.save(refreshed);
     _recentTicket = refreshed;
+  }
+
+  String _fallbackLabel(String? preferred, String? fallback) {
+    final preferredValue = preferred?.trim();
+    if (preferredValue != null && preferredValue.isNotEmpty) {
+      return preferredValue;
+    }
+    return fallback?.trim() ?? '';
   }
 
   Future<void> _runTicketAction(
@@ -396,10 +425,20 @@ class _TicketSummary extends StatelessWidget {
     final updatedAtLabel = ticket.updatedAt == null
         ? null
         : _dateLabel(ticket.updatedAt!);
-    final companyName = recentTicket?.companyName;
-    final serviceName = recentTicket?.serviceUnitName;
-    final locationName = recentTicket?.locationName;
-    final showLocation = !_isDefaultLocationName(locationName);
+    final companyName = _preferredLabel(
+      ticket.companyName,
+      recentTicket?.companyName,
+    );
+    final serviceName = _preferredLabel(
+      ticket.serviceUnitName,
+      recentTicket?.serviceUnitName,
+    );
+    final locationName = _preferredLabel(
+      ticket.locationName,
+      recentTicket?.locationName,
+    );
+    final showLocation =
+        !ticket.locationDefault && !_isDefaultLocationName(locationName);
     final contextLabel = _ticketContextLabel(
       companyName: companyName,
       serviceName: serviceName,
@@ -515,7 +554,11 @@ class _TicketSummary extends StatelessWidget {
               for (final line in ticket.lines)
                 _TicketLineTile(
                   line: line,
-                  name: itemNamesById[line.itemId] ?? line.itemId,
+                  name: _preferredLabel(
+                    line.itemName,
+                    itemNamesById[line.itemId],
+                    defaultValue: line.itemId,
+                  ),
                 ),
             const SizedBox(height: 16),
             _TicketActions(
@@ -555,6 +598,24 @@ class _TicketSummary extends StatelessWidget {
         .cast<String>()
         .toList(growable: false);
     return parts.isEmpty ? null : parts.join(' - ');
+  }
+
+  static String _preferredLabel(
+    String? preferred,
+    String? fallback, {
+    String defaultValue = '',
+  }) {
+    final preferredValue = preferred?.trim();
+    if (preferredValue != null && preferredValue.isNotEmpty) {
+      return preferredValue;
+    }
+
+    final fallbackValue = fallback?.trim();
+    if (fallbackValue != null && fallbackValue.isNotEmpty) {
+      return fallbackValue;
+    }
+
+    return defaultValue;
   }
 
   static bool _isDefaultLocationName(String? locationName) {
