@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/business/presentation/business_dashboard_screen.dart';
+import '../features/business/presentation/business_service_unit_items_screen.dart';
+import '../features/business/presentation/business_service_unit_tickets_screen.dart';
 import '../features/business/presentation/business_service_units_screen.dart';
 import '../features/business/presentation/create_company_screen.dart';
 import '../features/business/presentation/edit_company_screen.dart';
@@ -89,6 +91,18 @@ abstract final class AppRouter {
         title: 'Emplacements',
         contentScrolls: false,
         child: _businessServiceUnitLocationsPage(settings.arguments),
+      ),
+      AppRoutes.businessServiceUnitItems => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.business,
+        title: 'Articles',
+        contentScrolls: false,
+        child: _businessServiceUnitItemsPage(settings.arguments),
+      ),
+      AppRoutes.businessServiceUnitTickets => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.business,
+        title: 'Tickets service',
+        contentScrolls: false,
+        child: _businessServiceUnitTicketsPage(settings.arguments),
       ),
       AppRoutes.companyDetail => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.client,
@@ -300,6 +314,36 @@ abstract final class AppRouter {
   static Widget _businessServiceUnitLocationsPage(Object? arguments) {
     if (arguments is BusinessServiceUnitLocationsArguments) {
       return BusinessServiceUnitLocationsScreen(
+        companyId: arguments.companyId,
+        serviceUnit: arguments.serviceUnit,
+      );
+    }
+
+    return const FeaturePlaceholderScreen(
+      title: 'Service introuvable',
+      description:
+          'Revenez a la liste des services et selectionnez un service.',
+    );
+  }
+
+  static Widget _businessServiceUnitItemsPage(Object? arguments) {
+    if (arguments is BusinessServiceUnitItemsArguments) {
+      return BusinessServiceUnitItemsScreen(
+        companyId: arguments.companyId,
+        serviceUnit: arguments.serviceUnit,
+      );
+    }
+
+    return const FeaturePlaceholderScreen(
+      title: 'Service introuvable',
+      description:
+          'Revenez a la liste des services et selectionnez un service.',
+    );
+  }
+
+  static Widget _businessServiceUnitTicketsPage(Object? arguments) {
+    if (arguments is BusinessServiceUnitTicketsArguments) {
+      return BusinessServiceUnitTicketsScreen(
         companyId: arguments.companyId,
         serviceUnit: arguments.serviceUnit,
       );

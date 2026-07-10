@@ -13,6 +13,8 @@ abstract final class AppRoutes {
   static const businessServiceUnits = '/business/service-units';
   static const businessServiceUnitLocations =
       '/business/service-units/locations';
+  static const businessServiceUnitItems = '/business/service-units/items';
+  static const businessServiceUnitTickets = '/business/service-units/tickets';
   static const companyDetail = '/companies/detail';
   static const serviceUnitDetail = '/service-units/detail';
   static const publicLocationDetail = '/locations/public';

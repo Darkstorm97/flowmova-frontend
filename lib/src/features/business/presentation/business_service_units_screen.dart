@@ -7,6 +7,8 @@ import '../../../core/session/session_scope.dart';
 import '../../../core/theme/flow_mova_colors.dart';
 import '../data/admin_service_units_gateway.dart';
 import '../data/business_dashboard_gateway.dart';
+import 'business_service_unit_items_screen.dart';
+import 'business_service_unit_tickets_screen.dart';
 
 class BusinessServiceUnitsArguments {
   const BusinessServiceUnitsArguments({required this.companyId});
@@ -118,6 +120,22 @@ class _BusinessServiceUnitsScreenState
                       context,
                       AppRoutes.businessServiceUnitLocations,
                       arguments: BusinessServiceUnitLocationsArguments(
+                        companyId: widget.companyId,
+                        serviceUnit: service,
+                      ),
+                    ),
+                    onItems: () => Navigator.pushNamed(
+                      context,
+                      AppRoutes.businessServiceUnitItems,
+                      arguments: BusinessServiceUnitItemsArguments(
+                        companyId: widget.companyId,
+                        serviceUnit: service,
+                      ),
+                    ),
+                    onTickets: () => Navigator.pushNamed(
+                      context,
+                      AppRoutes.businessServiceUnitTickets,
+                      arguments: BusinessServiceUnitTicketsArguments(
                         companyId: widget.companyId,
                         serviceUnit: service,
                       ),
@@ -386,6 +404,8 @@ class _ServiceCard extends StatelessWidget {
     required this.service,
     required this.onEdit,
     required this.onLocations,
+    required this.onItems,
+    required this.onTickets,
     required this.onOpen,
     required this.onClose,
     required this.onArchive,
@@ -394,6 +414,8 @@ class _ServiceCard extends StatelessWidget {
   final BusinessServiceUnit service;
   final VoidCallback onEdit;
   final VoidCallback onLocations;
+  final VoidCallback onItems;
+  final VoidCallback onTickets;
   final VoidCallback? onOpen;
   final VoidCallback? onClose;
   final VoidCallback? onArchive;
@@ -459,6 +481,16 @@ class _ServiceCard extends StatelessWidget {
                   onPressed: onLocations,
                   icon: const Icon(Icons.place_outlined),
                   label: const Text('Emplacements'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: onItems,
+                  icon: const Icon(Icons.inventory_2_outlined),
+                  label: const Text('Articles'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: onTickets,
+                  icon: const Icon(Icons.confirmation_number_outlined),
+                  label: const Text('Tickets'),
                 ),
                 OutlinedButton.icon(
                   onPressed: onEdit,

@@ -959,6 +959,8 @@ Definition of Done:
 
 ### ITEM-FRONT-001 - Gerer les articles d'une unite de service
 
+Issue GitHub: #28.
+
 Permettre la creation et consultation des articles.
 
 Inclure:

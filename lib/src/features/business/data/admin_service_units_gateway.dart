@@ -1,4 +1,6 @@
 import '../../../core/api/api_client.dart';
+import '../../client/data/company_detail_gateway.dart';
+import '../../tickets/data/current_user_ticket_gateway.dart';
 import 'business_dashboard_gateway.dart';
 
 abstract interface class AdminServiceUnitsGateway {
@@ -46,6 +48,41 @@ abstract interface class AdminServiceUnitsGateway {
     String companyId,
     String serviceUnitId,
     ServiceUnitLocationInput input,
+  );
+
+  Future<CurrentUserTicketPage> listTickets(
+    String companyId,
+    String serviceUnitId, {
+    int page = 0,
+    int size = 20,
+    String? status,
+    String? ticketNumber,
+    String? locationId,
+  });
+
+  Future<CurrentUserTicket> changeTicketStatus(
+    String companyId,
+    String serviceUnitId,
+    String ticketId,
+    String status,
+  );
+
+  Future<List<BusinessServiceUnitItem>> listItems(
+    String companyId,
+    String serviceUnitId,
+  );
+
+  Future<BusinessServiceUnitItem> createItem(
+    String companyId,
+    String serviceUnitId,
+    ServiceUnitItemInput input,
+  );
+
+  Future<BusinessServiceUnitItem> updateItem(
+    String companyId,
+    String serviceUnitId,
+    String itemId,
+    ServiceUnitItemInput input,
   );
 }
 
@@ -168,11 +205,108 @@ class BackendAdminServiceUnitsGateway implements AdminServiceUnitsGateway {
     return BusinessServiceUnitLocation.fromJson(response);
   }
 
+  @override
+  Future<CurrentUserTicketPage> listTickets(
+    String companyId,
+    String serviceUnitId, {
+    int page = 0,
+    int size = 20,
+    String? status,
+    String? ticketNumber,
+    String? locationId,
+  }) async {
+    final response = await _apiClient.get(
+      '/api/companies/$companyId/admin/service-units/$serviceUnitId/tickets',
+      queryParameters: {
+        'page': page,
+        'size': size,
+        'sort': 'createdAt,desc',
+        if (status != null && status.trim().isNotEmpty) 'status': status,
+        if (ticketNumber != null && ticketNumber.trim().isNotEmpty)
+          'ticketNumber': ticketNumber.trim(),
+        if (locationId != null && locationId.trim().isNotEmpty)
+          'locationId': locationId,
+      },
+    );
+    if (response is! Map<String, dynamic>) {
+      throw const FormatException('Invalid admin tickets response.');
+    }
+    return CurrentUserTicketPage.fromJson(response);
+  }
+
+  @override
+  Future<CurrentUserTicket> changeTicketStatus(
+    String companyId,
+    String serviceUnitId,
+    String ticketId,
+    String status,
+  ) async {
+    final response = await _apiClient.patch(
+      '/api/companies/$companyId/admin/service-units/$serviceUnitId/tickets/$ticketId/status',
+      body: {'status': status},
+    );
+    if (response is! Map<String, dynamic>) {
+      throw const FormatException('Invalid admin ticket response.');
+    }
+    return CurrentUserTicket.fromJson(response);
+  }
+
+  @override
+  Future<List<BusinessServiceUnitItem>> listItems(
+    String companyId,
+    String serviceUnitId,
+  ) async {
+    final response = await _apiClient.get(
+      '/api/companies/$companyId/admin/service-units/$serviceUnitId/items',
+    );
+    if (response is! List) {
+      throw const FormatException('Invalid service items response.');
+    }
+    return response
+        .whereType<Map<String, dynamic>>()
+        .map(BusinessServiceUnitItem.fromJson)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<BusinessServiceUnitItem> createItem(
+    String companyId,
+    String serviceUnitId,
+    ServiceUnitItemInput input,
+  ) async {
+    final response = await _apiClient.post(
+      '/api/companies/$companyId/admin/service-units/$serviceUnitId/items',
+      body: input.toCreateJson(),
+    );
+    return _itemFromResponse(response);
+  }
+
+  @override
+  Future<BusinessServiceUnitItem> updateItem(
+    String companyId,
+    String serviceUnitId,
+    String itemId,
+    ServiceUnitItemInput input,
+  ) async {
+    final response = await _apiClient.put(
+      '/api/companies/$companyId/admin/service-units/$serviceUnitId/items/$itemId',
+      body: input.toUpdateJson(),
+    );
+    return _itemFromResponse(response);
+  }
+
   BusinessServiceUnit _serviceUnitFromResponse(Object? response) {
     if (response is! Map<String, dynamic>) {
       throw const FormatException('Invalid service unit response.');
     }
     return BusinessServiceUnit.fromJson(response);
+  }
+
+  BusinessServiceUnitItem _itemFromResponse(Object? response) {
+    if (response is! Map<String, dynamic>) {
+      throw const FormatException('Invalid service item response.');
+    }
+    return BusinessServiceUnitItem.fromJson(response);
   }
 }
 
@@ -214,6 +348,41 @@ class ServiceUnitLocationInput {
 
   Map<String, Object?> toJson() {
     return {'name': name.trim(), 'description': _blankToNull(description)};
+  }
+}
+
+class ServiceUnitItemInput {
+  const ServiceUnitItemInput({
+    required this.catalogId,
+    required this.availability,
+    required this.displayOrder,
+    this.priceAmount,
+    this.configuredQuantity,
+  });
+
+  final String catalogId;
+  final num? priceAmount;
+  final String availability;
+  final int? configuredQuantity;
+  final int displayOrder;
+
+  Map<String, Object?> toCreateJson() {
+    return {
+      'catalogId': catalogId,
+      'priceAmount': priceAmount,
+      'availability': availability,
+      'configuredQuantity': configuredQuantity,
+      'displayOrder': displayOrder,
+    };
+  }
+
+  Map<String, Object?> toUpdateJson() {
+    return {
+      'priceAmount': priceAmount,
+      'availability': availability,
+      'configuredQuantity': configuredQuantity,
+      'displayOrder': displayOrder,
+    };
   }
 }
 
@@ -287,6 +456,57 @@ class BusinessServiceUnitLocation {
   final String? publicAccessSlug;
   final String? publicUrl;
   final String status;
+}
+
+class BusinessServiceUnitItem {
+  const BusinessServiceUnitItem({
+    required this.id,
+    required this.serviceUnitId,
+    required this.catalog,
+    required this.availability,
+    required this.reservedQuantity,
+    required this.displayOrder,
+    required this.status,
+    this.priceAmount,
+    this.configuredQuantity,
+  });
+
+  factory BusinessServiceUnitItem.fromJson(Map<String, dynamic> json) {
+    final catalog = json['catalog'];
+    if (catalog is! Map<String, dynamic>) {
+      throw const FormatException('Invalid service item catalog.');
+    }
+
+    return BusinessServiceUnitItem(
+      id: json['id'] as String,
+      serviceUnitId: json['serviceUnitId'] as String,
+      catalog: CompanyCatalogItem.fromJson(catalog),
+      priceAmount: json['priceAmount'] as num?,
+      availability: json['availability'] as String? ?? 'AVAILABLE',
+      configuredQuantity: json['configuredQuantity'] as int?,
+      reservedQuantity: json['reservedQuantity'] as int? ?? 0,
+      displayOrder: json['displayOrder'] as int? ?? 0,
+      status: json['status'] as String? ?? 'ACTIVE',
+    );
+  }
+
+  final String id;
+  final String serviceUnitId;
+  final CompanyCatalogItem catalog;
+  final num? priceAmount;
+  final String availability;
+  final int? configuredQuantity;
+  final int reservedQuantity;
+  final int displayOrder;
+  final String status;
+
+  String get priceLabel {
+    final price = priceAmount;
+    if (price == null) {
+      return 'Prix catalogue';
+    }
+    return price.toStringAsFixed(2);
+  }
 }
 
 String? _blankToNull(String? value) {

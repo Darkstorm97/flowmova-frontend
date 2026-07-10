@@ -175,14 +175,26 @@ class _DashboardContent extends StatelessWidget {
                 value: '${bundle.catalogs.length}',
                 helper:
                     '${bundle.catalogCategories.length} categorie${bundle.catalogCategories.length > 1 ? 's' : ''}',
-                onTap: () => _showComingSoon(context, 'Articles'),
+                onTap: () => Navigator.pushNamed(
+                  context,
+                  AppRoutes.businessServiceUnits,
+                  arguments: BusinessServiceUnitsArguments(
+                    companyId: company.id,
+                  ),
+                ),
               ),
               _MetricTile(
                 icon: Icons.confirmation_number_outlined,
                 label: 'Tickets',
                 value: 'Suivi',
-                helper: 'bientot',
-                onTap: () => _showComingSoon(context, 'Tickets admin'),
+                helper: 'par service',
+                onTap: () => Navigator.pushNamed(
+                  context,
+                  AppRoutes.businessServiceUnits,
+                  arguments: BusinessServiceUnitsArguments(
+                    companyId: company.id,
+                  ),
+                ),
               ),
             ],
           ),
@@ -195,12 +207,6 @@ class _DashboardContent extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  void _showComingSoon(BuildContext context, String area) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$area sera branche dans la prochaine etape.')),
     );
   }
 }
