@@ -117,6 +117,28 @@ void main() {
     expect(find.widgetWithText(TextField, 'Code ou lien QR'), findsOneWidget);
   });
 
+  testWidgets('tab navigation clears secondary page back stack', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      FlowMovaApp(companySearchGateway: companySearchGateway),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Scanner un QR code'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BackButton), findsOneWidget);
+
+    await tester.tap(find.text('Tickets'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BackButton), findsNothing);
+
+    await tester.tap(find.text('Accueil'));
+    await tester.pumpAndSettle();
+    expect(find.text('Decouvrez autour de vous'), findsOneWidget);
+    expect(find.byType(BackButton), findsNothing);
+  });
+
   testWidgets('public location route accepts web hash matrix parameters', (
     tester,
   ) async {

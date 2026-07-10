@@ -119,7 +119,7 @@ class FlowMovaNavigationShell extends StatelessWidget {
       return;
     }
 
-    Navigator.pushReplacementNamed(context, targetRoute);
+    Navigator.pushNamedAndRemoveUntil(context, targetRoute, (_) => false);
   }
 }
 
