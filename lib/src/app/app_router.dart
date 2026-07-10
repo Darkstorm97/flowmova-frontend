@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
+import '../features/business/presentation/business_dashboard_screen.dart';
 import '../features/business/presentation/create_company_screen.dart';
 import '../features/business/presentation/edit_company_screen.dart';
 import '../features/business/presentation/my_companies_screen.dart';
@@ -70,14 +71,11 @@ abstract final class AppRouter {
         contentScrolls: false,
         child: _editCompanyPage(settings.arguments),
       ),
-      AppRoutes.businessDashboard => const FlowMovaNavigationShell(
+      AppRoutes.businessDashboard => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.business,
         title: 'Dashboard entreprise',
-        child: FeaturePlaceholderScreen(
-          title: 'Dashboard entreprise',
-          description:
-              'Le dashboard admin sera branche avec les features entreprise.',
-        ),
+        contentScrolls: false,
+        child: _businessDashboardPage(settings.arguments),
       ),
       AppRoutes.companyDetail => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.client,
@@ -260,6 +258,19 @@ abstract final class AppRouter {
       title: 'Entreprise introuvable',
       description: 'Revenez a Mes entreprises et selectionnez Modifier.',
     );
+  }
+
+  static Widget _businessDashboardPage(Object? arguments) {
+    final companyId = arguments is String ? arguments : null;
+    if (companyId == null || companyId.trim().isEmpty) {
+      return const FeaturePlaceholderScreen(
+        title: 'Entreprise introuvable',
+        description:
+            'Revenez a Mes entreprises et selectionnez une entreprise.',
+      );
+    }
+
+    return BusinessDashboardScreen(companyId: companyId);
   }
 }
 

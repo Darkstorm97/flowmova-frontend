@@ -824,6 +824,29 @@ Definition of Done:
 - les devises `XOF`, `XAF`, `CDF`, `GNF`, `RWF`, `BIF`, `KES`, `TZS`, `UGX`, `GHS`, `NGN`, `ZAR` sont prioritaires;
 - les devises courantes `CAD`, `USD`, `EUR` restent disponibles.
 
+### COMPANY-FRONT-007 - Dashboard entreprise reel
+
+Issue GitHub: #56.
+
+Remplacer le placeholder dashboard entreprise par une vue admin branchee aux donnees backend de l'entreprise selectionnee.
+
+Inclure:
+
+- chargement de l'entreprise par son identifiant;
+- resume visuel de la compagnie avec photo, statut operationnel, adresse et devise;
+- metriques de premier niveau pour services, categories et articles;
+- apercu des unites de service admin via endpoint admin;
+- apercu du catalogue actif;
+- raccourcis prepares vers modification entreprise, services, catalogues et tickets admin;
+- etats charge, erreur, non connecte et entreprise introuvable.
+
+Definition of Done:
+
+- un admin qui selectionne une entreprise arrive sur un dashboard reel;
+- le dashboard n'affiche plus le placeholder;
+- les appels frontend restent alignes avec les endpoints backend existants;
+- les tests couvrent le gateway et l'affichage principal.
+
 ### CATCAT-FRONT-001 - Gerer les categories de catalogue
 
 Permettre la creation et la consultation des categories.
