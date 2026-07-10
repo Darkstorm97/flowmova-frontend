@@ -420,7 +420,9 @@ class _MyTicketListCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      ticket.ticketNumber,
+                      ticket.companyName.isEmpty
+                          ? ticket.ticketNumber
+                          : ticket.companyName,
                       style: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
@@ -428,6 +430,16 @@ class _MyTicketListCard extends StatelessWidget {
                   ),
                   _StatusChip(status: ticket.status),
                 ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                ticket.serviceUnitName.isEmpty
+                    ? ticket.ticketNumber
+                    : '${ticket.serviceUnitName} - ${ticket.ticketNumber}',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: FlowMovaColors.slate,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 10),
               Wrap(
@@ -491,12 +503,39 @@ class _TicketSummaryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text(
-                    ticket.ticketNumber,
-                    style: textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: FlowMovaColors.logoInk,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        ticket.companyName.isEmpty
+                            ? ticket.ticketNumber
+                            : ticket.companyName,
+                        style: textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: FlowMovaColors.logoInk,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        ticket.serviceUnitName.isEmpty
+                            ? ticket.ticketNumber
+                            : ticket.serviceUnitName,
+                        style: textTheme.titleSmall?.copyWith(
+                          color: FlowMovaColors.slate,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      if (!ticket.locationDefault &&
+                          ticket.locationName.trim().isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          ticket.locationName,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: FlowMovaColors.slate,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 _StatusChip(status: ticket.status),
@@ -541,8 +580,13 @@ class _TicketDetailInfo extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         child: Column(
           children: [
-            _InfoRow(label: 'Service', value: _shortId(ticket.serviceUnitId)),
-            _InfoRow(label: 'Emplacement', value: _shortId(ticket.locationId)),
+            _InfoRow(label: 'Entreprise', value: _ticketCompanyName(ticket)),
+            _InfoRow(label: 'Service', value: _ticketServiceName(ticket)),
+            if (!ticket.locationDefault)
+              _InfoRow(
+                label: 'Emplacement',
+                value: _ticketLocationName(ticket),
+              ),
             if (ticket.customerPhone != null &&
                 ticket.customerPhone!.trim().isNotEmpty)
               _InfoRow(label: 'Telephone', value: ticket.customerPhone!),
@@ -590,7 +634,9 @@ class _TicketLineCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Article ${_shortId(line.itemId)}',
+                    line.itemName.trim().isEmpty
+                        ? 'Article ${_shortId(line.itemId)}'
+                        : line.itemName,
                     style: textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -926,4 +972,22 @@ String _shortId(String value) {
     return value;
   }
   return value.substring(0, 8);
+}
+
+String _ticketCompanyName(CurrentUserTicket ticket) {
+  return ticket.companyName.trim().isEmpty
+      ? _shortId(ticket.companyId)
+      : ticket.companyName;
+}
+
+String _ticketServiceName(CurrentUserTicket ticket) {
+  return ticket.serviceUnitName.trim().isEmpty
+      ? _shortId(ticket.serviceUnitId)
+      : ticket.serviceUnitName;
+}
+
+String _ticketLocationName(CurrentUserTicket ticket) {
+  return ticket.locationName.trim().isEmpty
+      ? _shortId(ticket.locationId)
+      : ticket.locationName;
 }

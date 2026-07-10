@@ -50,7 +50,16 @@ void main() {
     expect(capturedUrl.queryParameters['status'], 'RECEIVED');
     expect(capturedUrl.queryParameters['ticketNumber'], 'FM-0001');
     expect(page.items.single.ticketNumber, 'FM-0001');
+    expect(page.items.single.companyName, 'Cafe Flow');
+    expect(page.items.single.serviceUnitName, 'Comptoir');
+    expect(page.items.single.locationName, 'Accueil');
+    expect(page.items.single.locationDefault, isTrue);
     expect(page.items.single.totalLabel, '12.50 CAD');
+    expect(page.items.single.lines.single.itemName, 'Latte glace');
+    expect(
+      page.items.single.lines.single.itemImageUrl,
+      'https://cdn.test/latte.jpg',
+    );
   });
 
   test('cancelTicket patches current user cancel endpoint', () async {
@@ -111,8 +120,13 @@ Map<String, Object?> _ticketJson({required String status}) {
     'ticketNumber': 'FM-0001',
     'userId': 'user-1',
     'customerPhone': '+15145550000',
+    'companyId': 'company-1',
+    'companyName': 'Cafe Flow',
     'serviceUnitId': 'service-1',
+    'serviceUnitName': 'Comptoir',
     'locationId': 'location-1',
+    'locationName': 'Accueil',
+    'locationDefault': true,
     'status': status,
     'currency': 'CAD',
     'totalAmount': 12.5,
@@ -120,6 +134,8 @@ Map<String, Object?> _ticketJson({required String status}) {
       {
         'id': 'line-1',
         'itemId': 'item-1',
+        'itemName': 'Latte glace',
+        'itemImageUrl': 'https://cdn.test/latte.jpg',
         'quantity': 2,
         'unitPriceAmount': 6.25,
         'lineTotalAmount': 12.5,

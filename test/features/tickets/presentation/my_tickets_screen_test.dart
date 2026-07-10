@@ -41,7 +41,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Mes tickets'), findsOneWidget);
-    expect(find.text('FM-0001'), findsOneWidget);
+    expect(find.text('Cafe Flow'), findsWidgets);
+    expect(find.text('Comptoir principal - FM-0001'), findsOneWidget);
     expect(find.text('Recu'), findsOneWidget);
     expect(find.text('12.50 CAD'), findsOneWidget);
   });
@@ -58,9 +59,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('FM-0001'));
+    await tester.tap(find.text('Cafe Flow').first);
     await tester.pumpAndSettle();
 
+    expect(find.text('Cafe Flow'), findsWidgets);
+    expect(find.text('Comptoir principal'), findsWidgets);
+    expect(find.text('Table terrasse'), findsNothing);
+    expect(find.text('Latte glace'), findsOneWidget);
     expect(find.text('Details'), findsOneWidget);
     expect(find.text('Confirmer le traitement'), findsOneWidget);
 
@@ -162,8 +167,13 @@ CurrentUserTicket _ticket({required String status}) {
     ticketNumber: 'FM-0001',
     userId: 'user-1',
     customerPhone: '+15145550000',
+    companyId: 'company-1',
+    companyName: 'Cafe Flow',
     serviceUnitId: 'service-unit-1',
+    serviceUnitName: 'Comptoir principal',
     locationId: 'location-1',
+    locationName: 'Table terrasse',
+    locationDefault: true,
     status: status,
     currency: 'CAD',
     totalAmount: 12.5,
@@ -171,6 +181,7 @@ CurrentUserTicket _ticket({required String status}) {
       CurrentUserTicketLine(
         id: 'line-1',
         itemId: 'item-1',
+        itemName: 'Latte glace',
         quantity: 2,
         unitPriceAmount: 6.25,
         lineTotalAmount: 12.5,

@@ -256,6 +256,10 @@ class _PublicLocationScreenState extends State<PublicLocationScreen> {
     TicketCreationResult ticket,
     PublicLocationAccess access,
   ) async {
+    if (SessionScope.maybeOf(context)?.isAuthenticated ?? false) {
+      return;
+    }
+
     try {
       await _recentTicketStorage.save(
         RecentTicketEntry(

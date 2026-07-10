@@ -14,7 +14,7 @@ class SharedPreferencesRecentTicketStorage implements RecentTicketStorage {
   const SharedPreferencesRecentTicketStorage(this._preferences);
 
   static const _storageKey = 'flowmova.recent_tickets.v1';
-  static const _maxRecentTickets = 20;
+  static const _maxRecentTickets = 5;
 
   final SharedPreferences _preferences;
 
@@ -74,6 +74,9 @@ class InMemoryRecentTicketStorage implements RecentTicketStorage {
             entry.id == ticket.id || entry.ticketNumber == ticket.ticketNumber,
       )
       ..insert(0, ticket);
+    if (_tickets.length > 5) {
+      _tickets.removeRange(5, _tickets.length);
+    }
   }
 
   @override

@@ -46,4 +46,39 @@ void main() {
       expect(await storage.load(), isEmpty);
     },
   );
+
+  test('recent ticket storage keeps only five latest tickets', () async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final storage = SharedPreferencesRecentTicketStorage(preferences);
+
+    for (var index = 1; index <= 6; index++) {
+      await storage.save(_recentTicket(index));
+    }
+
+    final tickets = await storage.load();
+
+    expect(tickets, hasLength(5));
+    expect(tickets.first.ticketNumber, 'FM-0006');
+    expect(tickets.last.ticketNumber, 'FM-0002');
+    expect(tickets.any((ticket) => ticket.ticketNumber == 'FM-0001'), isFalse);
+  });
+}
+
+RecentTicketEntry _recentTicket(int index) {
+  final suffix = index.toString().padLeft(4, '0');
+  return RecentTicketEntry(
+    id: 'ticket-$index',
+    ticketNumber: 'FM-$suffix',
+    accessCode: 'ABC$index',
+    serviceUnitId: 'service-1',
+    locationId: 'location-1',
+    companyId: 'company-1',
+    status: 'CREATED',
+    createdAt: DateTime.utc(2026, 7, index),
+    companyName: 'Cafe Flow',
+    serviceUnitName: 'Comptoir principal',
+    locationName: 'Accueil',
+    totalLabel: '0.00 CAD',
+  );
 }

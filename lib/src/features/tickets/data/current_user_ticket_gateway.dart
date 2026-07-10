@@ -108,8 +108,13 @@ class CurrentUserTicket {
     required this.id,
     required this.ticketNumber,
     required this.userId,
+    required this.companyId,
+    required this.companyName,
     required this.serviceUnitId,
+    required this.serviceUnitName,
     required this.locationId,
+    required this.locationName,
+    required this.locationDefault,
     required this.status,
     required this.currency,
     required this.totalAmount,
@@ -129,8 +134,13 @@ class CurrentUserTicket {
       ticketNumber: json['ticketNumber'] as String,
       userId: json['userId'] as String,
       customerPhone: json['customerPhone'] as String?,
+      companyId: json['companyId'] as String? ?? '',
+      companyName: json['companyName'] as String? ?? '',
       serviceUnitId: json['serviceUnitId'] as String,
+      serviceUnitName: json['serviceUnitName'] as String? ?? '',
       locationId: json['locationId'] as String,
+      locationName: json['locationName'] as String? ?? '',
+      locationDefault: json['locationDefault'] as bool? ?? false,
       status: json['status'] as String,
       notes: json['notes'] as String?,
       currency: json['currency'] as String,
@@ -151,8 +161,13 @@ class CurrentUserTicket {
   final String ticketNumber;
   final String userId;
   final String? customerPhone;
+  final String companyId;
+  final String companyName;
   final String serviceUnitId;
+  final String serviceUnitName;
   final String locationId;
+  final String locationName;
+  final bool locationDefault;
   final String status;
   final String? notes;
   final String currency;
@@ -170,8 +185,13 @@ class CurrentUserTicket {
       ticketNumber: ticketNumber,
       userId: userId,
       customerPhone: customerPhone,
+      companyId: companyId,
+      companyName: companyName,
       serviceUnitId: serviceUnitId,
+      serviceUnitName: serviceUnitName,
       locationId: locationId,
+      locationName: locationName,
+      locationDefault: locationDefault,
       status: status ?? this.status,
       notes: notes,
       currency: currency,
@@ -188,16 +208,20 @@ class CurrentUserTicketLine {
   const CurrentUserTicketLine({
     required this.id,
     required this.itemId,
+    required this.itemName,
     required this.quantity,
     required this.unitPriceAmount,
     required this.lineTotalAmount,
     this.notes,
+    this.itemImageUrl,
   });
 
   factory CurrentUserTicketLine.fromJson(Map<String, dynamic> json) {
     return CurrentUserTicketLine(
       id: json['id'] as String,
       itemId: json['itemId'] as String,
+      itemName: json['itemName'] as String? ?? '',
+      itemImageUrl: json['itemImageUrl'] as String?,
       quantity: json['quantity'] as int,
       unitPriceAmount: json['unitPriceAmount'] as num,
       lineTotalAmount: json['lineTotalAmount'] as num,
@@ -207,6 +231,8 @@ class CurrentUserTicketLine {
 
   final String id;
   final String itemId;
+  final String itemName;
+  final String? itemImageUrl;
   final int quantity;
   final num unitPriceAmount;
   final num lineTotalAmount;

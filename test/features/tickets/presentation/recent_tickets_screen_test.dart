@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('recent tickets screen shows and clears local tickets', (
+  testWidgets('recent tickets screen shows guest local tickets without clear', (
     tester,
   ) async {
     final storage = InMemoryRecentTicketStorage([
@@ -39,16 +39,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Tickets recents'), findsOneWidget);
-    expect(find.text('Recents sur cet appareil'), findsOneWidget);
+    expect(find.text('Derniers tickets invites'), findsOneWidget);
     expect(find.text('FM-0001'), findsOneWidget);
     expect(find.textContaining('Latte glace x1'), findsOneWidget);
-
-    await tester.tap(find.text('Vider'));
-    await tester.pumpAndSettle();
-
     expect(
-      find.text('Aucun ticket recent sur cet appareil pour le moment.'),
+      find.textContaining('tickets non connectes sont conserves'),
       findsOneWidget,
     );
+    expect(find.text('Vider'), findsNothing);
   });
 }

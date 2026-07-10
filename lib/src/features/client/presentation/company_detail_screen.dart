@@ -773,6 +773,10 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
   }
 
   Future<void> _saveRecentTicket(_TicketConfirmation confirmation) async {
+    if (SessionScope.maybeOf(context)?.isAuthenticated ?? false) {
+      return;
+    }
+
     try {
       await widget.recentTicketStorage.save(confirmation.toRecentTicketEntry());
     } catch (_) {

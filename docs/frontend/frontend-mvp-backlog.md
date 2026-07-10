@@ -612,6 +612,29 @@ Definition of Done:
 - `Mes tickets`, `Tickets recents` et `Voir un ticket avec le code` restent des parcours distincts;
 - les tests gateway et widget couvrent le chargement, l'etat non connecte et l'ouverture d'un ticket.
 
+### TICKET-FRONT-009 - Afficher les libelles ticket et limiter les recents invites
+
+Issue GitHub: #51.
+
+Afficher les tickets connectes avec les libelles backend lisibles et reserver les tickets recents locaux au parcours invite.
+
+Inclure:
+
+- consommation des champs enrichis de `TicketResponse`: `companyName`, `serviceUnitName`, `locationName`, `locationDefault`, `itemName`, `itemImageUrl`;
+- affichage de l'entreprise puis du service dans la fiche ticket connectee;
+- masquage de l'emplacement lorsqu'il s'agit de l'emplacement par defaut;
+- affichage des vrais noms d'articles;
+- reservation des tickets recents locaux aux tickets invites non connectes;
+- conservation uniquement des 5 derniers tickets locaux;
+- retrait du bouton `Vider` de l'ecran de tickets recents.
+
+Definition of Done:
+
+- `Mes tickets` affiche des libelles lisibles pour entreprise, service, emplacement et articles;
+- les tickets crees avec un compte connecte ne sont pas ajoutes aux recents locaux;
+- l'ecran des recents locaux ne propose plus de suppression manuelle globale;
+- les tests couvrent les nouveaux champs et la limite des 5 recents.
+
 ### TICKET-FRONT-005 - Limiter les creations invitees avec les tickets recents
 
 Appliquer cote frontend le mode `AUTHENTICATED_OR_GUEST_RECENT_ONE_OPEN_TICKET` pour les visiteurs non authentifies.
