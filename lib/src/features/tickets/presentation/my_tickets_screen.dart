@@ -202,12 +202,6 @@ class _MyTicketDetailScreenState extends State<MyTicketDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextButton.icon(
-            onPressed: () => Navigator.pop(context, _ticket),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Retour'),
-          ),
-          const SizedBox(height: 8),
           _ConnectedTicketDetailCard(
             ticket: _ticket,
             actionLoading: _isSubmitting,
