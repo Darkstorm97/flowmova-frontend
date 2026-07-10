@@ -266,6 +266,7 @@ class CompanyServiceUnitItem {
     required this.status,
     required this.ticketCreationGuardMode,
     this.creationEntryMode = 'PUBLIC_AND_QR',
+    this.allowTicketWithoutItems = true,
     this.description,
     this.location,
   });
@@ -281,6 +282,7 @@ class CompanyServiceUnitItem {
       ticketCreationGuardMode: json['ticketCreationGuardMode'] as String,
       creationEntryMode:
           json['creationEntryMode'] as String? ?? 'PUBLIC_AND_QR',
+      allowTicketWithoutItems: json['allowTicketWithoutItems'] as bool? ?? true,
     );
   }
 
@@ -292,6 +294,7 @@ class CompanyServiceUnitItem {
   final String status;
   final String ticketCreationGuardMode;
   final String creationEntryMode;
+  final bool allowTicketWithoutItems;
 
   bool get requiresQrCode => creationEntryMode == 'QR_ONLY';
 
@@ -309,6 +312,7 @@ class CompanyServiceUnitDetail {
     required this.locations,
     required this.items,
     this.creationEntryMode = 'PUBLIC_AND_QR',
+    this.allowTicketWithoutItems = true,
     this.description,
     this.location,
     this.defaultLocation,
@@ -337,6 +341,7 @@ class CompanyServiceUnitDetail {
       ticketCreationGuardMode: json['ticketCreationGuardMode'] as String,
       creationEntryMode:
           json['creationEntryMode'] as String? ?? 'PUBLIC_AND_QR',
+      allowTicketWithoutItems: json['allowTicketWithoutItems'] as bool? ?? true,
       defaultLocation: json['defaultLocation'] is Map<String, dynamic>
           ? CompanyServiceUnitLocation.fromJson(
               json['defaultLocation'] as Map<String, dynamic>,
@@ -362,6 +367,7 @@ class CompanyServiceUnitDetail {
   final String status;
   final String ticketCreationGuardMode;
   final String creationEntryMode;
+  final bool allowTicketWithoutItems;
   final CompanyServiceUnitLocation? defaultLocation;
   final List<CompanyServiceUnitLocation> locations;
   final List<CompanyServiceUnitAvailableItem> items;

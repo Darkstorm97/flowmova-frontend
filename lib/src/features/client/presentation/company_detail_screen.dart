@@ -703,6 +703,15 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
       return;
     }
 
+    if (_serviceUnitDetail?.allowTicketWithoutItems == false &&
+        _selectedItemIds.isEmpty) {
+      setState(
+        () => _errorMessage =
+            'Ce service exige au moins un article pour creer une commande.',
+      );
+      return;
+    }
+
     final isAuthenticated =
         SessionScope.maybeOf(context)?.isAuthenticated ?? false;
     if (!isAuthenticated && _guestNameController.text.trim().isEmpty) {

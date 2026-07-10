@@ -22,7 +22,7 @@ void main() {
     expect(find.text('Utilisateur FlowMova'), findsOneWidget);
     expect(find.text('Non connecte'), findsWidgets);
     expect(find.text('Informations du profil'), findsOneWidget);
-    expect(find.text('Se connecter'), findsNothing);
+    expect(find.text('Se connecter'), findsOneWidget);
     expect(find.text('Creer un compte'), findsNothing);
   });
 

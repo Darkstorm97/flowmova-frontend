@@ -73,6 +73,7 @@ void main() {
     expect(capturedBody['type'], 'TICKET_QUEUE');
     expect(capturedBody['ticketCreationGuardMode'], 'NONE');
     expect(capturedBody['creationEntryMode'], 'PUBLIC_AND_QR');
+    expect(capturedBody['allowTicketWithoutItems'], isTrue);
     expect(service.id, 'service-1');
   });
 
@@ -101,6 +102,7 @@ void main() {
         description: '',
         ticketCreationGuardMode: 'AUTHENTICATED_ONLY_ONE_OPEN_TICKET',
         creationEntryMode: 'QR_ONLY',
+        allowTicketWithoutItems: false,
       ),
     );
 
@@ -115,6 +117,7 @@ void main() {
       'AUTHENTICATED_ONLY_ONE_OPEN_TICKET',
     );
     expect(capturedBody['creationEntryMode'], 'QR_ONLY');
+    expect(capturedBody['allowTicketWithoutItems'], isFalse);
     expect(service.name, 'File modifiee');
   });
 
@@ -181,6 +184,7 @@ Map<String, Object?> _serviceJson() {
     'status': 'OPEN',
     'ticketCreationGuardMode': 'NONE',
     'creationEntryMode': 'PUBLIC_AND_QR',
+    'allowTicketWithoutItems': true,
     'defaultLocation': _locationJson(),
   };
 }

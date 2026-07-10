@@ -77,6 +77,37 @@ void main() {
     expect(gateway.requestedSlug, 'loc-42');
     expect(find.text('Cafe Flow'), findsOneWidget);
   });
+
+  testWidgets('public QR screen blocks empty item selection when required', (
+    tester,
+  ) async {
+    final ticketGateway = _FakeTicketCreationGateway();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PublicLocationScreen(
+          initialSlug: 'loc-1',
+          gateway: const _RequiresItemsPublicLocationGateway(),
+          ticketCreationGateway: ticketGateway,
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.widgetWithText(TextField, 'Nom'), 'Marc');
+    await tester.ensureVisible(find.text('Creer ma commande'));
+    await tester.tap(find.text('Creer ma commande'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Ce service exige au moins un article pour creer une commande.',
+      ),
+      findsOneWidget,
+    );
+    expect(ticketGateway.command, isNull);
+  });
 }
 
 class _FakePublicLocationGateway implements PublicLocationGateway {
@@ -95,6 +126,28 @@ class _CapturingPublicLocationGateway implements PublicLocationGateway {
   Future<PublicLocationAccess> getAccess(String publicAccessSlug) async {
     requestedSlug = publicAccessSlug;
     return _publicLocationAccess();
+  }
+}
+
+class _RequiresItemsPublicLocationGateway implements PublicLocationGateway {
+  const _RequiresItemsPublicLocationGateway();
+
+  @override
+  Future<PublicLocationAccess> getAccess(String publicAccessSlug) async {
+    return _publicLocationAccess(
+      serviceUnit: const CompanyServiceUnitItem(
+        id: 'service-unit-1',
+        name: 'Comptoir QR',
+        type: 'TICKET_QUEUE',
+        status: 'OPEN',
+        ticketCreationGuardMode:
+            'AUTHENTICATED_OR_GUEST_RECENT_ONE_OPEN_TICKET',
+        creationEntryMode: 'QR_ONLY',
+        location: 'Salle principale',
+        allowTicketWithoutItems: false,
+      ),
+      items: const [],
+    );
   }
 }
 
@@ -132,9 +185,12 @@ class _FakeTicketCreationGateway implements TicketCreationGateway {
   }
 }
 
-PublicLocationAccess _publicLocationAccess() {
-  return const PublicLocationAccess(
-    company: CompanyDetail(
+PublicLocationAccess _publicLocationAccess({
+  CompanyServiceUnitItem? serviceUnit,
+  List<CompanyServiceUnitAvailableItem>? items,
+}) {
+  return PublicLocationAccess(
+    company: const CompanyDetail(
       id: 'company-1',
       name: 'Cafe Flow',
       description: 'Cafe QR.',
@@ -145,16 +201,19 @@ PublicLocationAccess _publicLocationAccess() {
       country: 'CA',
       status: 'ACTIVE',
     ),
-    serviceUnit: CompanyServiceUnitItem(
-      id: 'service-unit-1',
-      name: 'Comptoir QR',
-      type: 'TICKET_QUEUE',
-      status: 'OPEN',
-      ticketCreationGuardMode: 'AUTHENTICATED_OR_GUEST_RECENT_ONE_OPEN_TICKET',
-      creationEntryMode: 'QR_ONLY',
-      location: 'Salle principale',
-    ),
-    location: CompanyServiceUnitLocation(
+    serviceUnit:
+        serviceUnit ??
+        const CompanyServiceUnitItem(
+          id: 'service-unit-1',
+          name: 'Comptoir QR',
+          type: 'TICKET_QUEUE',
+          status: 'OPEN',
+          ticketCreationGuardMode:
+              'AUTHENTICATED_OR_GUEST_RECENT_ONE_OPEN_TICKET',
+          creationEntryMode: 'QR_ONLY',
+          location: 'Salle principale',
+        ),
+    location: const CompanyServiceUnitLocation(
       id: 'location-1',
       serviceUnitId: 'service-unit-1',
       name: 'Table 4',
@@ -163,20 +222,22 @@ PublicLocationAccess _publicLocationAccess() {
       publicAccessSlug: 'loc-1',
       status: 'ACTIVE',
     ),
-    items: [
-      CompanyServiceUnitAvailableItem(
-        id: 'item-1',
-        priceAmount: 4.5,
-        availability: 'AVAILABLE',
-        status: 'ACTIVE',
-        catalog: CompanyCatalogItem(
-          id: 'catalog-1',
-          name: 'Cafe filtre',
-          catalogCategoryId: 'category-1',
-          priceAmount: 4.5,
-          status: 'ACTIVE',
-        ),
-      ),
-    ],
+    items:
+        items ??
+        const [
+          CompanyServiceUnitAvailableItem(
+            id: 'item-1',
+            priceAmount: 4.5,
+            availability: 'AVAILABLE',
+            status: 'ACTIVE',
+            catalog: CompanyCatalogItem(
+              id: 'catalog-1',
+              name: 'Cafe filtre',
+              catalogCategoryId: 'category-1',
+              priceAmount: 4.5,
+              status: 'ACTIVE',
+            ),
+          ),
+        ],
   );
 }

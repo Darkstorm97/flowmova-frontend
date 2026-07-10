@@ -61,6 +61,7 @@ void main() {
       expect(dashboard.services.totalItems, 3);
       expect(dashboard.services.items.single.name, 'Comptoir');
       expect(dashboard.services.items.single.isQrOnly, isFalse);
+      expect(dashboard.services.items.single.allowTicketWithoutItems, isTrue);
       expect(dashboard.services.items.single.defaultLocation?.name, 'Salle');
       expect(dashboard.catalogCategories.single.name, 'Boissons');
       expect(dashboard.catalogs.single.name, 'Latte');
@@ -98,6 +99,7 @@ Map<String, Object?> _serviceJson() {
     'status': 'OPEN',
     'ticketCreationGuardMode': 'ALWAYS_ALLOWED',
     'creationEntryMode': 'PUBLIC_AND_QR',
+    'allowTicketWithoutItems': true,
     'defaultLocation': {
       'id': 'location-1',
       'serviceUnitId': 'service-1',

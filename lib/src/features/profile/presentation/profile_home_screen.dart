@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/app_routes.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/session/auth_session_controller.dart';
@@ -155,6 +156,12 @@ class _SignedOutProfileCard extends StatelessWidget {
               value: 'Profil non charge',
             ),
           ],
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: () => Navigator.pushNamed(context, AppRoutes.login),
+          icon: const Icon(Icons.login),
+          label: const Text('Se connecter'),
         ),
       ],
     );

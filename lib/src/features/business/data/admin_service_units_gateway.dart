@@ -181,6 +181,7 @@ class ServiceUnitInput {
     required this.name,
     required this.ticketCreationGuardMode,
     required this.creationEntryMode,
+    this.allowTicketWithoutItems = true,
     this.description,
     this.location,
   });
@@ -190,6 +191,7 @@ class ServiceUnitInput {
   final String? location;
   final String ticketCreationGuardMode;
   final String creationEntryMode;
+  final bool allowTicketWithoutItems;
 
   Map<String, Object?> toJson({bool includeType = false}) {
     return {
@@ -199,6 +201,7 @@ class ServiceUnitInput {
       if (includeType) 'type': 'TICKET_QUEUE',
       'ticketCreationGuardMode': ticketCreationGuardMode,
       'creationEntryMode': creationEntryMode,
+      'allowTicketWithoutItems': allowTicketWithoutItems,
     };
   }
 }

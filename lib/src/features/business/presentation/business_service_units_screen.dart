@@ -563,6 +563,7 @@ class _ServiceUnitFormSheetState extends State<_ServiceUnitFormSheet> {
   late final TextEditingController _locationController;
   late String _guardMode;
   late String _entryMode;
+  late bool _allowTicketWithoutItems;
 
   @override
   void initState() {
@@ -573,6 +574,7 @@ class _ServiceUnitFormSheetState extends State<_ServiceUnitFormSheet> {
     _locationController = TextEditingController(text: service?.location);
     _guardMode = service?.ticketCreationGuardMode ?? 'NONE';
     _entryMode = service?.creationEntryMode ?? 'PUBLIC_AND_QR';
+    _allowTicketWithoutItems = service?.allowTicketWithoutItems ?? true;
   }
 
   @override
@@ -663,6 +665,17 @@ class _ServiceUnitFormSheetState extends State<_ServiceUnitFormSheet> {
                 onChanged: (value) =>
                     setState(() => _guardMode = value ?? _guardMode),
               ),
+              const SizedBox(height: 12),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _allowTicketWithoutItems,
+                title: const Text('Autoriser les tickets sans article'),
+                subtitle: const Text(
+                  'Desactivez cette option si le client doit choisir au moins un article.',
+                ),
+                onChanged: (value) =>
+                    setState(() => _allowTicketWithoutItems = value),
+              ),
               const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
@@ -690,6 +703,7 @@ class _ServiceUnitFormSheetState extends State<_ServiceUnitFormSheet> {
         location: _locationController.text,
         ticketCreationGuardMode: _guardMode,
         creationEntryMode: _entryMode,
+        allowTicketWithoutItems: _allowTicketWithoutItems,
       ),
     );
   }

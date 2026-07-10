@@ -186,6 +186,42 @@ void main() {
     expect(ticketGateway.lastCommand?.lines, isEmpty);
   });
 
+  testWidgets(
+    'company detail blocks empty item selection when service requires items',
+    (tester) async {
+      final ticketGateway = _CapturingTicketCreationGateway();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CompanyDetailScreen(
+            companyId: 'company-1',
+            detailGateway: const _RequiresItemsCompanyDetailGateway(),
+            ticketCreationGateway: ticketGateway,
+            recentTicketStorage: InMemoryRecentTicketStorage(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Creer une commande'));
+      await tester.tap(find.text('Creer une commande'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.widgetWithText(TextField, 'Nom'), 'Marc');
+      await tester.ensureVisible(find.text('Creer mon ticket'));
+      await tester.tap(find.text('Creer mon ticket'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Ce service exige au moins un article pour creer une commande.',
+        ),
+        findsOneWidget,
+      );
+      expect(ticketGateway.lastCommand, isNull);
+    },
+  );
+
   testWidgets('company detail searches and selects optional ticket items', (
     tester,
   ) async {
@@ -541,6 +577,38 @@ class _RichCompanyDetailGateway implements CompanyDetailGateway {
           status: 'ACTIVE',
         ),
       ],
+    );
+  }
+}
+
+class _RequiresItemsCompanyDetailGateway extends _FakeCompanyDetailGateway {
+  const _RequiresItemsCompanyDetailGateway();
+
+  @override
+  Future<CompanyServiceUnitDetail> getServiceUnitDetail(
+    String companyId,
+    String serviceUnitId,
+  ) async {
+    return const CompanyServiceUnitDetail(
+      id: 'service-unit-1',
+      companyId: 'company-1',
+      name: 'Comptoir principal',
+      location: 'Accueil',
+      type: 'TICKET_QUEUE',
+      status: 'OPEN',
+      ticketCreationGuardMode: 'NONE',
+      allowTicketWithoutItems: false,
+      locations: [
+        CompanyServiceUnitLocation(
+          id: 'location-1',
+          serviceUnitId: 'service-unit-1',
+          name: 'Accueil',
+          type: 'DEFAULT',
+          defaultLocation: true,
+          status: 'ACTIVE',
+        ),
+      ],
+      items: [],
     );
   }
 }

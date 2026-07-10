@@ -919,6 +919,26 @@ Definition of Done:
 - aucune creation depuis la fiche entreprise n'est proposee pour `QR_ONLY`;
 - les unites `PUBLIC_AND_QR` gardent le comportement actuel.
 
+### SERVICE-FRONT-003 - Configurer les tickets sans article par service
+
+Issue GitHub: #60.
+
+Permettre a l'admin de choisir si une unite de service accepte les commandes sans article.
+
+Inclure:
+
+- lecture du champ `allowTicketWithoutItems` expose par le backend;
+- switch dans le formulaire admin d'unite de service;
+- envoi du champ a la creation et a la modification d'un service;
+- blocage frontend clair lorsque l'utilisateur tente de creer une commande sans article sur un service qui exige au moins un article;
+- application de la meme regle sur la fiche entreprise et le parcours QR/emplacement.
+
+Definition of Done:
+
+- un service peut rester permissif par defaut pour les tickets sans article;
+- un admin peut rendre les articles obligatoires pour un service;
+- l'utilisateur voit un message clair avant l'appel API si aucun article n'est selectionne alors que le service l'exige.
+
 ### LOCATION-FRONT-001 - Gerer les emplacements
 
 Issue GitHub: #58.

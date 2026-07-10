@@ -111,6 +111,7 @@ class BusinessServiceUnit {
     required this.status,
     required this.ticketCreationGuardMode,
     required this.creationEntryMode,
+    this.allowTicketWithoutItems = true,
     this.description,
     this.location,
     this.defaultLocation,
@@ -128,6 +129,7 @@ class BusinessServiceUnit {
       ticketCreationGuardMode: json['ticketCreationGuardMode'] as String,
       creationEntryMode:
           json['creationEntryMode'] as String? ?? 'PUBLIC_AND_QR',
+      allowTicketWithoutItems: json['allowTicketWithoutItems'] as bool? ?? true,
       defaultLocation: json['defaultLocation'] is Map<String, dynamic>
           ? CompanyServiceUnitLocation.fromJson(
               json['defaultLocation'] as Map<String, dynamic>,
@@ -145,6 +147,7 @@ class BusinessServiceUnit {
   final String status;
   final String ticketCreationGuardMode;
   final String creationEntryMode;
+  final bool allowTicketWithoutItems;
   final CompanyServiceUnitLocation? defaultLocation;
 
   bool get isOpen => status == 'OPEN';

@@ -197,6 +197,15 @@ class _PublicLocationScreenState extends State<PublicLocationScreen> {
       return;
     }
 
+    if (!access.serviceUnit.allowTicketWithoutItems &&
+        _selectedItemIds.isEmpty) {
+      setState(
+        () => _errorMessage =
+            'Ce service exige au moins un article pour creer une commande.',
+      );
+      return;
+    }
+
     setState(() {
       _submitting = true;
       _errorMessage = null;
