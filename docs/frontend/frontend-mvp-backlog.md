@@ -590,6 +590,28 @@ Definition of Done:
 - les tickets locaux ne sont visibles que dans l'ecran `Tickets recents`;
 - les tests widget couvrent l'onglet et l'ecran dedie.
 
+### TICKET-FRONT-008 - Afficher les tickets du profil connecte
+
+Issue GitHub: #50.
+
+Afficher dans l'onglet `Tickets` les tickets rattaches au compte utilisateur connecte.
+
+Inclure:
+
+- remplacement du placeholder `Mes tickets` par un ecran connecte;
+- consommation de `GET /api/users/me/tickets` avec pagination initiale;
+- affichage des tickets backend du compte connecte;
+- etats non connecte, chargement, vide et erreur;
+- ouverture d'une fiche ticket connectee depuis la liste;
+- actions client connectees lorsque le backend les autorise: annuler, confirmer le traitement.
+
+Definition of Done:
+
+- un utilisateur connecte voit ses tickets backend dans `Mes tickets`;
+- un utilisateur non connecte est invite a se connecter ou creer un compte;
+- `Mes tickets`, `Tickets recents` et `Voir un ticket avec le code` restent des parcours distincts;
+- les tests gateway et widget couvrent le chargement, l'etat non connecte et l'ouverture d'un ticket.
+
 ### TICKET-FRONT-005 - Limiter les creations invitees avec les tickets recents
 
 Appliquer cote frontend le mode `AUTHENTICATED_OR_GUEST_RECENT_ONE_OPEN_TICKET` pour les visiteurs non authentifies.

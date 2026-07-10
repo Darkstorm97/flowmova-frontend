@@ -12,6 +12,7 @@ import '../features/placeholders/presentation/feature_placeholder_screen.dart';
 import '../features/placeholders/presentation/not_found_screen.dart';
 import '../features/profile/presentation/profile_home_screen.dart';
 import '../features/tickets/data/recent_ticket_storage.dart';
+import '../features/tickets/presentation/my_tickets_screen.dart';
 import '../features/tickets/presentation/recent_tickets_screen.dart';
 import '../features/tickets/presentation/ticket_lookup_screen.dart';
 import '../features/tickets/presentation/tickets_home_screen.dart';
@@ -85,10 +86,13 @@ abstract final class AppRouter {
         selectedRoute: AppRoutes.tickets,
         child: RecentTicketsScreen(recentTicketStorage: recentTicketStorage),
       ),
-      AppRoutes.myTickets => const FeaturePlaceholderScreen(
-        title: 'Mes tickets',
-        description:
-            'La liste des tickets utilisateur sera branchee avec la session.',
+      AppRoutes.myTickets => const FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.tickets,
+        child: MyTicketsScreen(),
+      ),
+      AppRoutes.myTicketDetail => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.tickets,
+        child: _myTicketDetailPage(settings.arguments),
       ),
       AppRoutes.myCompanies => const FeaturePlaceholderScreen(
         title: 'Mes entreprises',
@@ -179,5 +183,19 @@ abstract final class AppRouter {
       return arguments;
     }
     return null;
+  }
+
+  static Widget _myTicketDetailPage(Object? arguments) {
+    if (arguments is MyTicketDetailArguments) {
+      return MyTicketDetailScreen(
+        ticket: arguments.ticket,
+        gateway: arguments.gateway,
+      );
+    }
+
+    return const FeaturePlaceholderScreen(
+      title: 'Ticket introuvable',
+      description: 'Revenez a Mes tickets et selectionnez un ticket.',
+    );
   }
 }
