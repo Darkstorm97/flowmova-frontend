@@ -879,6 +879,8 @@ Definition of Done:
 
 ### SERVICE-FRONT-001 - Gerer les unites de service
 
+Issue GitHub: #57.
+
 Permettre la creation, consultation et modification des unites de service.
 
 Inclure:
@@ -890,6 +892,8 @@ Inclure:
 - lien public si expose;
 - association catalogue;
 - etat actif/archive selon backend.
+- actions ouvrir, fermer et archiver selon endpoints disponibles;
+- acces aux emplacements du service.
 
 Definition of Done:
 
@@ -917,6 +921,8 @@ Definition of Done:
 
 ### LOCATION-FRONT-001 - Gerer les emplacements
 
+Issue GitHub: #58.
+
 Permettre la creation et la consultation des emplacements d'une unite de service.
 
 Inclure:
@@ -925,6 +931,7 @@ Inclure:
 - creation d'emplacements;
 - liste emplacements;
 - liens de creation ticket.
+- affichage du lien public/QR quand expose par le backend.
 
 Definition of Done:
 

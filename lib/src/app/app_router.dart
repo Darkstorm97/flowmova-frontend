@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/business/presentation/business_dashboard_screen.dart';
+import '../features/business/presentation/business_service_units_screen.dart';
 import '../features/business/presentation/create_company_screen.dart';
 import '../features/business/presentation/edit_company_screen.dart';
 import '../features/business/presentation/my_companies_screen.dart';
@@ -76,6 +77,18 @@ abstract final class AppRouter {
         title: 'Dashboard entreprise',
         contentScrolls: false,
         child: _businessDashboardPage(settings.arguments),
+      ),
+      AppRoutes.businessServiceUnits => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.business,
+        title: 'Services',
+        contentScrolls: false,
+        child: _businessServiceUnitsPage(settings.arguments),
+      ),
+      AppRoutes.businessServiceUnitLocations => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.business,
+        title: 'Emplacements',
+        contentScrolls: false,
+        child: _businessServiceUnitLocationsPage(settings.arguments),
       ),
       AppRoutes.companyDetail => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.client,
@@ -271,6 +284,32 @@ abstract final class AppRouter {
     }
 
     return BusinessDashboardScreen(companyId: companyId);
+  }
+
+  static Widget _businessServiceUnitsPage(Object? arguments) {
+    if (arguments is BusinessServiceUnitsArguments) {
+      return BusinessServiceUnitsScreen(companyId: arguments.companyId);
+    }
+
+    return const FeaturePlaceholderScreen(
+      title: 'Entreprise introuvable',
+      description: 'Revenez au dashboard et ouvrez les services.',
+    );
+  }
+
+  static Widget _businessServiceUnitLocationsPage(Object? arguments) {
+    if (arguments is BusinessServiceUnitLocationsArguments) {
+      return BusinessServiceUnitLocationsScreen(
+        companyId: arguments.companyId,
+        serviceUnit: arguments.serviceUnit,
+      );
+    }
+
+    return const FeaturePlaceholderScreen(
+      title: 'Service introuvable',
+      description:
+          'Revenez a la liste des services et selectionnez un service.',
+    );
   }
 }
 

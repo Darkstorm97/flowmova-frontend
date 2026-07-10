@@ -9,6 +9,7 @@ import '../../../core/theme/flow_mova_colors.dart';
 import '../../client/data/company_detail_gateway.dart';
 import '../data/business_dashboard_gateway.dart';
 import '../data/current_user_companies_gateway.dart';
+import 'business_service_units_screen.dart';
 import 'edit_company_screen.dart';
 
 class BusinessDashboardScreen extends StatefulWidget {
@@ -194,7 +195,13 @@ class _DashboardContent extends StatelessWidget {
               _ActionChipButton(
                 icon: Icons.room_service_outlined,
                 label: 'Services',
-                onPressed: () => _showComingSoon(context, 'Services'),
+                onPressed: () => Navigator.pushNamed(
+                  context,
+                  AppRoutes.businessServiceUnits,
+                  arguments: BusinessServiceUnitsArguments(
+                    companyId: company.id,
+                  ),
+                ),
               ),
               _ActionChipButton(
                 icon: Icons.inventory_2_outlined,
