@@ -58,11 +58,26 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Mes entreprises',
-            style: textTheme.headlineLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  'Mes entreprises',
+                  style: textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if (session.isAuthenticated) ...[
+                const SizedBox(width: 12),
+                FilledButton.icon(
+                  onPressed: _openCreateCompany,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Nouveau'),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 12),
           Text(
@@ -144,6 +159,10 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
       AppRoutes.businessDashboard,
       arguments: company.id,
     );
+  }
+
+  void _openCreateCompany() {
+    Navigator.pushNamed(context, AppRoutes.createCompany);
   }
 
   String _errorMessage(Object? error) {

@@ -721,6 +721,8 @@ Inclure:
 Implementation MVP:
 
 - consommation de `GET /api/users/me/companies`;
+- onglet `Entreprise` ouvert directement sur cette liste, sans sas intermediaire;
+- action `Nouveau` preparee vers `COMPANY-FRONT-002`;
 - recherche locale sur la page courante pour le nom, la ville, le role et les statuts;
 - pagination backend avec boutons precedent/suivant;
 - ouverture d'une entreprise vers le dashboard admin de l'entreprise, en attendant les ecrans admin detailles.

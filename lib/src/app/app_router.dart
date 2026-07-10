@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
-import '../features/business/presentation/business_home_screen.dart';
 import '../features/business/presentation/my_companies_screen.dart';
 import '../features/client/data/company_search_gateway.dart';
 import '../features/client/presentation/company_detail_screen.dart';
@@ -46,12 +45,24 @@ abstract final class AppRouter {
         selectedRoute: AppRoutes.tickets,
         child: TicketsHomeScreen(recentTicketStorage: recentTicketStorage),
       ),
-      AppRoutes.business => const FlowMovaNavigationShell(
+      AppRoutes.business ||
+      AppRoutes.myCompanies => const FlowMovaNavigationShell(
         selectedRoute: AppRoutes.business,
-        child: BusinessHomeScreen(),
+        title: 'Mes entreprises',
+        contentScrolls: false,
+        child: MyCompaniesScreen(),
       ),
       AppRoutes.login => const LoginScreen(),
       AppRoutes.register => const RegisterScreen(),
+      AppRoutes.createCompany => const FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.business,
+        title: 'Nouvelle entreprise',
+        child: FeaturePlaceholderScreen(
+          title: 'Nouvelle entreprise',
+          description:
+              'La creation entreprise sera branchee dans COMPANY-FRONT-002.',
+        ),
+      ),
       AppRoutes.businessDashboard => const FlowMovaNavigationShell(
         selectedRoute: AppRoutes.business,
         title: 'Dashboard entreprise',
@@ -129,12 +140,6 @@ abstract final class AppRouter {
         title: 'Tickets',
         contentScrolls: false,
         child: _myTicketDetailPage(settings.arguments),
-      ),
-      AppRoutes.myCompanies => const FlowMovaNavigationShell(
-        selectedRoute: AppRoutes.business,
-        title: 'Mes entreprises',
-        contentScrolls: false,
-        child: MyCompaniesScreen(),
       ),
       _ => NotFoundScreen(routeName: routeName),
     };

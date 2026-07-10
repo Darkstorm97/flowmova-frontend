@@ -43,6 +43,7 @@ void main() {
     expect(find.text('Mes entreprises'), findsOneWidget);
     expect(find.text('1 entreprise'), findsOneWidget);
     expect(find.text('Cafe Flow'), findsOneWidget);
+    expect(find.text('Nouveau'), findsOneWidget);
     expect(find.text('Admin'), findsOneWidget);
     expect(find.text('Restauration'), findsOneWidget);
     expect(find.text('Active'), findsOneWidget);
@@ -107,6 +108,26 @@ void main() {
 
     expect(find.text('Dashboard company-1'), findsOneWidget);
   });
+
+  testWidgets('my companies opens create company action', (tester) async {
+    final sessionController = AuthSessionController.inMemory();
+    await sessionController.authenticate(_jwt());
+
+    await tester.pumpWidget(
+      _TestApp(
+        sessionController: sessionController,
+        gateway: _FakeCurrentUserCompaniesGateway(
+          companies: [_company(name: 'Cafe Flow')],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Nouveau'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Create company'), findsOneWidget);
+  });
 }
 
 class _TestApp extends StatelessWidget {
@@ -129,6 +150,8 @@ class _TestApp extends StatelessWidget {
             final companyId = ModalRoute.of(context)!.settings.arguments;
             return Scaffold(body: Text('Dashboard $companyId'));
           },
+          AppRoutes.createCompany: (_) =>
+              const Scaffold(body: Text('Create company')),
         },
       ),
     );
