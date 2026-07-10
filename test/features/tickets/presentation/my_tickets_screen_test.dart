@@ -47,6 +47,53 @@ void main() {
     expect(find.text('12.50 CAD'), findsOneWidget);
   });
 
+  testWidgets('my tickets filters current user tickets locally', (
+    tester,
+  ) async {
+    final sessionController = AuthSessionController.inMemory();
+    await sessionController.authenticate(_jwt());
+
+    await tester.pumpWidget(
+      _TestApp(
+        sessionController: sessionController,
+        gateway: _FakeCurrentUserTicketGateway(
+          tickets: [
+            _ticket(status: 'RECEIVED'),
+            _ticket(
+              id: 'ticket-2',
+              ticketNumber: 'FM-0002',
+              companyName: 'Salon Mova',
+              serviceUnitName: 'Accueil coupe',
+              itemName: 'Brushing rapide',
+              status: 'CREATED',
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('2 tickets'), findsOneWidget);
+    expect(find.text('Cafe Flow'), findsWidgets);
+    expect(find.text('Salon Mova'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'salon');
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 resultat sur 2 tickets'), findsOneWidget);
+    expect(find.text('Salon Mova'), findsOneWidget);
+    expect(find.text('Cafe Flow'), findsNothing);
+
+    await tester.enterText(find.byType(TextField), 'introuvable');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Aucun ticket trouve'), findsOneWidget);
+    expect(
+      find.text('Aucun ticket ne correspond a "introuvable".'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('my tickets opens detail and confirms treatment', (tester) async {
     final sessionController = AuthSessionController.inMemory();
     await sessionController.authenticate(_jwt());
@@ -161,27 +208,34 @@ class _FakeCurrentUserTicketGateway implements CurrentUserTicketGateway {
   }
 }
 
-CurrentUserTicket _ticket({required String status}) {
+CurrentUserTicket _ticket({
+  required String status,
+  String id = 'ticket-1',
+  String ticketNumber = 'FM-0001',
+  String companyName = 'Cafe Flow',
+  String serviceUnitName = 'Comptoir principal',
+  String itemName = 'Latte glace',
+}) {
   return CurrentUserTicket(
-    id: 'ticket-1',
-    ticketNumber: 'FM-0001',
+    id: id,
+    ticketNumber: ticketNumber,
     userId: 'user-1',
     customerPhone: '+15145550000',
     companyId: 'company-1',
-    companyName: 'Cafe Flow',
+    companyName: companyName,
     serviceUnitId: 'service-unit-1',
-    serviceUnitName: 'Comptoir principal',
+    serviceUnitName: serviceUnitName,
     locationId: 'location-1',
     locationName: 'Table terrasse',
     locationDefault: true,
     status: status,
     currency: 'CAD',
     totalAmount: 12.5,
-    lines: const [
+    lines: [
       CurrentUserTicketLine(
         id: 'line-1',
         itemId: 'item-1',
-        itemName: 'Latte glace',
+        itemName: itemName,
         quantity: 2,
         unitPriceAmount: 6.25,
         lineTotalAmount: 12.5,

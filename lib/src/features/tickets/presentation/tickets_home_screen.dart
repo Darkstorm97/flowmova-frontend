@@ -29,7 +29,7 @@ class TicketsHomeScreen extends StatelessWidget {
         _TicketShortcut(
           title: 'Mes tickets',
           subtitle:
-              'Reserve aux tickets du compte connecte. La session sera branchee dans FRONT-012.',
+              'Retrouvez les tickets crees avec votre compte et suivez leur progression.',
           icon: Icons.person_search_outlined,
           routeName: AppRoutes.myTickets,
         ),

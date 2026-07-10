@@ -61,53 +61,57 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
     final textTheme = Theme.of(context).textTheme;
     final session = SessionScope.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Mes tickets',
-          style: textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Suivez les tickets crees avec votre compte FlowMova.',
-          style: textTheme.titleMedium?.copyWith(color: FlowMovaColors.slate),
-        ),
-        const SizedBox(height: 24),
-        if (session.status == AuthSessionStatus.unknown)
-          const _MyTicketsLoadingCard()
-        else if (!session.isAuthenticated)
-          _SignedOutTicketsCard(
-            isExpired: session.status == AuthSessionStatus.expired,
-          )
-        else
-          FutureBuilder<CurrentUserTicketPage>(
-            future: _ticketsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState != ConnectionState.done) {
-                return const _MyTicketsLoadingCard();
-              }
-
-              if (snapshot.hasError) {
-                return _MyTicketsErrorCard(
-                  message: _errorMessage(snapshot.error),
-                  onRetry: _reload,
-                );
-              }
-
-              final page = snapshot.requireData;
-              if (page.items.isEmpty) {
-                return const _EmptyTicketsCard();
-              }
-
-              return _MyTicketsList(
-                page: page,
-                onRefresh: _reload,
-                onOpenTicket: _openTicket,
-              );
-            },
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Mes tickets',
+            style: textTheme.headlineLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
-      ],
+          const SizedBox(height: 12),
+          Text(
+            'Suivez les tickets crees avec votre compte FlowMova.',
+            style: textTheme.titleMedium?.copyWith(color: FlowMovaColors.slate),
+          ),
+          const SizedBox(height: 24),
+          if (session.status == AuthSessionStatus.unknown)
+            const _MyTicketsLoadingCard()
+          else if (!session.isAuthenticated)
+            _SignedOutTicketsCard(
+              isExpired: session.status == AuthSessionStatus.expired,
+            )
+          else
+            FutureBuilder<CurrentUserTicketPage>(
+              future: _ticketsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const _MyTicketsLoadingCard();
+                }
+
+                if (snapshot.hasError) {
+                  return _MyTicketsErrorCard(
+                    message: _errorMessage(snapshot.error),
+                    onRetry: _reload,
+                  );
+                }
+
+                final page = snapshot.requireData;
+                if (page.items.isEmpty) {
+                  return const _EmptyTicketsCard();
+                }
+
+                return _MyTicketsList(
+                  page: page,
+                  onRefresh: _reload,
+                  onOpenTicket: _openTicket,
+                );
+              },
+            ),
+        ],
+      ),
     );
   }
 
@@ -305,7 +309,7 @@ class _MyTicketDetailScreenState extends State<MyTicketDetailScreen> {
   bool _canCancel(String status) => status == 'CREATED' || status == 'RECEIVED';
 }
 
-class _MyTicketsList extends StatelessWidget {
+class _MyTicketsList extends StatefulWidget {
   const _MyTicketsList({
     required this.page,
     required this.onRefresh,
@@ -317,8 +321,26 @@ class _MyTicketsList extends StatelessWidget {
   final ValueChanged<CurrentUserTicket> onOpenTicket;
 
   @override
+  State<_MyTicketsList> createState() => _MyTicketsListState();
+}
+
+class _MyTicketsListState extends State<_MyTicketsList> {
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final filteredTickets = widget.page.items
+        .where((ticket) => _matchesTicket(ticket, _query))
+        .toList(growable: false);
+    final hasQuery = _query.trim().isNotEmpty;
 
     return Column(
       children: [
@@ -326,7 +348,10 @@ class _MyTicketsList extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '${page.totalItems} ticket${page.totalItems > 1 ? 's' : ''}',
+                _ticketCountLabel(
+                  filteredTickets.length,
+                  widget.page.items.length,
+                ),
                 style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -334,18 +359,75 @@ class _MyTicketsList extends StatelessWidget {
             ),
             IconButton(
               tooltip: 'Rafraichir',
-              onPressed: onRefresh,
+              onPressed: widget.onRefresh,
               icon: const Icon(Icons.refresh),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        for (final ticket in page.items) ...[
-          _MyTicketListCard(ticket: ticket, onTap: () => onOpenTicket(ticket)),
-          const SizedBox(height: 12),
-        ],
+        const SizedBox(height: 10),
+        TextField(
+          controller: _searchController,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: 'Rechercher par numero, entreprise, service...',
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: hasQuery
+                ? IconButton(
+                    tooltip: 'Effacer la recherche',
+                    onPressed: _clearSearch,
+                    icon: const Icon(Icons.close),
+                  )
+                : null,
+          ),
+          onChanged: (value) => setState(() => _query = value),
+        ),
+        const SizedBox(height: 14),
+        if (filteredTickets.isEmpty)
+          _EmptyTicketSearchCard(query: _query)
+        else
+          for (final ticket in filteredTickets) ...[
+            _MyTicketListCard(
+              ticket: ticket,
+              onTap: () => widget.onOpenTicket(ticket),
+            ),
+            const SizedBox(height: 12),
+          ],
       ],
     );
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() => _query = '');
+  }
+
+  bool _matchesTicket(CurrentUserTicket ticket, String query) {
+    final normalizedQuery = query.trim().toLowerCase();
+    if (normalizedQuery.isEmpty) {
+      return true;
+    }
+
+    final values = <String>[
+      ticket.ticketNumber,
+      ticket.companyName,
+      ticket.serviceUnitName,
+      ticket.locationName,
+      ticket.status,
+      _statusLabel(ticket.status),
+      ticket.totalLabel,
+      for (final line in ticket.lines) line.itemName,
+    ];
+
+    return values.any((value) => value.toLowerCase().contains(normalizedQuery));
+  }
+
+  String _ticketCountLabel(int filteredCount, int totalCount) {
+    final totalLabel = '$totalCount ticket${totalCount > 1 ? 's' : ''}';
+    if (_query.trim().isEmpty || filteredCount == totalCount) {
+      return totalLabel;
+    }
+
+    return '$filteredCount resultat${filteredCount > 1 ? 's' : ''} sur $totalLabel';
   }
 }
 
@@ -1102,6 +1184,43 @@ class _EmptyTicketsCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               'Les commandes creees avec votre compte apparaitront ici.',
+              style: textTheme.bodyMedium?.copyWith(
+                color: FlowMovaColors.slate,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyTicketSearchCard extends StatelessWidget {
+  const _EmptyTicketSearchCard({required this.query});
+
+  final String query;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.search_off_outlined),
+            const SizedBox(height: 12),
+            Text(
+              'Aucun ticket trouve',
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Aucun ticket ne correspond a "$query".',
               style: textTheme.bodyMedium?.copyWith(
                 color: FlowMovaColors.slate,
               ),
