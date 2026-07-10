@@ -791,11 +791,11 @@ Definition of Done:
 - aucune action de creation n'est disponible cote frontend quand elle est `CLOSED`;
 - les compagnies `OPEN` gardent le comportement actuel.
 
-### COMPANY-FRONT-005 - Photo picker entreprise avec preview et upload
+### COMPANY-FRONT-005 - Photo picker entreprise avec preview et upload en modification
 
 Issue GitHub: #53.
 
-Remplacer le champ `Image URL` par un vrai choix de photo local, avec preview et upload vers le backend.
+Ajouter un vrai choix de photo local dans le parcours de modification entreprise, avec preview et upload vers le backend.
 
 Dependance backend:
 
@@ -803,9 +803,10 @@ Dependance backend:
 
 Definition of Done:
 
-- un admin peut choisir une photo locale dans la creation entreprise;
+- un admin peut choisir une photo locale depuis la modification entreprise;
 - la photo est previsualisee avant soumission;
-- apres creation, l'image est envoyee via `POST /api/companies/{companyId}/image`.
+- apres sauvegarde, l'image est envoyee via `POST /api/companies/{companyId}/image`;
+- la creation entreprise reste volontairement sans photo pour garder le parcours initial court.
 
 ### COMPANY-FRONT-006 - Remplacer la devise par une liste deroulante priorisee
 

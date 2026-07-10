@@ -1,6 +1,3 @@
-import 'dart:typed_data';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/app_routes.dart';
@@ -35,7 +32,6 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
   CurrentUserCompaniesGateway? _gateway;
   String _businessType = 'RESTAURANT';
   String _currency = _currencyOptions.first.value;
-  _SelectedCompanyImage? _selectedImage;
   bool _startsOpen = true;
   bool _isSubmitting = false;
   String? _errorMessage;
@@ -113,13 +109,6 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                         alignLabelWithHint: true,
                         prefixIcon: Icon(Icons.notes_outlined),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    _CompanyImagePicker(
-                      image: _selectedImage,
-                      isDisabled: _isSubmitting,
-                      onPick: _pickImage,
-                      onClear: () => setState(() => _selectedImage = null),
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
@@ -390,30 +379,6 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
           longitude: _parseCoordinate(_longitudeController.text),
         ),
       );
-      final selectedImage = _selectedImage;
-      if (selectedImage != null) {
-        try {
-          await _gateway!.uploadCompanyImage(
-            company.id,
-            CompanyImageUpload(
-              bytes: selectedImage.bytes,
-              filename: selectedImage.name,
-              contentType: selectedImage.contentType,
-            ),
-          );
-        } catch (_) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Entreprise creee, mais la photo n a pas pu etre envoyee.',
-                ),
-              ),
-            );
-          }
-        }
-      }
-
       if (!mounted) {
         return;
       }
@@ -451,46 +416,6 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
       return 'La reponse de creation est illisible.';
     }
     return 'Impossible de creer l entreprise pour le moment.';
-  }
-
-  Future<void> _pickImage() async {
-    final result = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp'],
-      withData: true,
-    );
-    final file = result?.files.single;
-    final bytes = file?.bytes;
-    if (file == null || bytes == null) {
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setState(() {
-        _errorMessage = 'La photo doit peser 5 Mo maximum.';
-      });
-      return;
-    }
-
-    setState(() {
-      _selectedImage = _SelectedCompanyImage(
-        name: file.name,
-        bytes: bytes,
-        contentType: _contentTypeFor(file.name),
-      );
-      _errorMessage = null;
-    });
-  }
-
-  String _contentTypeFor(String filename) {
-    final lower = filename.toLowerCase();
-    if (lower.endsWith('.png')) {
-      return 'image/png';
-    }
-    if (lower.endsWith('.webp')) {
-      return 'image/webp';
-    }
-    return 'image/jpeg';
   }
 
   @override
@@ -545,113 +470,6 @@ class _SignedOutCreateCompanyCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _CompanyImagePicker extends StatelessWidget {
-  const _CompanyImagePicker({
-    required this.image,
-    required this.isDisabled,
-    required this.onPick,
-    required this.onClear,
-  });
-
-  final _SelectedCompanyImage? image;
-  final bool isDisabled;
-  final VoidCallback onPick;
-  final VoidCallback onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final selectedImage = image;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: FlowMovaColors.cloud,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: FlowMovaColors.border),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Photo',
-              style: textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 10),
-            if (selectedImage == null)
-              AspectRatio(
-                aspectRatio: 16 / 8,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: FlowMovaColors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.add_photo_alternate_outlined,
-                      size: 42,
-                      color: FlowMovaColors.slate,
-                    ),
-                  ),
-                ),
-              )
-            else
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: AspectRatio(
-                  aspectRatio: 16 / 8,
-                  child: Image.memory(selectedImage.bytes, fit: BoxFit.cover),
-                ),
-              ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    selectedImage?.name ?? 'Aucune photo selectionnee',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: FlowMovaColors.slate,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                if (selectedImage != null)
-                  IconButton(
-                    tooltip: 'Retirer la photo',
-                    onPressed: isDisabled ? null : onClear,
-                    icon: const Icon(Icons.close),
-                  ),
-                FilledButton.icon(
-                  onPressed: isDisabled ? null : onPick,
-                  icon: const Icon(Icons.upload_file),
-                  label: Text(selectedImage == null ? 'Choisir' : 'Changer'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SelectedCompanyImage {
-  const _SelectedCompanyImage({
-    required this.name,
-    required this.bytes,
-    required this.contentType,
-  });
-
-  final String name;
-  final Uint8List bytes;
-  final String contentType;
 }
 
 class _CompanyTypeOption {
