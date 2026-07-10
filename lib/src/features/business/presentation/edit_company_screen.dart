@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/app_routes.dart';
@@ -10,6 +9,7 @@ import '../../../core/config/app_environment.dart';
 import '../../../core/session/session_scope.dart';
 import '../../../core/theme/flow_mova_colors.dart';
 import '../data/current_user_companies_gateway.dart';
+import 'company_image_picker.dart';
 
 class EditCompanyArguments {
   const EditCompanyArguments({required this.company, this.gateway});
@@ -382,17 +382,11 @@ class _EditCompanyScreenState extends State<EditCompanyScreen> {
 
   Future<void> _pickImage() async {
     try {
-      final result = await FilePicker.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp'],
-        withData: true,
-      );
-      final file = result?.files.single;
-      final bytes = file?.bytes;
-      if (file == null || bytes == null) {
+      final pickedImage = await pickCompanyImage();
+      if (pickedImage == null) {
         return;
       }
-      if (bytes.length > _maxImageBytes) {
+      if (pickedImage.bytes.length > _maxImageBytes) {
         setState(() {
           _errorMessage = 'La photo doit peser 5 Mo maximum.';
         });
@@ -401,9 +395,9 @@ class _EditCompanyScreenState extends State<EditCompanyScreen> {
 
       setState(() {
         _selectedImage = _SelectedCompanyImage(
-          bytes: bytes,
-          filename: file.name,
-          contentType: _contentTypeFor(file.name),
+          bytes: pickedImage.bytes,
+          filename: pickedImage.filename,
+          contentType: pickedImage.contentType,
         );
         _errorMessage = null;
       });
@@ -480,17 +474,6 @@ class _EditCompanyScreenState extends State<EditCompanyScreen> {
       return 'Le nom doit contenir 150 caracteres maximum.';
     }
     return null;
-  }
-
-  String _contentTypeFor(String filename) {
-    final lower = filename.toLowerCase();
-    if (lower.endsWith('.png')) {
-      return 'image/png';
-    }
-    if (lower.endsWith('.webp')) {
-      return 'image/webp';
-    }
-    return 'image/jpeg';
   }
 
   String _submitErrorMessage(Object error) {
