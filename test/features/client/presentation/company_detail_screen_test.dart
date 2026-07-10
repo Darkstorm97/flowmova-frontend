@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:flowmova_frontend/src/core/session/auth_session_controller.dart';
+import 'package:flowmova_frontend/src/core/session/session_scope.dart';
 import 'package:flowmova_frontend/src/features/client/data/company_detail_gateway.dart';
 import 'package:flowmova_frontend/src/features/client/presentation/company_detail_screen.dart';
 import 'package:flowmova_frontend/src/features/tickets/data/recent_ticket_storage.dart';
@@ -144,6 +148,42 @@ void main() {
     expect(recentTickets.single.ticketNumber, 'FM-0001');
     expect(recentTickets.single.serviceUnitName, 'Comptoir principal');
     expect(recentTickets.single.locationName, 'Accueil');
+  });
+
+  testWidgets('connected user creates ticket without name or item', (
+    tester,
+  ) async {
+    final sessionController = AuthSessionController.inMemory();
+    await sessionController.authenticate(_jwt());
+    final ticketGateway = _CapturingTicketCreationGateway();
+
+    await tester.pumpWidget(
+      SessionScope(
+        controller: sessionController,
+        child: MaterialApp(
+          home: CompanyDetailScreen(
+            companyId: 'company-1',
+            detailGateway: const _FakeCompanyDetailGateway(),
+            ticketCreationGateway: ticketGateway,
+            recentTicketStorage: InMemoryRecentTicketStorage(),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Creer une commande'));
+    await tester.tap(find.text('Creer une commande'));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(TextField, 'Nom'), findsNothing);
+    await tester.ensureVisible(find.text('Creer mon ticket'));
+    await tester.tap(find.text('Creer mon ticket'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ticket cree'), findsOneWidget);
+    expect(ticketGateway.lastCommand?.guestName, isNull);
+    expect(ticketGateway.lastCommand?.lines, isEmpty);
   });
 
   testWidgets('company detail searches and selects optional ticket items', (
@@ -315,6 +355,37 @@ class _FakeTicketCreationGateway implements TicketCreationGateway {
   }
 }
 
+class _CapturingTicketCreationGateway implements TicketCreationGateway {
+  CreateTicketCommand? lastCommand;
+
+  @override
+  Future<TicketCreationResult> createTicket(
+    String serviceUnitId,
+    CreateTicketCommand command,
+  ) async {
+    lastCommand = command;
+    return TicketCreationResult(
+      id: 'ticket-1',
+      ticketNumber: 'FM-0001',
+      accessCode: 'ABC123',
+      guestName: command.guestName,
+      serviceUnitId: serviceUnitId,
+      locationId: command.locationId,
+      status: 'CREATED',
+      currency: 'CAD',
+      totalAmount: 0,
+    );
+  }
+
+  @override
+  Future<TicketCreationResult> createTicketFromPublicLocation(
+    String publicAccessSlug,
+    CreateTicketCommand command,
+  ) {
+    throw UnimplementedError();
+  }
+}
+
 class _QrOnlyCompanyDetailGateway implements CompanyDetailGateway {
   const _QrOnlyCompanyDetailGateway();
 
@@ -472,4 +543,15 @@ class _RichCompanyDetailGateway implements CompanyDetailGateway {
       ],
     );
   }
+}
+
+String _jwt() {
+  final expiresAt = DateTime.now().toUtc().add(const Duration(hours: 1));
+  final header = _encode({'alg': 'none', 'typ': 'JWT'});
+  final payload = _encode({'exp': expiresAt.millisecondsSinceEpoch ~/ 1000});
+  return '$header.$payload.signature';
+}
+
+String _encode(Map<String, dynamic> json) {
+  return base64Url.encode(utf8.encode(jsonEncode(json))).replaceAll('=', '');
 }

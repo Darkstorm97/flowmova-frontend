@@ -53,7 +53,31 @@ void main() {
     expect(find.text('ada@test.dev'), findsWidgets);
     expect(find.text('+1 514 555 0101'), findsOneWidget);
     expect(find.text('Compte actif'), findsWidgets);
-    expect(find.text('Se deconnecter'), findsNothing);
+    expect(find.text('Se deconnecter'), findsOneWidget);
+  });
+
+  testWidgets('profile signs out after confirmation', (tester) async {
+    final sessionController = AuthSessionController.inMemory();
+    await sessionController.authenticate(_jwt());
+
+    await tester.pumpWidget(
+      _TestApp(
+        sessionController: sessionController,
+        profileGateway: _FakeProfileGateway(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Se deconnecter'));
+    await tester.pumpAndSettle();
+    expect(find.text('Se deconnecter ?'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Se deconnecter'));
+    await tester.pumpAndSettle();
+
+    expect(sessionController.isAuthenticated, isFalse);
+    expect(find.text('Utilisateur FlowMova'), findsOneWidget);
+    expect(find.text('Non connecte'), findsWidgets);
   });
 
   testWidgets('profile displays backend errors and retries', (tester) async {

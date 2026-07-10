@@ -138,7 +138,6 @@ class _DashboardContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final company = bundle.company;
-    final textTheme = Theme.of(context).textTheme;
     final openServices = bundle.services.items
         .where((service) => service.isOpen)
         .length;
@@ -162,40 +161,7 @@ class _DashboardContent extends StatelessWidget {
                 label: 'Services',
                 value: '${bundle.services.totalItems}',
                 helper: '$openServices ouverts',
-              ),
-              _MetricTile(
-                icon: Icons.category_outlined,
-                label: 'Categories',
-                value: '${bundle.catalogCategories.length}',
-                helper: 'catalogue',
-              ),
-              _MetricTile(
-                icon: Icons.inventory_2_outlined,
-                label: 'Articles',
-                value: '${bundle.catalogs.length}',
-                helper: 'actifs',
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Raccourcis',
-            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _ActionChipButton(
-                icon: Icons.edit_outlined,
-                label: 'Modifier',
-                onPressed: () => onEditCompany(company),
-              ),
-              _ActionChipButton(
-                icon: Icons.room_service_outlined,
-                label: 'Services',
-                onPressed: () => Navigator.pushNamed(
+                onTap: () => Navigator.pushNamed(
                   context,
                   AppRoutes.businessServiceUnits,
                   arguments: BusinessServiceUnitsArguments(
@@ -203,15 +169,20 @@ class _DashboardContent extends StatelessWidget {
                   ),
                 ),
               ),
-              _ActionChipButton(
+              _MetricTile(
                 icon: Icons.inventory_2_outlined,
-                label: 'Catalogues',
-                onPressed: () => _showComingSoon(context, 'Catalogues'),
+                label: 'Articles',
+                value: '${bundle.catalogs.length}',
+                helper:
+                    '${bundle.catalogCategories.length} categorie${bundle.catalogCategories.length > 1 ? 's' : ''}',
+                onTap: () => _showComingSoon(context, 'Articles'),
               ),
-              _ActionChipButton(
+              _MetricTile(
                 icon: Icons.confirmation_number_outlined,
                 label: 'Tickets',
-                onPressed: () => _showComingSoon(context, 'Tickets admin'),
+                value: 'Suivi',
+                helper: 'bientot',
+                onTap: () => _showComingSoon(context, 'Tickets admin'),
               ),
             ],
           ),
@@ -396,12 +367,14 @@ class _MetricTile extends StatelessWidget {
     required this.label,
     required this.value,
     required this.helper,
+    required this.onTap,
   });
 
   final IconData icon;
   final String label;
   final String value;
   final String helper;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -410,33 +383,37 @@ class _MetricTile extends StatelessWidget {
     return SizedBox(
       width: 150,
       child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: FlowMovaColors.primaryAqua),
-              const SizedBox(height: 10),
-              Text(
-                value,
-                style: textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, color: FlowMovaColors.primaryAqua),
+                const SizedBox(height: 10),
+                Text(
+                  value,
+                  style: textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-              ),
-              Text(
-                label,
-                style: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
+                Text(
+                  label,
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                helper,
-                style: textTheme.bodySmall?.copyWith(
-                  color: FlowMovaColors.slate,
+                const SizedBox(height: 2),
+                Text(
+                  helper,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: FlowMovaColors.slate,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -632,27 +609,6 @@ class _CatalogPreview extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ActionChipButton extends StatelessWidget {
-  const _ActionChipButton({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon),
-      label: Text(label),
     );
   }
 }

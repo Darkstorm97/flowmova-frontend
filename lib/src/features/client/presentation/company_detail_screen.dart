@@ -420,6 +420,8 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
 
   Widget _buildForm(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final isAuthenticated =
+        SessionScope.maybeOf(context)?.isAuthenticated ?? false;
     final canChangeService = widget.bundle.serviceUnits.length > 1;
     final canChangeLocation =
         _serviceUnitDetail != null && _serviceUnitDetail!.locations.length > 1;
@@ -484,15 +486,17 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
             onTap: _openItemsPicker,
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _guestNameController,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              prefixIcon: Icon(Icons.person_outline),
-              labelText: 'Nom',
+          if (!isAuthenticated) ...[
+            TextField(
+              controller: _guestNameController,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.person_outline),
+                labelText: 'Nom',
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
+            const SizedBox(height: 10),
+          ],
           TextField(
             controller: _phoneController,
             keyboardType: TextInputType.phone,
@@ -699,7 +703,9 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
       return;
     }
 
-    if (_guestNameController.text.trim().isEmpty) {
+    final isAuthenticated =
+        SessionScope.maybeOf(context)?.isAuthenticated ?? false;
+    if (!isAuthenticated && _guestNameController.text.trim().isEmpty) {
       setState(
         () => _errorMessage = 'Indiquez votre nom pour creer le ticket.',
       );
@@ -717,7 +723,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
         serviceUnit.id,
         CreateTicketCommand(
           locationId: location.id,
-          guestName: _guestNameController.text,
+          guestName: isAuthenticated ? null : _guestNameController.text,
           customerPhone: _phoneController.text,
           notes: _notesController.text,
           lines: [

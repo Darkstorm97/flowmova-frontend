@@ -190,7 +190,9 @@ class _PublicLocationScreenState extends State<PublicLocationScreen> {
       return;
     }
 
-    if (_guestNameController.text.trim().isEmpty) {
+    final isAuthenticated =
+        SessionScope.maybeOf(context)?.isAuthenticated ?? false;
+    if (!isAuthenticated && _guestNameController.text.trim().isEmpty) {
       setState(() => _errorMessage = 'Indiquez votre nom pour confirmer.');
       return;
     }
@@ -206,7 +208,7 @@ class _PublicLocationScreenState extends State<PublicLocationScreen> {
             slug,
             CreateTicketCommand(
               locationId: access.location.id,
-              guestName: _guestNameController.text,
+              guestName: isAuthenticated ? null : _guestNameController.text,
               customerPhone: _phoneController.text,
               notes: _notesController.text,
               lines: [
@@ -470,6 +472,9 @@ class _OrderForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isAuthenticated =
+        SessionScope.maybeOf(context)?.isAuthenticated ?? false;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -494,15 +499,17 @@ class _OrderForm extends StatelessWidget {
           ],
           const SizedBox(height: 6),
         ],
-        TextField(
-          controller: guestNameController,
-          textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            prefixIcon: Icon(Icons.person_outline),
-            labelText: 'Nom',
+        if (!isAuthenticated) ...[
+          TextField(
+            controller: guestNameController,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              prefixIcon: Icon(Icons.person_outline),
+              labelText: 'Nom',
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
+          const SizedBox(height: 10),
+        ],
         TextField(
           controller: phoneController,
           keyboardType: TextInputType.phone,

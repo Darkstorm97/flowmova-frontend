@@ -196,8 +196,43 @@ class _SignedInProfileCard extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _ProfileInfoCard(rows: rows),
+        const SizedBox(height: 16),
+        Align(
+          alignment: Alignment.centerRight,
+          child: OutlinedButton.icon(
+            onPressed: () => _confirmSignOut(context),
+            icon: const Icon(Icons.logout),
+            label: const Text('Se deconnecter'),
+          ),
+        ),
       ],
     );
+  }
+
+  Future<void> _confirmSignOut(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Se deconnecter ?'),
+        content: const Text(
+          'Vous devrez vous reconnecter pour acceder a vos espaces personnels.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Se deconnecter'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await SessionScope.of(context).signOut();
+    }
   }
 }
 

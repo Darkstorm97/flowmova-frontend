@@ -955,6 +955,8 @@ Definition of Done:
 
 ### TICKET-ADMIN-FRONT-001 - Lister les tickets d'une unite de service
 
+Issue GitHub: #59.
+
 Afficher les tickets d'une unite de service pour l'admin.
 
 Inclure:
