@@ -735,6 +735,8 @@ Definition of Done:
 
 ### COMPANY-FRONT-002 - Creer une entreprise
 
+Issue GitHub: #19.
+
 Brancher le formulaire creation entreprise.
 
 Inclure:
@@ -745,6 +747,9 @@ Inclure:
 - domaine/type;
 - adresse optionnelle avec latitude/longitude optionnelles;
 - affichage erreurs backend.
+- bouton `Nouveau` dans la barre superieure de `Mes entreprises`;
+- soumission via `POST /api/companies`;
+- ouverture du dashboard de l'entreprise creee lorsque l'API retourne l'identifiant.
 
 Definition of Done:
 

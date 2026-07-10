@@ -14,6 +14,7 @@ class FlowMovaNavigationShell extends StatelessWidget {
     this.contentScrolls = true,
     this.maxContentWidth = 760,
     this.contentPadding = const EdgeInsets.all(24),
+    this.actions = const [],
   });
 
   final String selectedRoute;
@@ -22,6 +23,7 @@ class FlowMovaNavigationShell extends StatelessWidget {
   final bool contentScrolls;
   final double maxContentWidth;
   final EdgeInsetsGeometry contentPadding;
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +44,7 @@ class FlowMovaNavigationShell extends StatelessWidget {
             appBar: AppBar(
               titleSpacing: canPop ? 4 : null,
               title: FlowMovaAppBarTitle(title: _pageTitle, showLogo: !canPop),
+              actions: actions,
             ),
             body: content,
             bottomNavigationBar: NavigationBar(
@@ -90,7 +93,7 @@ class FlowMovaNavigationShell extends StatelessWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      _LargeTopBar(title: _pageTitle),
+                      _LargeTopBar(title: _pageTitle, actions: actions),
                       Expanded(child: content),
                     ],
                   ),
@@ -124,9 +127,10 @@ class FlowMovaNavigationShell extends StatelessWidget {
 }
 
 class _LargeTopBar extends StatelessWidget {
-  const _LargeTopBar({required this.title});
+  const _LargeTopBar({required this.title, required this.actions});
 
   final String title;
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -155,6 +159,10 @@ class _LargeTopBar extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (actions.isNotEmpty) ...[
+                  const SizedBox(width: 12),
+                  ...actions,
+                ],
               ],
             ),
           ),

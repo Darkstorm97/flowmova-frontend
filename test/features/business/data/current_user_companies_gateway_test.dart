@@ -51,6 +51,53 @@ void main() {
     expect(page.items.single.locationLabel, 'Montreal, Quebec, CA');
     expect(page.items.single.isOperationallyOpen, isTrue);
   });
+
+  test('createCompany posts company creation payload', () async {
+    late Uri capturedUrl;
+    late Map<String, dynamic> capturedBody;
+
+    final gateway = BackendCurrentUserCompaniesGateway(
+      ApiClient(
+        environment: environment,
+        httpClient: MockClient.streaming((request, bodyStream) async {
+          capturedUrl = request.url;
+          capturedBody =
+              jsonDecode(await utf8.decodeStream(bodyStream))
+                  as Map<String, dynamic>;
+          return http.StreamedResponse(
+            Stream.value(utf8.encode(jsonEncode(_companyJson()))),
+            201,
+          );
+        }),
+      ),
+    );
+
+    final company = await gateway.createCompany(
+      const CreateCompanyInput(
+        name: ' Cafe Flow ',
+        description: '',
+        imageUrl: 'https://cdn.test/cafe-flow.jpg',
+        currency: 'cad',
+        businessType: 'RESTAURANT',
+        operationalStatus: 'OPEN',
+        city: 'Montreal',
+        country: 'ca',
+        latitude: 45.5017,
+      ),
+    );
+
+    expect(capturedUrl.path, '/api/companies');
+    expect(capturedBody['name'], 'Cafe Flow');
+    expect(capturedBody['description'], isNull);
+    expect(capturedBody['currency'], 'CAD');
+    expect(capturedBody['businessType'], 'RESTAURANT');
+    expect(capturedBody['operationalStatus'], 'OPEN');
+    expect(capturedBody['city'], 'Montreal');
+    expect(capturedBody['country'], 'CA');
+    expect(capturedBody['latitude'], 45.5017);
+    expect(company.id, 'company-1');
+    expect(company.role, 'ADMIN');
+  });
 }
 
 Map<String, Object?> _companyJson() {

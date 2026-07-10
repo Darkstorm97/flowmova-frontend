@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
+import '../features/business/presentation/create_company_screen.dart';
 import '../features/business/presentation/my_companies_screen.dart';
 import '../features/client/data/company_search_gateway.dart';
 import '../features/client/presentation/company_detail_screen.dart';
@@ -16,6 +17,7 @@ import '../features/tickets/presentation/my_tickets_screen.dart';
 import '../features/tickets/presentation/recent_tickets_screen.dart';
 import '../features/tickets/presentation/ticket_lookup_screen.dart';
 import '../features/tickets/presentation/tickets_home_screen.dart';
+import '../core/session/session_scope.dart';
 import 'app_routes.dart';
 
 abstract final class AppRouter {
@@ -50,6 +52,7 @@ abstract final class AppRouter {
         selectedRoute: AppRoutes.business,
         title: 'Mes entreprises',
         contentScrolls: false,
+        actions: [_CreateCompanyAction()],
         child: MyCompaniesScreen(),
       ),
       AppRoutes.login => const LoginScreen(),
@@ -57,11 +60,8 @@ abstract final class AppRouter {
       AppRoutes.createCompany => const FlowMovaNavigationShell(
         selectedRoute: AppRoutes.business,
         title: 'Nouvelle entreprise',
-        child: FeaturePlaceholderScreen(
-          title: 'Nouvelle entreprise',
-          description:
-              'La creation entreprise sera branchee dans COMPANY-FRONT-002.',
-        ),
+        contentScrolls: false,
+        child: CreateCompanyScreen(),
       ),
       AppRoutes.businessDashboard => const FlowMovaNavigationShell(
         selectedRoute: AppRoutes.business,
@@ -238,6 +238,27 @@ abstract final class AppRouter {
     return const FeaturePlaceholderScreen(
       title: 'Ticket introuvable',
       description: 'Revenez a Mes tickets et selectionnez un ticket.',
+    );
+  }
+}
+
+class _CreateCompanyAction extends StatelessWidget {
+  const _CreateCompanyAction();
+
+  @override
+  Widget build(BuildContext context) {
+    final session = SessionScope.of(context);
+    if (!session.isAuthenticated) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: FilledButton.icon(
+        onPressed: () => Navigator.pushNamed(context, AppRoutes.createCompany),
+        icon: const Icon(Icons.add),
+        label: const Text('Nouveau'),
+      ),
     );
   }
 }

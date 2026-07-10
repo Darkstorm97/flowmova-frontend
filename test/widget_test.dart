@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flowmova_frontend/src/app/flow_mova_app.dart';
+import 'package:flowmova_frontend/src/core/session/auth_session_controller.dart';
 import 'package:flowmova_frontend/src/core/session/session_scope.dart';
 import 'package:flowmova_frontend/src/features/client/data/company_search_gateway.dart';
 import 'package:flowmova_frontend/src/features/client/presentation/client_home_screen.dart';
@@ -140,6 +143,31 @@ void main() {
     expect(find.byType(BackButton), findsNothing);
   });
 
+  testWidgets('business tab exposes create company action when connected', (
+    tester,
+  ) async {
+    final sessionController = AuthSessionController.inMemory();
+    await sessionController.authenticate(_jwt());
+
+    await tester.pumpWidget(
+      FlowMovaApp(
+        sessionController: sessionController,
+        companySearchGateway: companySearchGateway,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Entreprise'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nouveau'), findsOneWidget);
+
+    await tester.tap(find.text('Nouveau'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nouvelle entreprise'), findsWidgets);
+  });
+
   testWidgets('public location route accepts web hash matrix parameters', (
     tester,
   ) async {
@@ -192,4 +220,15 @@ class _FakeCompanySearchGateway implements CompanySearchGateway {
 
   @override
   Future<CompanySearchPage> search(CompanySearchQuery query) async => page;
+}
+
+String _jwt() {
+  final expiresAt = DateTime.now().toUtc().add(const Duration(hours: 1));
+  final header = _encode({'alg': 'none', 'typ': 'JWT'});
+  final payload = _encode({'exp': expiresAt.millisecondsSinceEpoch ~/ 1000});
+  return '$header.$payload.signature';
+}
+
+String _encode(Map<String, dynamic> json) {
+  return base64Url.encode(utf8.encode(jsonEncode(json))).replaceAll('=', '');
 }

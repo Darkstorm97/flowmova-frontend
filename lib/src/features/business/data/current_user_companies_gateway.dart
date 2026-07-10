@@ -2,6 +2,8 @@ import '../../../core/api/api_client.dart';
 
 abstract interface class CurrentUserCompaniesGateway {
   Future<CurrentUserCompanyPage> listCompanies({int page = 0, int size = 10});
+
+  Future<CurrentUserCompany> createCompany(CreateCompanyInput input);
 }
 
 class BackendCurrentUserCompaniesGateway
@@ -25,6 +27,78 @@ class BackendCurrentUserCompaniesGateway
     }
 
     return CurrentUserCompanyPage.fromJson(response);
+  }
+
+  @override
+  Future<CurrentUserCompany> createCompany(CreateCompanyInput input) async {
+    final response = await _apiClient.post(
+      '/api/companies',
+      body: input.toJson(),
+    );
+
+    if (response is! Map<String, dynamic>) {
+      throw const FormatException('Invalid created company payload.');
+    }
+
+    return CurrentUserCompany.fromJson({...response, 'role': 'ADMIN'});
+  }
+}
+
+class CreateCompanyInput {
+  const CreateCompanyInput({
+    required this.name,
+    required this.currency,
+    required this.businessType,
+    required this.operationalStatus,
+    this.description,
+    this.imageUrl,
+    this.addressLine1,
+    this.addressLine2,
+    this.city,
+    this.region,
+    this.postalCode,
+    this.country,
+    this.latitude,
+    this.longitude,
+  });
+
+  final String name;
+  final String? description;
+  final String? imageUrl;
+  final String currency;
+  final String businessType;
+  final String operationalStatus;
+  final String? addressLine1;
+  final String? addressLine2;
+  final String? city;
+  final String? region;
+  final String? postalCode;
+  final String? country;
+  final double? latitude;
+  final double? longitude;
+
+  Map<String, Object?> toJson() {
+    return {
+      'name': name.trim(),
+      'description': _blankToNull(description),
+      'imageUrl': _blankToNull(imageUrl),
+      'currency': currency.trim().toUpperCase(),
+      'businessType': businessType,
+      'operationalStatus': operationalStatus,
+      'addressLine1': _blankToNull(addressLine1),
+      'addressLine2': _blankToNull(addressLine2),
+      'city': _blankToNull(city),
+      'region': _blankToNull(region),
+      'postalCode': _blankToNull(postalCode),
+      'country': _blankToNull(country)?.toUpperCase(),
+      'latitude': latitude,
+      'longitude': longitude,
+    };
+  }
+
+  static String? _blankToNull(String? value) {
+    final trimmed = value?.trim();
+    return trimmed == null || trimmed.isEmpty ? null : trimmed;
   }
 }
 
