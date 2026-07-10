@@ -52,7 +52,7 @@ void main() {
     expect(find.text('Ada Lovelace'), findsWidgets);
     expect(find.text('ada@test.dev'), findsWidgets);
     expect(find.text('+1 514 555 0101'), findsOneWidget);
-    expect(find.text('Compte actif'), findsOneWidget);
+    expect(find.text('Compte actif'), findsWidgets);
     expect(find.text('Se deconnecter'), findsNothing);
   });
 

@@ -173,7 +173,10 @@ class _SignedInProfileCard extends StatelessWidget {
       _ProfileInfoRowData(label: 'Email', value: profile.email),
       if (profile.phone != null && profile.phone!.trim().isNotEmpty)
         _ProfileInfoRowData(label: 'Telephone', value: profile.phone!),
-      _ProfileInfoRowData(label: 'Statut du compte', value: profile.status),
+      _ProfileInfoRowData(
+        label: 'Statut du compte',
+        value: _statusLabel(profile.status),
+      ),
       if (profile.preferredLanguage != null &&
           profile.preferredLanguage!.trim().isNotEmpty)
         _ProfileInfoRowData(
@@ -278,21 +281,24 @@ class _ProfileInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Informations du profil',
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
+    return SizedBox(
+      width: double.infinity,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Informations du profil',
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            for (final row in rows) _ProfileInfoRow(row: row),
-          ],
+              const SizedBox(height: 16),
+              for (final row in rows) _ProfileInfoRow(row: row),
+            ],
+          ),
         ),
       ),
     );
