@@ -89,10 +89,16 @@ class CurrentUserTicketPage {
                 .map(CurrentUserTicket.fromJson)
                 .toList(growable: false)
           : const [],
-      page: json['page'] as int,
-      size: json['size'] as int,
-      totalItems: json['totalItems'] as int,
-      totalPages: json['totalPages'] as int,
+      page: _parseInt(json['page']),
+      size: _parseInt(
+        json['size'],
+        fallback: rawItems is List ? rawItems.length : 0,
+      ),
+      totalItems: _parseInt(
+        json['totalItems'],
+        fallback: rawItems is List ? rawItems.length : 0,
+      ),
+      totalPages: _parseInt(json['totalPages'], fallback: 1),
     );
   }
 
@@ -132,19 +138,19 @@ class CurrentUserTicket {
     return CurrentUserTicket(
       id: json['id'] as String,
       ticketNumber: json['ticketNumber'] as String,
-      userId: json['userId'] as String,
+      userId: json['userId'] as String? ?? '',
       customerPhone: json['customerPhone'] as String?,
       companyId: json['companyId'] as String? ?? '',
       companyName: json['companyName'] as String? ?? '',
-      serviceUnitId: json['serviceUnitId'] as String,
+      serviceUnitId: json['serviceUnitId'] as String? ?? '',
       serviceUnitName: json['serviceUnitName'] as String? ?? '',
-      locationId: json['locationId'] as String,
+      locationId: json['locationId'] as String? ?? '',
       locationName: json['locationName'] as String? ?? '',
       locationDefault: json['locationDefault'] as bool? ?? false,
       status: json['status'] as String,
       notes: json['notes'] as String?,
-      currency: json['currency'] as String,
-      totalAmount: json['totalAmount'] as num,
+      currency: json['currency'] as String? ?? '',
+      totalAmount: json['totalAmount'] as num? ?? 0,
       lines: rawLines is List
           ? rawLines
                 .whereType<Map<String, dynamic>>()
@@ -218,13 +224,13 @@ class CurrentUserTicketLine {
 
   factory CurrentUserTicketLine.fromJson(Map<String, dynamic> json) {
     return CurrentUserTicketLine(
-      id: json['id'] as String,
-      itemId: json['itemId'] as String,
+      id: json['id'] as String? ?? '',
+      itemId: json['itemId'] as String? ?? '',
       itemName: json['itemName'] as String? ?? '',
       itemImageUrl: json['itemImageUrl'] as String?,
-      quantity: json['quantity'] as int,
-      unitPriceAmount: json['unitPriceAmount'] as num,
-      lineTotalAmount: json['lineTotalAmount'] as num,
+      quantity: _parseInt(json['quantity'], fallback: 1),
+      unitPriceAmount: json['unitPriceAmount'] as num? ?? 0,
+      lineTotalAmount: json['lineTotalAmount'] as num? ?? 0,
       notes: json['notes'] as String?,
     );
   }
@@ -244,4 +250,17 @@ DateTime? _parseDateTime(Object? value) {
     return null;
   }
   return DateTime.tryParse(value);
+}
+
+int _parseInt(Object? value, {int fallback = 0}) {
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  if (value is String) {
+    return int.tryParse(value) ?? fallback;
+  }
+  return fallback;
 }

@@ -62,6 +62,83 @@ void main() {
     );
   });
 
+  test(
+    'listTickets tolerates empty-item tickets with optional fields omitted',
+    () async {
+      final gateway = BackendCurrentUserTicketGateway(
+        ApiClient(
+          environment: environment,
+          httpClient: MockClient.streaming((request, bodyStream) async {
+            return http.StreamedResponse(
+              Stream.value(
+                utf8.encode(
+                  jsonEncode({
+                    'items': [
+                      {
+                        'id': 'ticket-empty',
+                        'ticketNumber': 'FM-0002',
+                        'companyId': 'company-1',
+                        'companyName': 'Cafe Flow',
+                        'serviceUnitId': 'service-1',
+                        'serviceUnitName': 'Comptoir',
+                        'locationId': 'location-1',
+                        'locationName': 'Accueil',
+                        'status': 'CREATED',
+                        'currency': 'CAD',
+                        'totalAmount': 0,
+                        'lines': const [],
+                        'createdAt': '2026-07-07T12:00:00Z',
+                      },
+                    ],
+                    'page': 0,
+                    'size': 20,
+                    'totalItems': 1,
+                    'totalPages': 1,
+                  }),
+                ),
+              ),
+              200,
+            );
+          }),
+        ),
+      );
+
+      final page = await gateway.listTickets();
+
+      expect(page.items.single.ticketNumber, 'FM-0002');
+      expect(page.items.single.userId, '');
+      expect(page.items.single.lines, isEmpty);
+      expect(page.items.single.totalLabel, '0.00 CAD');
+    },
+  );
+
+  test('listTickets tolerates missing page counters', () async {
+    final gateway = BackendCurrentUserTicketGateway(
+      ApiClient(
+        environment: environment,
+        httpClient: MockClient.streaming((request, bodyStream) async {
+          return http.StreamedResponse(
+            Stream.value(
+              utf8.encode(
+                jsonEncode({
+                  'items': [_ticketJson(status: 'CREATED')],
+                }),
+              ),
+            ),
+            200,
+          );
+        }),
+      ),
+    );
+
+    final page = await gateway.listTickets();
+
+    expect(page.page, 0);
+    expect(page.size, 1);
+    expect(page.totalItems, 1);
+    expect(page.totalPages, 1);
+  });
+
   test('cancelTicket patches current user cancel endpoint', () async {
     late Uri capturedUrl;
 

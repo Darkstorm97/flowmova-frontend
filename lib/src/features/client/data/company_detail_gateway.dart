@@ -322,14 +322,6 @@ class CompanyServiceUnitDetail {
     final rawLocations = json['locations'];
     final rawItems = json['items'];
 
-    if (rawLocations is! List) {
-      throw const FormatException('Invalid service unit locations payload.');
-    }
-
-    if (rawItems is! List) {
-      throw const FormatException('Invalid service unit items payload.');
-    }
-
     return CompanyServiceUnitDetail(
       id: json['id'] as String,
       companyId: json['companyId'] as String,
@@ -347,14 +339,18 @@ class CompanyServiceUnitDetail {
               json['defaultLocation'] as Map<String, dynamic>,
             )
           : null,
-      locations: rawLocations
-          .whereType<Map<String, dynamic>>()
-          .map(CompanyServiceUnitLocation.fromJson)
-          .toList(growable: false),
-      items: rawItems
-          .whereType<Map<String, dynamic>>()
-          .map(CompanyServiceUnitAvailableItem.fromJson)
-          .toList(growable: false),
+      locations: rawLocations is List
+          ? rawLocations
+                .whereType<Map<String, dynamic>>()
+                .map(CompanyServiceUnitLocation.fromJson)
+                .toList(growable: false)
+          : const [],
+      items: rawItems is List
+          ? rawItems
+                .whereType<Map<String, dynamic>>()
+                .map(CompanyServiceUnitAvailableItem.fromJson)
+                .toList(growable: false)
+          : const [],
     );
   }
 

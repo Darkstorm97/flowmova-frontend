@@ -703,8 +703,10 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
       return;
     }
 
-    if (_serviceUnitDetail?.allowTicketWithoutItems == false &&
-        _selectedItemIds.isEmpty) {
+    final allowTicketWithoutItems =
+        _serviceUnitDetail?.allowTicketWithoutItems ??
+        serviceUnit.allowTicketWithoutItems;
+    if (!allowTicketWithoutItems && _selectedItemIds.isEmpty) {
       setState(
         () => _errorMessage =
             'Ce service exige au moins un article pour creer une commande.',

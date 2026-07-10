@@ -49,18 +49,16 @@ class PublicLocationAccess {
     if (location is! Map<String, dynamic>) {
       throw const FormatException('Invalid public location payload.');
     }
-    if (items is! List) {
-      throw const FormatException('Invalid public location items payload.');
-    }
-
     return PublicLocationAccess(
       company: CompanyDetail.fromJson(company),
       serviceUnit: CompanyServiceUnitItem.fromJson(serviceUnit),
       location: CompanyServiceUnitLocation.fromJson(location),
-      items: items
-          .whereType<Map<String, dynamic>>()
-          .map(CompanyServiceUnitAvailableItem.fromJson)
-          .toList(growable: false),
+      items: items is List
+          ? items
+                .whereType<Map<String, dynamic>>()
+                .map(CompanyServiceUnitAvailableItem.fromJson)
+                .toList(growable: false)
+          : const [],
     );
   }
 
