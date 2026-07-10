@@ -849,6 +849,8 @@ Definition of Done:
 
 ### CATCAT-FRONT-001 - Gerer les categories de catalogue
 
+Issue GitHub: #24.
+
 Permettre la creation et la consultation des categories.
 
 Inclure:
@@ -862,6 +864,8 @@ Definition of Done:
 - un admin peut organiser son catalogue par categories.
 
 ### CATALOG-FRONT-001 - Gerer les catalogues
+
+Issue GitHub: #22.
 
 Permettre la creation, consultation, modification et archivage des catalogues.
 

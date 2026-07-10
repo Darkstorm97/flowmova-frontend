@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/business/presentation/business_dashboard_screen.dart';
+import '../features/business/presentation/business_catalog_screen.dart';
 import '../features/business/presentation/business_service_unit_items_screen.dart';
 import '../features/business/presentation/business_service_unit_tickets_screen.dart';
 import '../features/business/presentation/business_service_units_screen.dart';
@@ -79,6 +80,12 @@ abstract final class AppRouter {
         title: 'Dashboard entreprise',
         contentScrolls: false,
         child: _businessDashboardPage(settings.arguments),
+      ),
+      AppRoutes.businessCatalog => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.business,
+        title: 'Catalogue',
+        contentScrolls: false,
+        child: _businessCatalogPage(settings.arguments),
       ),
       AppRoutes.businessServiceUnits => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.business,
@@ -298,6 +305,19 @@ abstract final class AppRouter {
     }
 
     return BusinessDashboardScreen(companyId: companyId);
+  }
+
+  static Widget _businessCatalogPage(Object? arguments) {
+    final companyId = arguments is String ? arguments : null;
+    if (companyId == null || companyId.trim().isEmpty) {
+      return const FeaturePlaceholderScreen(
+        title: 'Entreprise introuvable',
+        description:
+            'Revenez au dashboard et ouvrez le catalogue de l entreprise.',
+      );
+    }
+
+    return BusinessCatalogScreen(companyId: companyId);
   }
 
   static Widget _businessServiceUnitsPage(Object? arguments) {

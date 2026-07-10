@@ -171,16 +171,14 @@ class _DashboardContent extends StatelessWidget {
               ),
               _MetricTile(
                 icon: Icons.inventory_2_outlined,
-                label: 'Articles',
+                label: 'Catalogue',
                 value: '${bundle.catalogs.length}',
                 helper:
                     '${bundle.catalogCategories.length} categorie${bundle.catalogCategories.length > 1 ? 's' : ''}',
                 onTap: () => Navigator.pushNamed(
                   context,
-                  AppRoutes.businessServiceUnits,
-                  arguments: BusinessServiceUnitsArguments(
-                    companyId: company.id,
-                  ),
+                  AppRoutes.businessCatalog,
+                  arguments: company.id,
                 ),
               ),
               _MetricTile(

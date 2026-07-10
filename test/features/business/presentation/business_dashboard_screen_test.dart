@@ -45,7 +45,7 @@ void main() {
     expect(find.text('3'), findsWidgets);
     expect(find.text('2 ouverts'), findsOneWidget);
     expect(find.text('Tickets'), findsOneWidget);
-    expect(find.text('Articles'), findsOneWidget);
+    expect(find.text('Catalogue'), findsWidgets);
     expect(find.text('1 categorie'), findsWidgets);
     expect(find.text('Comptoir'), findsOneWidget);
     expect(find.text('Latte'), findsOneWidget);
