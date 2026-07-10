@@ -6,7 +6,6 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/session/session_scope.dart';
 import '../../../core/theme/flow_mova_colors.dart';
 import '../../../core/theme/flow_mova_radii.dart';
-import '../../../shared/widgets/flow_mova_app_bar_title.dart';
 import '../../tickets/data/recent_ticket_storage.dart';
 import '../../tickets/data/ticket_creation_gateway.dart';
 import '../data/company_detail_gateway.dart';
@@ -46,59 +45,49 @@ class _CompanyDetailScreenState extends State<CompanyDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const FlowMovaAppBarTitle(title: 'Entreprise', showLogo: false),
-      ),
-      body: ColoredBox(
-        color: FlowMovaColors.cloud,
-        child: SafeArea(
-          top: false,
-          child: FutureBuilder<CompanyDetailBundle>(
-            future: _detailFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState != ConnectionState.done) {
-                return const _DetailLoading();
-              }
+    return Material(
+      color: Colors.transparent,
+      child: FutureBuilder<CompanyDetailBundle>(
+        future: _detailFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const _DetailLoading();
+          }
 
-              if (snapshot.hasError) {
-                return _DetailError(
-                  message: _errorMessage(snapshot.error),
-                  onRetry: () {
-                    setState(() {
-                      _detailFuture = _detailGateway.getDetail(
-                        widget.companyId,
-                      );
-                    });
-                  },
-                );
-              }
+          if (snapshot.hasError) {
+            return _DetailError(
+              message: _errorMessage(snapshot.error),
+              onRetry: () {
+                setState(() {
+                  _detailFuture = _detailGateway.getDetail(widget.companyId);
+                });
+              },
+            );
+          }
 
-              final bundle = snapshot.requireData;
-              final ticketCreationGateway =
-                  widget.ticketCreationGateway ??
-                  BackendTicketCreationGateway(
-                    ApiClient(accessTokenProvider: _accessTokenProvider),
-                  );
-              return SingleChildScrollView(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 760),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: _CompanyDetailContent(
-                        bundle: bundle,
-                        detailGateway: _detailGateway,
-                        ticketCreationGateway: ticketCreationGateway,
-                        recentTicketStorage: _recentTicketStorage,
-                      ),
-                    ),
+          final bundle = snapshot.requireData;
+          final ticketCreationGateway =
+              widget.ticketCreationGateway ??
+              BackendTicketCreationGateway(
+                ApiClient(accessTokenProvider: _accessTokenProvider),
+              );
+          return SingleChildScrollView(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 760),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: _CompanyDetailContent(
+                    bundle: bundle,
+                    detailGateway: _detailGateway,
+                    ticketCreationGateway: ticketCreationGateway,
+                    recentTicketStorage: _recentTicketStorage,
                   ),
                 ),
-              );
-            },
-          ),
-        ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

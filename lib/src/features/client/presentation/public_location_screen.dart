@@ -5,7 +5,6 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/session/session_scope.dart';
 import '../../../core/theme/flow_mova_colors.dart';
 import '../../../core/theme/flow_mova_radii.dart';
-import '../../../shared/widgets/flow_mova_app_bar_title.dart';
 import '../../tickets/data/recent_ticket_storage.dart';
 import '../../tickets/data/ticket_creation_gateway.dart';
 import '../data/company_detail_gateway.dart';
@@ -66,27 +65,19 @@ class _PublicLocationScreenState extends State<PublicLocationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const FlowMovaAppBarTitle(title: 'QR code', showLogo: false),
-      ),
-      body: ColoredBox(
-        color: FlowMovaColors.cloud,
-        child: SafeArea(
-          top: false,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 680),
-                child: _createdTicket == null
-                    ? _buildContent(context)
-                    : _QrTicketCreatedSummary(
-                        ticket: _createdTicket!,
-                        access: _access!,
-                      ),
-              ),
-            ),
+    return Material(
+      color: Colors.transparent,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 680),
+            child: _createdTicket == null
+                ? _buildContent(context)
+                : _QrTicketCreatedSummary(
+                    ticket: _createdTicket!,
+                    access: _access!,
+                  ),
           ),
         ),
       ),

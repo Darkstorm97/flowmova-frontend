@@ -29,7 +29,7 @@ La navigation principale MVP doit etre organisee autour de quatre entrees:
 - `Accueil`: entree par defaut de l'application. Elle contient la recherche d'entreprises actives, les filtres publics, l'acces aux fiches entreprises, aux unites de service et a la creation de ticket. Elle expose aussi une action secondaire `Scanner un QR code` pour ouvrir rapidement un lien public d'emplacement ou d'unite de service. Elle ne doit pas contenir le raccourci `Consulter un ticket par code`.
 - `Tickets`: espace dedie au suivi des tickets. Il contient `Mes tickets`, reserve aux tickets du compte authentifie, `Tickets recents`, disponible authentifie ou non avec les tickets crees localement dans le navigateur ou l'application mobile du client, ainsi que `Voir un ticket avec le code`, accessible aux utilisateurs authentifies ou non.
 - `Entreprise`: espace admin/entreprise. Si l'utilisateur n'est pas connecte, il propose `Se connecter` et `Creer un compte`. Si l'utilisateur est connecte, il contient `Creer une entreprise`, la liste des entreprises de l'utilisateur avec recherche/filtre, puis l'acces a la page d'administration d'une entreprise.
-- `Profil`: espace compte. Si l'utilisateur n'est pas connecte, il propose `Se connecter` et `Creer un compte`. Si l'utilisateur est connecte, il contient `Mes infos profil`, les parametres, la deconnexion et les futures options de compte.
+- `Profil`: espace compte sobre. Il affiche l'avatar, l'etat de session et les informations de profil disponibles. Les preferences seront ajoutees plus tard sans dupliquer les raccourcis deja presents dans `Tickets` ou `Entreprise`.
 
 Sur mobile, cette navigation peut etre rendue sous forme de bottom navigation. Sur web/tablette, elle peut etre rendue en barre superieure. Le comportement fonctionnel reste le meme.
 
@@ -144,6 +144,13 @@ Definition of Done:
 - l'utilisateur retrouve une navigation principale uniforme dans l'application;
 - les pages secondaires ne collent pas le logo au bouton retour;
 - les tests widget couvrent la navigation principale et au moins une page secondaire avec retour.
+
+Decision d'implementation:
+
+- la coquille `FlowMovaNavigationShell` porte la barre haute, le menu mobile, le rail large, les titres compacts et le bouton retour;
+- les routes secondaires publiques et tickets passent par la meme coquille en conservant l'onglet principal actif;
+- chaque ecran garde la responsabilite de son scroll lorsque son contenu est deja scrollable, afin d'eviter les doubles scrolls;
+- les placeholders applicatifs sont rendus comme contenu de shell, sans `Scaffold` local.
 
 ### FRONT-004 - Configurer environnement API
 

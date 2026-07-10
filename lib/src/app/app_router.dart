@@ -38,6 +38,7 @@ abstract final class AppRouter {
       ),
       AppRoutes.profile => const FlowMovaNavigationShell(
         selectedRoute: AppRoutes.profile,
+        contentScrolls: false,
         child: ProfileHomeScreen(),
       ),
       AppRoutes.tickets => FlowMovaNavigationShell(
@@ -50,33 +51,61 @@ abstract final class AppRouter {
       ),
       AppRoutes.login => const LoginScreen(),
       AppRoutes.register => const RegisterScreen(),
-      AppRoutes.businessDashboard => const FeaturePlaceholderScreen(
+      AppRoutes.businessDashboard => const FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.business,
         title: 'Dashboard entreprise',
-        description:
-            'Le dashboard admin sera branche avec les features entreprise.',
+        child: FeaturePlaceholderScreen(
+          title: 'Dashboard entreprise',
+          description:
+              'Le dashboard admin sera branche avec les features entreprise.',
+        ),
       ),
-      AppRoutes.companyDetail => _companyDetailPage(
-        settings.arguments,
-        recentTicketStorage: recentTicketStorage,
+      AppRoutes.companyDetail => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.client,
+        title: 'Entreprise',
+        contentScrolls: false,
+        maxContentWidth: 760,
+        contentPadding: EdgeInsets.zero,
+        child: _companyDetailPage(
+          settings.arguments,
+          recentTicketStorage: recentTicketStorage,
+        ),
       ),
-      AppRoutes.serviceUnitDetail => const FeaturePlaceholderScreen(
-        title: 'Detail unite de service',
-        description:
-            'Le detail unite de service sera implemente dans PUBLIC-FRONT-003.',
+      AppRoutes.serviceUnitDetail => const FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.client,
+        title: 'Unite de service',
+        child: FeaturePlaceholderScreen(
+          title: 'Detail unite de service',
+          description:
+              'Le detail unite de service sera implemente dans PUBLIC-FRONT-003.',
+        ),
       ),
-      AppRoutes.publicLocationDetail => _publicLocationPage(
-        settings.arguments,
-        routeUri: routeUri,
-        routeName: routeName,
-        recentTicketStorage: recentTicketStorage,
+      AppRoutes.publicLocationDetail => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.client,
+        title: 'QR code',
+        contentScrolls: false,
+        maxContentWidth: 680,
+        contentPadding: EdgeInsets.zero,
+        child: _publicLocationPage(
+          settings.arguments,
+          routeUri: routeUri,
+          routeName: routeName,
+          recentTicketStorage: recentTicketStorage,
+        ),
       ),
-      AppRoutes.createTicket => const FeaturePlaceholderScreen(
+      AppRoutes.createTicket => const FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.client,
         title: 'Creer un ticket',
-        description:
-            'La creation de ticket sera implementee dans TICKET-FRONT-001.',
+        child: FeaturePlaceholderScreen(
+          title: 'Creer un ticket',
+          description:
+              'La creation de ticket sera implementee dans TICKET-FRONT-001.',
+        ),
       ),
       AppRoutes.ticketLookup => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.tickets,
+        title: 'Voir un ticket',
+        contentScrolls: false,
         child: TicketLookupScreen(
           arguments: _ticketLookupArguments(settings.arguments),
           recentTicketStorage: recentTicketStorage,
@@ -84,20 +113,30 @@ abstract final class AppRouter {
       ),
       AppRoutes.recentTickets => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.tickets,
+        title: 'Tickets recents',
+        contentScrolls: false,
         child: RecentTicketsScreen(recentTicketStorage: recentTicketStorage),
       ),
       AppRoutes.myTickets => const FlowMovaNavigationShell(
         selectedRoute: AppRoutes.tickets,
+        title: 'Mes tickets',
+        contentScrolls: false,
         child: MyTicketsScreen(),
       ),
       AppRoutes.myTicketDetail => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.tickets,
+        title: 'Tickets',
+        contentScrolls: false,
         child: _myTicketDetailPage(settings.arguments),
       ),
-      AppRoutes.myCompanies => const FeaturePlaceholderScreen(
+      AppRoutes.myCompanies => const FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.business,
         title: 'Mes entreprises',
-        description:
-            'La liste des entreprises admin sera implementee dans COMPANY-FRONT-001.',
+        child: FeaturePlaceholderScreen(
+          title: 'Mes entreprises',
+          description:
+              'La liste des entreprises admin sera implementee dans COMPANY-FRONT-001.',
+        ),
       ),
       _ => NotFoundScreen(routeName: routeName),
     };

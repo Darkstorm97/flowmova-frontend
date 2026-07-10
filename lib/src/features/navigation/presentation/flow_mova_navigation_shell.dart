@@ -10,10 +10,18 @@ class FlowMovaNavigationShell extends StatelessWidget {
     required this.selectedRoute,
     required this.child,
     super.key,
+    this.title,
+    this.contentScrolls = true,
+    this.maxContentWidth = 760,
+    this.contentPadding = const EdgeInsets.all(24),
   });
 
   final String selectedRoute;
   final Widget child;
+  final String? title;
+  final bool contentScrolls;
+  final double maxContentWidth;
+  final EdgeInsetsGeometry contentPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +30,19 @@ class FlowMovaNavigationShell extends StatelessWidget {
         final useBottomNavigation = constraints.maxWidth < 720;
         final content = _NavigationContent(
           selectedRoute: selectedRoute,
+          scrolls: contentScrolls,
+          maxWidth: maxContentWidth,
+          padding: contentPadding,
           child: child,
         );
+        final canPop = Navigator.canPop(context);
 
         if (useBottomNavigation) {
           return Scaffold(
-            appBar: AppBar(title: FlowMovaAppBarTitle(title: _pageTitle)),
+            appBar: AppBar(
+              titleSpacing: canPop ? 4 : null,
+              title: FlowMovaAppBarTitle(title: _pageTitle, showLogo: !canPop),
+            ),
             body: content,
             bottomNavigationBar: NavigationBar(
               selectedIndex: _selectedIndex,
@@ -72,7 +87,14 @@ class FlowMovaNavigationShell extends StatelessWidget {
                       .toList(growable: false),
                 ),
                 const VerticalDivider(width: 1),
-                Expanded(child: content),
+                Expanded(
+                  child: Column(
+                    children: [
+                      _LargeTopBar(title: _pageTitle),
+                      Expanded(child: content),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -88,7 +110,7 @@ class FlowMovaNavigationShell extends StatelessWidget {
     _ => 0,
   };
 
-  String get _pageTitle => _destinations[_selectedIndex].label;
+  String get _pageTitle => title ?? _destinations[_selectedIndex].label;
 
   void _goToIndex(BuildContext context, int index) {
     final targetRoute = _destinations[index].route;
@@ -98,6 +120,47 @@ class FlowMovaNavigationShell extends StatelessWidget {
     }
 
     Navigator.pushReplacementNamed(context, targetRoute);
+  }
+}
+
+class _LargeTopBar extends StatelessWidget {
+  const _LargeTopBar({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: FlowMovaColors.white,
+      child: SafeArea(
+        bottom: false,
+        child: SizedBox(
+          height: 64,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                if (Navigator.canPop(context)) ...[
+                  const BackButton(),
+                  const SizedBox(width: 4),
+                ],
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: FlowMovaColors.logoInk,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -143,46 +206,54 @@ class _FlowMovaDestination {
 }
 
 class _NavigationContent extends StatelessWidget {
-  const _NavigationContent({required this.selectedRoute, required this.child});
+  const _NavigationContent({
+    required this.selectedRoute,
+    required this.child,
+    required this.scrolls,
+    required this.maxWidth,
+    required this.padding,
+  });
 
   final String selectedRoute;
   final Widget child;
+  final bool scrolls;
+  final double maxWidth;
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
+    final constrainedChild = Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: Padding(
+          padding: padding,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) {
+              final offset = Tween<Offset>(
+                begin: const Offset(0, 0.015),
+                end: Offset.zero,
+              ).animate(animation);
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(position: offset, child: child),
+              );
+            },
+            child: KeyedSubtree(key: ValueKey(selectedRoute), child: child),
+          ),
+        ),
+      ),
+    );
+
     return ColoredBox(
       color: FlowMovaColors.cloud,
       child: SafeArea(
         top: false,
-        child: SingleChildScrollView(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) {
-                    final offset = Tween<Offset>(
-                      begin: const Offset(0, 0.015),
-                      end: Offset.zero,
-                    ).animate(animation);
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(position: offset, child: child),
-                    );
-                  },
-                  child: KeyedSubtree(
-                    key: ValueKey(selectedRoute),
-                    child: child,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
+        child: scrolls
+            ? SingleChildScrollView(child: constrainedChild)
+            : constrainedChild,
       ),
     );
   }

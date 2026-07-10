@@ -107,6 +107,12 @@ void main() {
     await tester.tap(find.byTooltip('Scanner un QR code'));
     await tester.pumpAndSettle();
 
+    expect(find.text('QR code'), findsOneWidget);
+    expect(find.byType(BackButton), findsOneWidget);
+    expect(find.text('Accueil'), findsAtLeastNWidgets(1));
+    expect(find.text('Tickets'), findsOneWidget);
+    expect(find.text('Profil'), findsOneWidget);
+    expect(find.text('Entreprise'), findsOneWidget);
     expect(find.text('Commande sur place'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Code ou lien QR'), findsOneWidget);
   });
