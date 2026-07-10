@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../app/app_routes.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/session/auth_session_controller.dart';
@@ -62,52 +61,53 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
     final textTheme = Theme.of(context).textTheme;
     final session = SessionScope.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Profil',
-          style: textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Connectez-vous pour retrouver vos tickets, vos entreprises et vos informations de compte.',
-          style: textTheme.titleMedium?.copyWith(color: FlowMovaColors.slate),
-        ),
-        const SizedBox(height: 28),
-        if (session.status == AuthSessionStatus.unknown)
-          const _ProfileLoadingCard()
-        else if (!session.isAuthenticated)
-          _SignedOutProfileCard(
-            isExpired: session.status == AuthSessionStatus.expired,
-          )
-        else
-          FutureBuilder<UserProfile>(
-            future: _profileFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState != ConnectionState.done) {
-                return const _ProfileLoadingCard();
-              }
-
-              if (snapshot.hasError) {
-                return _ProfileErrorCard(
-                  message: _profileErrorMessage(snapshot.error),
-                  onRetry: () {
-                    setState(() {
-                      _profileFuture = _profileGateway!.getCurrentUserProfile();
-                    });
-                  },
-                  onSignOut: () => SessionScope.of(context).signOut(),
-                );
-              }
-
-              return _SignedInProfileCard(
-                profile: snapshot.requireData,
-                onSignOut: () => SessionScope.of(context).signOut(),
-              );
-            },
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Profil',
+            style: textTheme.headlineLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
-      ],
+          const SizedBox(height: 12),
+          Text(
+            'Vos informations de compte FlowMova.',
+            style: textTheme.titleMedium?.copyWith(color: FlowMovaColors.slate),
+          ),
+          const SizedBox(height: 28),
+          if (session.status == AuthSessionStatus.unknown)
+            const _ProfileLoadingCard()
+          else if (!session.isAuthenticated)
+            _SignedOutProfileCard(
+              isExpired: session.status == AuthSessionStatus.expired,
+            )
+          else
+            FutureBuilder<UserProfile>(
+              future: _profileFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const _ProfileLoadingCard();
+                }
+
+                if (snapshot.hasError) {
+                  return _ProfileErrorCard(
+                    message: _profileErrorMessage(snapshot.error),
+                    onRetry: () {
+                      setState(() {
+                        _profileFuture = _profileGateway!
+                            .getCurrentUserProfile();
+                      });
+                    },
+                  );
+                }
+
+                return _SignedInProfileCard(profile: snapshot.requireData);
+              },
+            ),
+        ],
+      ),
     );
   }
 
@@ -132,45 +132,135 @@ class _SignedOutProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final title = isExpired ? 'Session expiree' : 'Utilisateur FlowMova';
+    final status = isExpired ? 'Session expiree' : 'Non connecte';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _ProfileHero(
+          initials: 'FM',
+          title: title,
+          subtitle: isExpired
+              ? 'Reconnectez-vous pour actualiser vos informations.'
+              : 'Connectez-vous pour afficher vos informations.',
+          statusLabel: status,
+        ),
+        const SizedBox(height: 16),
+        _ProfileInfoCard(
+          rows: [
+            _ProfileInfoRowData(label: 'Statut du compte', value: status),
+            const _ProfileInfoRowData(
+              label: 'Informations',
+              value: 'Profil non charge',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _SignedInProfileCard extends StatelessWidget {
+  const _SignedInProfileCard({required this.profile});
+
+  final UserProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = [
+      _ProfileInfoRowData(label: 'Nom', value: profile.displayName),
+      _ProfileInfoRowData(label: 'Email', value: profile.email),
+      if (profile.phone != null && profile.phone!.trim().isNotEmpty)
+        _ProfileInfoRowData(label: 'Telephone', value: profile.phone!),
+      _ProfileInfoRowData(label: 'Statut du compte', value: profile.status),
+      if (profile.preferredLanguage != null &&
+          profile.preferredLanguage!.trim().isNotEmpty)
+        _ProfileInfoRowData(
+          label: 'Langue preferee',
+          value: profile.preferredLanguage!,
+        ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _ProfileHero(
+          initials: _profileInitials(profile),
+          title: profile.displayName,
+          subtitle: profile.email,
+          statusLabel: _statusLabel(profile.status),
+        ),
+        const SizedBox(height: 16),
+        _ProfileInfoCard(rows: rows),
+      ],
+    );
+  }
+}
+
+class _ProfileHero extends StatelessWidget {
+  const _ProfileHero({
+    required this.initials,
+    required this.title,
+    required this.subtitle,
+    required this.statusLabel,
+  });
+
+  final String initials;
+  final String title;
+  final String subtitle;
+  final String statusLabel;
+
+  @override
+  Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Card(
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.primaryAqua.withValues(alpha: 0.08),
+        border: Border.all(
+          color: FlowMovaColors.primaryAqua.withValues(alpha: 0.2),
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(18),
+        child: Row(
           children: [
-            Text(
-              isExpired ? 'Session expiree' : 'Vous n etes pas connecte',
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+            CircleAvatar(
+              radius: 34,
+              backgroundColor: FlowMovaColors.primaryAqua,
+              child: Text(
+                initials,
+                style: textTheme.titleMedium?.copyWith(
+                  color: FlowMovaColors.white,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              isExpired
-                  ? 'Reconnectez-vous pour acceder a vos informations.'
-                  : 'Connectez-vous pour acceder a vos informations, retrouver vos tickets et gerer vos entreprises.',
-              style: textTheme.bodyMedium?.copyWith(
-                color: FlowMovaColors.slate,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: textTheme.titleLarge?.copyWith(
+                      color: FlowMovaColors.logoInk,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: FlowMovaColors.slate,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _ProfileStatusPill(label: statusLabel),
+                ],
               ),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                FilledButton(
-                  onPressed: () =>
-                      Navigator.pushNamed(context, AppRoutes.login),
-                  child: const Text('Se connecter'),
-                ),
-                OutlinedButton(
-                  onPressed: () =>
-                      Navigator.pushNamed(context, AppRoutes.register),
-                  child: const Text('Creer un compte'),
-                ),
-              ],
             ),
           ],
         ),
@@ -179,11 +269,10 @@ class _SignedOutProfileCard extends StatelessWidget {
   }
 }
 
-class _SignedInProfileCard extends StatelessWidget {
-  const _SignedInProfileCard({required this.profile, required this.onSignOut});
+class _ProfileInfoCard extends StatelessWidget {
+  const _ProfileInfoCard({required this.rows});
 
-  final UserProfile profile;
-  final VoidCallback onSignOut;
+  final List<_ProfileInfoRowData> rows;
 
   @override
   Widget build(BuildContext context) {
@@ -196,29 +285,13 @@ class _SignedInProfileCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Mes infos profil',
+              'Informations du profil',
               style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 16),
-            _ProfileInfoRow(label: 'Nom', value: profile.displayName),
-            _ProfileInfoRow(label: 'Email', value: profile.email),
-            if (profile.phone != null && profile.phone!.trim().isNotEmpty)
-              _ProfileInfoRow(label: 'Telephone', value: profile.phone!),
-            _ProfileInfoRow(label: 'Statut', value: profile.status),
-            if (profile.preferredLanguage != null &&
-                profile.preferredLanguage!.trim().isNotEmpty)
-              _ProfileInfoRow(
-                label: 'Langue',
-                value: profile.preferredLanguage!,
-              ),
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: onSignOut,
-              icon: const Icon(Icons.logout),
-              label: const Text('Se deconnecter'),
-            ),
+            for (final row in rows) _ProfileInfoRow(row: row),
           ],
         ),
       ),
@@ -226,11 +299,17 @@ class _SignedInProfileCard extends StatelessWidget {
   }
 }
 
-class _ProfileInfoRow extends StatelessWidget {
-  const _ProfileInfoRow({required this.label, required this.value});
+class _ProfileInfoRowData {
+  const _ProfileInfoRowData({required this.label, required this.value});
 
   final String label;
   final String value;
+}
+
+class _ProfileInfoRow extends StatelessWidget {
+  const _ProfileInfoRow({required this.row});
+
+  final _ProfileInfoRowData row;
 
   @override
   Widget build(BuildContext context) {
@@ -242,15 +321,47 @@ class _ProfileInfoRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
+            row.label,
             style: textTheme.labelMedium?.copyWith(
               color: FlowMovaColors.slate,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 2),
-          Text(value, style: textTheme.bodyLarge),
+          Text(row.value, style: textTheme.bodyLarge),
         ],
+      ),
+    );
+  }
+}
+
+class _ProfileStatusPill extends StatelessWidget {
+  const _ProfileStatusPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (label) {
+      'Compte actif' => FlowMovaColors.leafGreen,
+      'Session expiree' => FlowMovaColors.softApricot,
+      _ => FlowMovaColors.slate,
+    };
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
       ),
     );
   }
@@ -280,15 +391,10 @@ class _ProfileLoadingCard extends StatelessWidget {
 }
 
 class _ProfileErrorCard extends StatelessWidget {
-  const _ProfileErrorCard({
-    required this.message,
-    required this.onRetry,
-    required this.onSignOut,
-  });
+  const _ProfileErrorCard({required this.message, required this.onRetry});
 
   final String message;
   final VoidCallback onRetry;
-  final VoidCallback onSignOut;
 
   @override
   Widget build(BuildContext context) {
@@ -314,25 +420,38 @@ class _ProfileErrorCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                FilledButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Reessayer'),
-                ),
-                OutlinedButton.icon(
-                  onPressed: onSignOut,
-                  icon: const Icon(Icons.logout),
-                  label: const Text('Se deconnecter'),
-                ),
-              ],
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reessayer'),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+String _profileInitials(UserProfile profile) {
+  final first = profile.firstName.trim();
+  final last = profile.lastName.trim();
+  final source = [if (first.isNotEmpty) first, if (last.isNotEmpty) last];
+
+  if (source.isEmpty) {
+    final email = profile.email.trim();
+    return email.isEmpty ? 'FM' : email.characters.first.toUpperCase();
+  }
+
+  return source
+      .take(2)
+      .map((part) => part.characters.first.toUpperCase())
+      .join();
+}
+
+String _statusLabel(String status) {
+  return switch (status) {
+    'ACTIVE' => 'Compte actif',
+    'INACTIVE' => 'Compte inactif',
+    _ => status,
+  };
 }

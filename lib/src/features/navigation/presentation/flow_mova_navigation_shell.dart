@@ -32,28 +32,15 @@ class FlowMovaNavigationShell extends StatelessWidget {
             bottomNavigationBar: NavigationBar(
               selectedIndex: _selectedIndex,
               onDestinationSelected: (index) => _goToIndex(context, index),
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.search_outlined),
-                  selectedIcon: Icon(Icons.search),
-                  label: 'Accueil',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.confirmation_number_outlined),
-                  selectedIcon: Icon(Icons.confirmation_number),
-                  label: 'Tickets',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.person_outline),
-                  selectedIcon: Icon(Icons.person),
-                  label: 'Profil',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.storefront_outlined),
-                  selectedIcon: Icon(Icons.storefront),
-                  label: 'Entreprise',
-                ),
-              ],
+              destinations: _destinations
+                  .map(
+                    (destination) => NavigationDestination(
+                      icon: Icon(destination.icon),
+                      selectedIcon: Icon(destination.selectedIcon),
+                      label: destination.label,
+                    ),
+                  )
+                  .toList(growable: false),
             ),
           );
         }
@@ -74,28 +61,15 @@ class FlowMovaNavigationShell extends StatelessWidget {
                       height: 72,
                     ),
                   ),
-                  destinations: const [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.search_outlined),
-                      selectedIcon: Icon(Icons.search),
-                      label: Text('Accueil'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.confirmation_number_outlined),
-                      selectedIcon: Icon(Icons.confirmation_number),
-                      label: Text('Tickets'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.person_outline),
-                      selectedIcon: Icon(Icons.person),
-                      label: Text('Profil'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.storefront_outlined),
-                      selectedIcon: Icon(Icons.storefront),
-                      label: Text('Entreprise'),
-                    ),
-                  ],
+                  destinations: _destinations
+                      .map(
+                        (destination) => NavigationRailDestination(
+                          icon: Icon(destination.icon),
+                          selectedIcon: Icon(destination.selectedIcon),
+                          label: Text(destination.label),
+                        ),
+                      )
+                      .toList(growable: false),
                 ),
                 const VerticalDivider(width: 1),
                 Expanded(child: content),
@@ -114,20 +88,10 @@ class FlowMovaNavigationShell extends StatelessWidget {
     _ => 0,
   };
 
-  String get _pageTitle => switch (selectedRoute) {
-    AppRoutes.tickets => 'Tickets',
-    AppRoutes.profile => 'Profil',
-    AppRoutes.business => 'Entreprise',
-    _ => 'Accueil',
-  };
+  String get _pageTitle => _destinations[_selectedIndex].label;
 
   void _goToIndex(BuildContext context, int index) {
-    final targetRoute = switch (index) {
-      1 => AppRoutes.tickets,
-      2 => AppRoutes.profile,
-      3 => AppRoutes.business,
-      _ => AppRoutes.client,
-    };
+    final targetRoute = _destinations[index].route;
 
     if (targetRoute == selectedRoute) {
       return;
@@ -135,6 +99,47 @@ class FlowMovaNavigationShell extends StatelessWidget {
 
     Navigator.pushReplacementNamed(context, targetRoute);
   }
+}
+
+const _destinations = [
+  _FlowMovaDestination(
+    route: AppRoutes.client,
+    label: 'Accueil',
+    icon: Icons.search_outlined,
+    selectedIcon: Icons.search,
+  ),
+  _FlowMovaDestination(
+    route: AppRoutes.tickets,
+    label: 'Tickets',
+    icon: Icons.confirmation_number_outlined,
+    selectedIcon: Icons.confirmation_number,
+  ),
+  _FlowMovaDestination(
+    route: AppRoutes.profile,
+    label: 'Profil',
+    icon: Icons.person_outline,
+    selectedIcon: Icons.person,
+  ),
+  _FlowMovaDestination(
+    route: AppRoutes.business,
+    label: 'Entreprise',
+    icon: Icons.storefront_outlined,
+    selectedIcon: Icons.storefront,
+  ),
+];
+
+class _FlowMovaDestination {
+  const _FlowMovaDestination({
+    required this.route,
+    required this.label,
+    required this.icon,
+    required this.selectedIcon,
+  });
+
+  final String route;
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
 }
 
 class _NavigationContent extends StatelessWidget {

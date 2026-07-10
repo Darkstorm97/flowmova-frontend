@@ -62,7 +62,8 @@ void main() {
 
     await tester.tap(find.text('Profil'));
     await tester.pumpAndSettle();
-    expect(find.text('Vous n etes pas connecte'), findsOneWidget);
+    expect(find.text('Utilisateur FlowMova'), findsOneWidget);
+    expect(find.text('Non connecte'), findsWidgets);
 
     await tester.tap(find.text('Entreprise'));
     await tester.pumpAndSettle();

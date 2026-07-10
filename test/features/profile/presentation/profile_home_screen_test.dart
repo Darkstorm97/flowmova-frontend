@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flowmova_frontend/src/app/app_routes.dart';
 import 'package:flowmova_frontend/src/core/api/api_exception.dart';
 import 'package:flowmova_frontend/src/core/session/auth_session_controller.dart';
 import 'package:flowmova_frontend/src/core/session/session_scope.dart';
@@ -20,9 +19,11 @@ void main() {
       ),
     );
 
-    expect(find.text('Vous n etes pas connecte'), findsOneWidget);
-    expect(find.text('Se connecter'), findsOneWidget);
-    expect(find.text('Creer un compte'), findsOneWidget);
+    expect(find.text('Utilisateur FlowMova'), findsOneWidget);
+    expect(find.text('Non connecte'), findsWidgets);
+    expect(find.text('Informations du profil'), findsOneWidget);
+    expect(find.text('Se connecter'), findsNothing);
+    expect(find.text('Creer un compte'), findsNothing);
   });
 
   testWidgets('profile displays current user information', (tester) async {
@@ -47,31 +48,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Mes infos profil'), findsOneWidget);
-    expect(find.text('Ada Lovelace'), findsOneWidget);
-    expect(find.text('ada@test.dev'), findsOneWidget);
+    expect(find.text('Informations du profil'), findsOneWidget);
+    expect(find.text('Ada Lovelace'), findsWidgets);
+    expect(find.text('ada@test.dev'), findsWidgets);
     expect(find.text('+1 514 555 0101'), findsOneWidget);
-    expect(find.text('ACTIVE'), findsOneWidget);
-    expect(find.text('Se deconnecter'), findsOneWidget);
-  });
-
-  testWidgets('profile can sign out authenticated user', (tester) async {
-    final sessionController = AuthSessionController.inMemory();
-    await sessionController.authenticate(_jwt());
-
-    await tester.pumpWidget(
-      _TestApp(
-        sessionController: sessionController,
-        profileGateway: _FakeProfileGateway(),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Se deconnecter'));
-    await tester.pumpAndSettle();
-
-    expect(sessionController.isAuthenticated, isFalse);
-    expect(find.text('Vous n etes pas connecte'), findsOneWidget);
+    expect(find.text('Compte actif'), findsOneWidget);
+    expect(find.text('Se deconnecter'), findsNothing);
   });
 
   testWidgets('profile displays backend errors and retries', (tester) async {
@@ -108,7 +90,7 @@ void main() {
     await tester.tap(find.text('Reessayer'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Ada Lovelace'), findsOneWidget);
+    expect(find.text('Ada Lovelace'), findsWidgets);
   });
 }
 
@@ -127,11 +109,6 @@ class _TestApp extends StatelessWidget {
       controller: sessionController,
       child: MaterialApp(
         home: Scaffold(body: ProfileHomeScreen(profileGateway: profileGateway)),
-        routes: {
-          AppRoutes.login: (_) => const Scaffold(body: Text('Login route')),
-          AppRoutes.register: (_) =>
-              const Scaffold(body: Text('Register route')),
-        },
       ),
     );
   }
