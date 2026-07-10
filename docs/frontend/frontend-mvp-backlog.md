@@ -635,6 +635,26 @@ Definition of Done:
 - l'ecran des recents locaux ne propose plus de suppression manuelle globale;
 - les tests couvrent les nouveaux champs et la limite des 5 recents.
 
+### TICKET-FRONT-010 - Uniformiser les fiches ticket client
+
+Issue GitHub: #52.
+
+Uniformiser la fiche ticket connectee avec la fiche ticket hors connexion, en utilisant la fiche hors connexion comme reference visuelle.
+
+Inclure:
+
+- reprise de la structure visuelle de la fiche hors connexion pour la fiche ticket connectee;
+- conservation des appels backend connectes existants pour annuler et confirmer le traitement;
+- affichage des memes blocs: entete ticket, progression, informations, note, articles, actions;
+- conservation des confirmations avant action irreversible;
+- aucun changement de cycle de vie metier.
+
+Definition of Done:
+
+- les fiches connectee et hors connexion ont la meme presentation;
+- la fiche connectee affiche les libelles entreprise, service, emplacement non-defaut et articles dans cette presentation;
+- les tests widget couvrent la fiche connectee uniformisee.
+
 ### TICKET-FRONT-005 - Limiter les creations invitees avec les tickets recents
 
 Appliquer cote frontend le mode `AUTHENTICATED_OR_GUEST_RECENT_ONE_OPEN_TICKET` pour les visiteurs non authentifies.

@@ -62,11 +62,11 @@ void main() {
     await tester.tap(find.text('Cafe Flow').first);
     await tester.pumpAndSettle();
 
-    expect(find.text('Cafe Flow'), findsWidgets);
-    expect(find.text('Comptoir principal'), findsWidgets);
+    expect(find.text('FM-0001'), findsOneWidget);
+    expect(find.text('Cafe Flow - Comptoir principal'), findsOneWidget);
     expect(find.text('Table terrasse'), findsNothing);
     expect(find.text('Latte glace'), findsOneWidget);
-    expect(find.text('Details'), findsOneWidget);
+    expect(find.text('Articles commandes'), findsOneWidget);
     expect(find.text('Confirmer le traitement'), findsOneWidget);
 
     await tester.ensureVisible(find.text('Confirmer le traitement'));
@@ -79,7 +79,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(gateway.confirmedTicketId, 'ticket-1');
-    expect(find.text('Confirme'), findsOneWidget);
+    expect(find.text('Confirme'), findsWidgets);
   });
 }
 

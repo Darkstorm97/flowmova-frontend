@@ -6,6 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/session/auth_session_controller.dart';
 import '../../../core/session/session_scope.dart';
 import '../../../core/theme/flow_mova_colors.dart';
+import '../../../core/theme/flow_mova_radii.dart';
 import '../data/current_user_ticket_gateway.dart';
 
 class MyTicketsScreen extends StatefulWidget {
@@ -194,7 +195,6 @@ class _MyTicketDetailScreenState extends State<MyTicketDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final canCancel = _canCancel(_ticket.status);
     final canConfirmTreatment = _ticket.status == 'TREATED';
 
@@ -208,56 +208,15 @@ class _MyTicketDetailScreenState extends State<MyTicketDetailScreen> {
             label: const Text('Retour'),
           ),
           const SizedBox(height: 8),
-          _TicketSummaryCard(ticket: _ticket),
-          const SizedBox(height: 16),
-          Text(
-            'Details',
-            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          _ConnectedTicketDetailCard(
+            ticket: _ticket,
+            actionLoading: _isSubmitting,
+            errorMessage: _actionError,
+            onCancel: canCancel ? () => _cancel(context) : null,
+            onConfirmTreatment: canConfirmTreatment
+                ? () => _confirmTreatment(context)
+                : null,
           ),
-          const SizedBox(height: 8),
-          _TicketDetailInfo(ticket: _ticket),
-          if (_ticket.lines.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Text(
-              'Articles',
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            for (final line in _ticket.lines) _TicketLineCard(line: line),
-          ],
-          if (_actionError != null) ...[
-            const SizedBox(height: 16),
-            _InlineError(message: _actionError!),
-          ],
-          if (canCancel || canConfirmTreatment) ...[
-            const SizedBox(height: 18),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                if (canConfirmTreatment)
-                  FilledButton.icon(
-                    onPressed: _isSubmitting
-                        ? null
-                        : () => _confirmTreatment(context),
-                    icon: const Icon(Icons.check_circle_outline),
-                    label: const Text('Confirmer le traitement'),
-                  ),
-                if (canCancel)
-                  OutlinedButton.icon(
-                    onPressed: _isSubmitting ? null : () => _cancel(context),
-                    icon: const Icon(Icons.cancel_outlined),
-                    label: const Text('Annuler'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: FlowMovaColors.error,
-                      side: const BorderSide(color: FlowMovaColors.error),
-                    ),
-                  ),
-              ],
-            ),
-          ],
         ],
       ),
     );
@@ -484,82 +443,158 @@ class _MyTicketListCard extends StatelessWidget {
   }
 }
 
-class _TicketSummaryCard extends StatelessWidget {
-  const _TicketSummaryCard({required this.ticket});
+class _ConnectedTicketDetailCard extends StatelessWidget {
+  const _ConnectedTicketDetailCard({
+    required this.ticket,
+    required this.actionLoading,
+    required this.errorMessage,
+    required this.onCancel,
+    required this.onConfirmTreatment,
+  });
 
   final CurrentUserTicket ticket;
+  final bool actionLoading;
+  final String? errorMessage;
+  final VoidCallback? onCancel;
+  final VoidCallback? onConfirmTreatment;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final createdAtLabel = _dateLabel(ticket.createdAt);
+    final updatedAtLabel = ticket.updatedAt == null
+        ? null
+        : _dateLabel(ticket.updatedAt!);
+    final showLocation =
+        !ticket.locationDefault && ticket.locationName.trim().isNotEmpty;
+    final contextLabel = _ticketContextLabel(
+      companyName: _ticketCompanyName(ticket),
+      serviceName: _ticketServiceName(ticket),
+      locationName: showLocation ? _ticketLocationName(ticket) : null,
+    );
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        ticket.companyName.isEmpty
-                            ? ticket.ticketNumber
-                            : ticket.companyName,
-                        style: textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: FlowMovaColors.logoInk,
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: FlowMovaColors.primaryAqua.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(FlowMovaRadii.large),
+                border: Border.all(
+                  color: FlowMovaColors.primaryAqua.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: FlowMovaColors.white,
+                        borderRadius: BorderRadius.circular(
+                          FlowMovaRadii.medium,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        ticket.serviceUnitName.isEmpty
-                            ? ticket.ticketNumber
-                            : ticket.serviceUnitName,
-                        style: textTheme.titleSmall?.copyWith(
-                          color: FlowMovaColors.slate,
-                          fontWeight: FontWeight.w800,
-                        ),
+                      child: const Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Icon(Icons.receipt_long_outlined),
                       ),
-                      if (!ticket.locationDefault &&
-                          ticket.locationName.trim().isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          ticket.locationName,
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: FlowMovaColors.slate,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            ticket.ticketNumber,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: FlowMovaColors.logoInk,
+                                  fontWeight: FontWeight.w800,
+                                ),
                           ),
-                        ),
-                      ],
-                    ],
+                          const SizedBox(height: 3),
+                          Text(
+                            contextLabel,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: FlowMovaColors.slate,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Cree le $createdAtLabel',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: FlowMovaColors.slate),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _StatusChip(status: ticket.status),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _ConnectedTicketProgress(status: ticket.status),
+            const SizedBox(height: 16),
+            _ConnectedTicketInfoGrid(
+              items: [
+                if (ticket.customerPhone != null &&
+                    ticket.customerPhone!.trim().isNotEmpty)
+                  _ConnectedTicketInfoItem(
+                    icon: Icons.phone_outlined,
+                    label: 'Telephone',
+                    value: ticket.customerPhone!,
                   ),
+                _ConnectedTicketInfoItem(
+                  icon: Icons.payments_outlined,
+                  label: 'Total',
+                  value: ticket.totalLabel,
                 ),
-                _StatusChip(status: ticket.status),
+                if (updatedAtLabel != null)
+                  _ConnectedTicketInfoItem(
+                    icon: Icons.update_outlined,
+                    label: 'Mis a jour',
+                    value: updatedAtLabel,
+                  ),
               ],
             ),
-            const SizedBox(height: 10),
-            Text(
-              _statusMessage(ticket.status),
-              style: textTheme.bodyLarge?.copyWith(color: FlowMovaColors.slate),
+            if (ticket.notes != null && ticket.notes!.trim().isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _ConnectedTicketNote(note: ticket.notes!),
+            ],
+            const SizedBox(height: 18),
+            const _ConnectedSectionTitle(
+              icon: Icons.shopping_bag_outlined,
+              label: 'Articles commandes',
             ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _MetaPill(
-                  icon: Icons.calendar_today_outlined,
-                  label: 'Cree le ${_formatDate(ticket.createdAt)}',
-                ),
-                _MetaPill(
-                  icon: Icons.receipt_long_outlined,
-                  label: ticket.totalLabel,
-                ),
-              ],
+            const SizedBox(height: 8),
+            if (ticket.lines.isEmpty)
+              const _ConnectedEmptyLineItems()
+            else
+              for (final line in ticket.lines)
+                _ConnectedTicketLineTile(line: line),
+            if (errorMessage != null) ...[
+              const SizedBox(height: 16),
+              _InlineError(message: errorMessage!),
+            ],
+            const SizedBox(height: 16),
+            _ConnectedTicketActions(
+              actionLoading: actionLoading,
+              onCancel: onCancel,
+              onConfirmTreatment: onConfirmTreatment,
+            ),
+            const SizedBox(height: 12),
+            const _ConnectedInfoMessage(
+              icon: Icons.verified_user_outlined,
+              text:
+                  'Statut rafraichi depuis votre compte FlowMova. Les actions restent synchronisees avec le backend.',
+              color: FlowMovaColors.primaryAqua,
             ),
           ],
         ),
@@ -568,35 +603,163 @@ class _TicketSummaryCard extends StatelessWidget {
   }
 }
 
-class _TicketDetailInfo extends StatelessWidget {
-  const _TicketDetailInfo({required this.ticket});
+class _ConnectedTicketProgress extends StatelessWidget {
+  const _ConnectedTicketProgress({required this.status});
 
-  final CurrentUserTicket ticket;
+  final String status;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    const steps = ['CREATED', 'RECEIVED', 'TREATED', 'CUSTOMER_CONFIRMED'];
+    final activeIndex = steps.indexOf(status);
+    final isCancelled = status == 'CANCELLED';
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.cloud,
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
+        padding: const EdgeInsets.all(12),
+        child: isCancelled
+            ? const Row(
+                children: [
+                  Icon(Icons.cancel_outlined, color: FlowMovaColors.error),
+                  SizedBox(width: 8),
+                  Expanded(child: Text('Ce ticket a ete annule.')),
+                ],
+              )
+            : Row(
+                children: [
+                  for (var index = 0; index < steps.length; index++) ...[
+                    Expanded(
+                      child: _ConnectedProgressStep(
+                        label: _statusLabel(steps[index]),
+                        active: activeIndex >= index,
+                      ),
+                    ),
+                    if (index != steps.length - 1)
+                      Container(
+                        width: 16,
+                        height: 2,
+                        color: activeIndex > index
+                            ? FlowMovaColors.primaryAqua
+                            : FlowMovaColors.border,
+                      ),
+                  ],
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _ConnectedProgressStep extends StatelessWidget {
+  const _ConnectedProgressStep({required this.label, required this.active});
+
+  final String label;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          active ? Icons.check_circle : Icons.radio_button_unchecked,
+          size: 18,
+          color: active ? FlowMovaColors.primaryAqua : FlowMovaColors.slate,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: active ? FlowMovaColors.logoInk : FlowMovaColors.slate,
+            fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ConnectedTicketInfoGrid extends StatelessWidget {
+  const _ConnectedTicketInfoGrid({required this.items});
+
+  final List<_ConnectedTicketInfoItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useColumns = constraints.maxWidth >= 520;
+        final itemWidth = useColumns
+            ? (constraints.maxWidth - 10) / 2
+            : constraints.maxWidth;
+
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
           children: [
-            _InfoRow(label: 'Entreprise', value: _ticketCompanyName(ticket)),
-            _InfoRow(label: 'Service', value: _ticketServiceName(ticket)),
-            if (!ticket.locationDefault)
-              _InfoRow(
-                label: 'Emplacement',
-                value: _ticketLocationName(ticket),
+            for (final item in items) SizedBox(width: itemWidth, child: item),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ConnectedTicketInfoItem extends StatelessWidget {
+  const _ConnectedTicketInfoItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.cloud,
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 18, color: FlowMovaColors.slate),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 76,
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: FlowMovaColors.slate,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            if (ticket.customerPhone != null &&
-                ticket.customerPhone!.trim().isNotEmpty)
-              _InfoRow(label: 'Telephone', value: ticket.customerPhone!),
-            if (ticket.notes != null && ticket.notes!.trim().isNotEmpty)
-              _InfoRow(label: 'Notes', value: ticket.notes!),
-            if (ticket.updatedAt != null)
-              _InfoRow(
-                label: 'Mis a jour',
-                value: _formatDate(ticket.updatedAt!),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                value,
+                softWrap: true,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: FlowMovaColors.logoInk,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
+            ),
           ],
         ),
       ),
@@ -604,58 +767,267 @@ class _TicketDetailInfo extends StatelessWidget {
   }
 }
 
-class _TicketLineCard extends StatelessWidget {
-  const _TicketLineCard({required this.line});
+class _ConnectedSectionTitle extends StatelessWidget {
+  const _ConnectedSectionTitle({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: FlowMovaColors.logoInk),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+        ),
+      ],
+    );
+  }
+}
+
+class _ConnectedTicketNote extends StatelessWidget {
+  const _ConnectedTicketNote({required this.note});
+
+  final String note;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.softApricot.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.notes_outlined, color: FlowMovaColors.logoInk),
+            const SizedBox(width: 8),
+            Expanded(child: Text(note)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ConnectedEmptyLineItems extends StatelessWidget {
+  const _ConnectedEmptyLineItems();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: FlowMovaColors.cloud,
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.all(12),
+        child: Text('Aucun article associe a ce ticket.'),
+      ),
+    );
+  }
+}
+
+class _ConnectedTicketLineTile extends StatelessWidget {
+  const _ConnectedTicketLineTile({required this.line});
 
   final CurrentUserTicketLine line;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final name = line.itemName.trim().isEmpty
+        ? 'Article ${_shortId(line.itemId)}'
+        : line.itemName;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: FlowMovaColors.cloud,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Padding(
-                padding: EdgeInsets.all(10),
-                child: Icon(Icons.shopping_bag_outlined),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    line.itemName.trim().isEmpty
-                        ? 'Article ${_shortId(line.itemId)}'
-                        : line.itemName,
-                    style: textTheme.titleSmall?.copyWith(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(color: FlowMovaColors.border),
+          borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: FlowMovaColors.primaryAqua.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  child: Text(
+                    'x${line.quantity}',
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: FlowMovaColors.logoInk,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Quantite ${line.quantity} - ${line.lineTotalAmount.toStringAsFixed(2)}',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: FlowMovaColors.slate,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (line.notes != null && line.notes!.trim().isNotEmpty)
+                      Text(
+                        line.notes!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: FlowMovaColors.slate,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Text(
+                line.lineTotalAmount.toStringAsFixed(2),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ConnectedTicketActions extends StatelessWidget {
+  const _ConnectedTicketActions({
+    required this.actionLoading,
+    required this.onCancel,
+    required this.onConfirmTreatment,
+  });
+
+  final bool actionLoading;
+  final VoidCallback? onCancel;
+  final VoidCallback? onConfirmTreatment;
+
+  @override
+  Widget build(BuildContext context) {
+    if (onCancel == null && onConfirmTreatment == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _ConnectedSectionTitle(
+          icon: Icons.touch_app_outlined,
+          label: 'Actions',
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            if (onCancel != null)
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: FlowMovaColors.error,
+                  side: BorderSide(
+                    color: FlowMovaColors.error.withValues(alpha: 0.45),
+                  ),
+                  backgroundColor: FlowMovaColors.error.withValues(alpha: 0.06),
+                ),
+                onPressed: actionLoading ? null : onCancel,
+                icon: actionLoading
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.cancel_outlined),
+                label: const Text('Annuler'),
+              ),
+            if (onConfirmTreatment != null)
+              FilledButton.icon(
+                onPressed: actionLoading ? null : onConfirmTreatment,
+                icon: actionLoading
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.verified_outlined),
+                label: const Text('Confirmer le traitement'),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ConnectedInfoMessage extends StatelessWidget {
+  const _ConnectedInfoMessage({
+    required this.icon,
+    required this.text,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(text)),
           ],
         ),
       ),
     );
   }
+}
+
+String _dateLabel(DateTime date) {
+  final local = date.toLocal();
+  final day = local.day.toString().padLeft(2, '0');
+  final month = local.month.toString().padLeft(2, '0');
+  final hour = local.hour.toString().padLeft(2, '0');
+  final minute = local.minute.toString().padLeft(2, '0');
+  return '$day/$month/${local.year} $hour:$minute';
+}
+
+String _ticketContextLabel({
+  required String companyName,
+  required String serviceName,
+  required String? locationName,
+}) {
+  final parts = [companyName, serviceName, locationName]
+      .where((part) => part != null && part.trim().isNotEmpty)
+      .cast<String>()
+      .toList(growable: false);
+  return parts.join(' - ');
 }
 
 class _SignedOutTicketsCard extends StatelessWidget {
@@ -870,38 +1242,6 @@ class _MetaPill extends StatelessWidget {
             Text(label),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 108,
-            child: Text(
-              label,
-              style: textTheme.labelMedium?.copyWith(
-                color: FlowMovaColors.slate,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          Expanded(child: Text(value, style: textTheme.bodyMedium)),
-        ],
       ),
     );
   }
