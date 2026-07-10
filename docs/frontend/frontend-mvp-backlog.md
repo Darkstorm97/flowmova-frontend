@@ -759,12 +759,16 @@ Definition of Done:
 
 Brancher le formulaire modification entreprise.
 
+Issue GitHub: #21.
+
 Inclure:
 
 - champs entreprise actuels;
 - domaine/type;
 - adresse;
 - devise;
+- statut operationnel ouverte/fermee;
+- photo en modification via le picker de `COMPANY-FRONT-005`;
 - gestion erreurs.
 
 Definition of Done:

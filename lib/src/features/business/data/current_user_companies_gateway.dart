@@ -5,6 +5,11 @@ abstract interface class CurrentUserCompaniesGateway {
 
   Future<CurrentUserCompany> createCompany(CreateCompanyInput input);
 
+  Future<CurrentUserCompany> updateCompany(
+    String companyId,
+    CreateCompanyInput input,
+  );
+
   Future<CurrentUserCompany> uploadCompanyImage(
     String companyId,
     CompanyImageUpload image,
@@ -43,6 +48,23 @@ class BackendCurrentUserCompaniesGateway
 
     if (response is! Map<String, dynamic>) {
       throw const FormatException('Invalid created company payload.');
+    }
+
+    return CurrentUserCompany.fromJson({...response, 'role': 'ADMIN'});
+  }
+
+  @override
+  Future<CurrentUserCompany> updateCompany(
+    String companyId,
+    CreateCompanyInput input,
+  ) async {
+    final response = await _apiClient.put(
+      '/api/companies/${companyId.trim()}',
+      body: input.toJson(),
+    );
+
+    if (response is! Map<String, dynamic>) {
+      throw const FormatException('Invalid updated company payload.');
     }
 
     return CurrentUserCompany.fromJson({...response, 'role': 'ADMIN'});

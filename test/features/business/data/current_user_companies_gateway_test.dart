@@ -99,6 +99,62 @@ void main() {
     expect(company.role, 'ADMIN');
   });
 
+  test('updateCompany puts company update payload', () async {
+    late Uri capturedUrl;
+    late Map<String, dynamic> capturedBody;
+
+    final gateway = BackendCurrentUserCompaniesGateway(
+      ApiClient(
+        environment: environment,
+        httpClient: MockClient.streaming((request, bodyStream) async {
+          capturedUrl = request.url;
+          capturedBody =
+              jsonDecode(await utf8.decodeStream(bodyStream))
+                  as Map<String, dynamic>;
+          return http.StreamedResponse(
+            Stream.value(
+              utf8.encode(
+                jsonEncode({
+                  ..._companyJson(),
+                  'name': 'Cafe Flow modifie',
+                  'currency': 'XOF',
+                  'operationalStatus': 'CLOSED',
+                }),
+              ),
+            ),
+            200,
+          );
+        }),
+      ),
+    );
+
+    final company = await gateway.updateCompany(
+      ' company-1 ',
+      const CreateCompanyInput(
+        name: ' Cafe Flow modifie ',
+        description: 'Nouvelle description',
+        imageUrl: 'https://cdn.test/cafe-flow.jpg',
+        currency: 'xof',
+        businessType: 'RESTAURANT',
+        operationalStatus: 'CLOSED',
+        city: 'Dakar',
+        country: 'sn',
+      ),
+    );
+
+    expect(capturedUrl.path, '/api/companies/company-1');
+    expect(capturedBody['name'], 'Cafe Flow modifie');
+    expect(capturedBody['description'], 'Nouvelle description');
+    expect(capturedBody['imageUrl'], 'https://cdn.test/cafe-flow.jpg');
+    expect(capturedBody['currency'], 'XOF');
+    expect(capturedBody['operationalStatus'], 'CLOSED');
+    expect(capturedBody['city'], 'Dakar');
+    expect(capturedBody['country'], 'SN');
+    expect(company.name, 'Cafe Flow modifie');
+    expect(company.currency, 'XOF');
+    expect(company.role, 'ADMIN');
+  });
+
   test('uploadCompanyImage posts multipart image payload', () async {
     late Uri capturedUrl;
     late String capturedContentType;

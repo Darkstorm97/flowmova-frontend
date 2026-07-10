@@ -131,6 +131,14 @@ class _FakeCurrentUserCompaniesGateway implements CurrentUserCompaniesGateway {
   }
 
   @override
+  Future<CurrentUserCompany> updateCompany(
+    String companyId,
+    CreateCompanyInput input,
+  ) {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<CurrentUserCompany> uploadCompanyImage(
     String companyId,
     CompanyImageUpload image,

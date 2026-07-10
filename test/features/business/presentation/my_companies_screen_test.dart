@@ -4,6 +4,7 @@ import 'package:flowmova_frontend/src/app/app_routes.dart';
 import 'package:flowmova_frontend/src/core/session/auth_session_controller.dart';
 import 'package:flowmova_frontend/src/core/session/session_scope.dart';
 import 'package:flowmova_frontend/src/features/business/data/current_user_companies_gateway.dart';
+import 'package:flowmova_frontend/src/features/business/presentation/edit_company_screen.dart';
 import 'package:flowmova_frontend/src/features/business/presentation/my_companies_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -107,6 +108,26 @@ void main() {
 
     expect(find.text('Dashboard company-1'), findsOneWidget);
   });
+
+  testWidgets('my companies opens selected company edition', (tester) async {
+    final sessionController = AuthSessionController.inMemory();
+    await sessionController.authenticate(_jwt());
+
+    await tester.pumpWidget(
+      _TestApp(
+        sessionController: sessionController,
+        gateway: _FakeCurrentUserCompaniesGateway(
+          companies: [_company(name: 'Cafe Flow')],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Modifier'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edit company-1'), findsOneWidget);
+  });
 }
 
 class _TestApp extends StatelessWidget {
@@ -128,6 +149,13 @@ class _TestApp extends StatelessWidget {
           AppRoutes.businessDashboard: (context) {
             final companyId = ModalRoute.of(context)!.settings.arguments;
             return Scaffold(body: Text('Dashboard $companyId'));
+          },
+          AppRoutes.editCompany: (context) {
+            final arguments = ModalRoute.of(context)!.settings.arguments;
+            final companyId = arguments is EditCompanyArguments
+                ? arguments.company.id
+                : 'missing';
+            return Scaffold(body: Text('Edit $companyId'));
           },
         },
       ),
@@ -156,6 +184,14 @@ class _FakeCurrentUserCompaniesGateway implements CurrentUserCompaniesGateway {
 
   @override
   Future<CurrentUserCompany> createCompany(CreateCompanyInput input) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<CurrentUserCompany> updateCompany(
+    String companyId,
+    CreateCompanyInput input,
+  ) {
     throw UnimplementedError();
   }
 

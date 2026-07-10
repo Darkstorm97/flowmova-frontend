@@ -7,6 +7,7 @@ import '../../../core/session/auth_session_controller.dart';
 import '../../../core/session/session_scope.dart';
 import '../../../core/theme/flow_mova_colors.dart';
 import '../data/current_user_companies_gateway.dart';
+import 'edit_company_screen.dart';
 
 class MyCompaniesScreen extends StatefulWidget {
   const MyCompaniesScreen({super.key, this.gateway});
@@ -106,6 +107,7 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
                       ? () => _loadPage(page: page.page + 1)
                       : null,
                   onOpenCompany: _openCompanyDashboard,
+                  onEditCompany: _openCompanyEdit,
                 );
               },
             ),
@@ -146,6 +148,18 @@ class _MyCompaniesScreenState extends State<MyCompaniesScreen> {
     );
   }
 
+  Future<void> _openCompanyEdit(CurrentUserCompany company) async {
+    final result = await Navigator.pushNamed(
+      context,
+      AppRoutes.editCompany,
+      arguments: EditCompanyArguments(company: company, gateway: _gateway),
+    );
+
+    if (result is CurrentUserCompany && mounted) {
+      _loadPage();
+    }
+  }
+
   String _errorMessage(Object? error) {
     if (error is ApiException) {
       return error.message;
@@ -175,6 +189,7 @@ class _CompaniesLoadedState extends StatelessWidget {
     required this.onPrevious,
     required this.onNext,
     required this.onOpenCompany,
+    required this.onEditCompany,
   });
 
   final CurrentUserCompanyPage page;
@@ -186,6 +201,7 @@ class _CompaniesLoadedState extends StatelessWidget {
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
   final ValueChanged<CurrentUserCompany> onOpenCompany;
+  final ValueChanged<CurrentUserCompany> onEditCompany;
 
   @override
   Widget build(BuildContext context) {
@@ -245,6 +261,7 @@ class _CompaniesLoadedState extends StatelessWidget {
             _CompanyAdminCard(
               company: company,
               onTap: () => onOpenCompany(company),
+              onEdit: () => onEditCompany(company),
             ),
             const SizedBox(height: 12),
           ],
@@ -298,10 +315,15 @@ class _CompaniesLoadedState extends StatelessWidget {
 }
 
 class _CompanyAdminCard extends StatelessWidget {
-  const _CompanyAdminCard({required this.company, required this.onTap});
+  const _CompanyAdminCard({
+    required this.company,
+    required this.onTap,
+    required this.onEdit,
+  });
 
   final CurrentUserCompany company;
   final VoidCallback onTap;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -398,6 +420,13 @@ class _CompanyAdminCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        onPressed: onEdit,
+                        icon: const Icon(Icons.edit_outlined),
+                        label: const Text('Modifier'),
+                      ),
+                      const SizedBox(width: 4),
                       const Icon(Icons.chevron_right),
                     ],
                   ),

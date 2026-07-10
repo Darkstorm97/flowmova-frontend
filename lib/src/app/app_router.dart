@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/business/presentation/create_company_screen.dart';
+import '../features/business/presentation/edit_company_screen.dart';
 import '../features/business/presentation/my_companies_screen.dart';
 import '../features/client/data/company_search_gateway.dart';
 import '../features/client/presentation/company_detail_screen.dart';
@@ -62,6 +63,12 @@ abstract final class AppRouter {
         title: 'Nouvelle entreprise',
         contentScrolls: false,
         child: CreateCompanyScreen(),
+      ),
+      AppRoutes.editCompany => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.business,
+        title: 'Modifier entreprise',
+        contentScrolls: false,
+        child: _editCompanyPage(settings.arguments),
       ),
       AppRoutes.businessDashboard => const FlowMovaNavigationShell(
         selectedRoute: AppRoutes.business,
@@ -238,6 +245,20 @@ abstract final class AppRouter {
     return const FeaturePlaceholderScreen(
       title: 'Ticket introuvable',
       description: 'Revenez a Mes tickets et selectionnez un ticket.',
+    );
+  }
+
+  static Widget _editCompanyPage(Object? arguments) {
+    if (arguments is EditCompanyArguments) {
+      return EditCompanyScreen(
+        company: arguments.company,
+        gateway: arguments.gateway,
+      );
+    }
+
+    return const FeaturePlaceholderScreen(
+      title: 'Entreprise introuvable',
+      description: 'Revenez a Mes entreprises et selectionnez Modifier.',
     );
   }
 }
