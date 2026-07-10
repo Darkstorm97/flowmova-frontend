@@ -69,7 +69,7 @@ void main() {
 
     expect(gateway.createdInput?.name, 'Cafe');
     expect(gateway.createdInput?.description, 'Cafe de test');
-    expect(gateway.createdInput?.currency, 'CAD');
+    expect(gateway.createdInput?.currency, 'XOF');
     expect(gateway.createdInput?.businessType, 'RESTAURANT');
     expect(gateway.createdInput?.city, 'Laval');
     expect(find.text('Dashboard company-created'), findsOneWidget);
@@ -102,6 +102,7 @@ class _TestApp extends StatelessWidget {
 
 class _FakeCurrentUserCompaniesGateway implements CurrentUserCompaniesGateway {
   CreateCompanyInput? createdInput;
+  CompanyImageUpload? uploadedImage;
 
   @override
   Future<CurrentUserCompanyPage> listCompanies({int page = 0, int size = 10}) {
@@ -123,6 +124,27 @@ class _FakeCurrentUserCompaniesGateway implements CurrentUserCompaniesGateway {
       country: input.country,
       status: 'ACTIVE',
       operationalStatus: input.operationalStatus,
+      role: 'ADMIN',
+      createdAt: DateTime.utc(2026, 7, 9, 12),
+      updatedAt: DateTime.utc(2026, 7, 9, 12),
+    );
+  }
+
+  @override
+  Future<CurrentUserCompany> uploadCompanyImage(
+    String companyId,
+    CompanyImageUpload image,
+  ) async {
+    uploadedImage = image;
+    return CurrentUserCompany(
+      id: companyId,
+      name: createdInput?.name ?? 'Company',
+      description: createdInput?.description,
+      imageUrl: 'http://localhost:8080/uploads/companies/$companyId/cover.jpg',
+      currency: createdInput?.currency ?? 'XOF',
+      businessType: createdInput?.businessType ?? 'RESTAURANT',
+      status: 'ACTIVE',
+      operationalStatus: createdInput?.operationalStatus ?? 'OPEN',
       role: 'ADMIN',
       createdAt: DateTime.utc(2026, 7, 9, 12),
       updatedAt: DateTime.utc(2026, 7, 9, 12),

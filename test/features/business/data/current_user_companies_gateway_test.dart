@@ -98,6 +98,54 @@ void main() {
     expect(company.id, 'company-1');
     expect(company.role, 'ADMIN');
   });
+
+  test('uploadCompanyImage posts multipart image payload', () async {
+    late Uri capturedUrl;
+    late String capturedContentType;
+    late String capturedBody;
+
+    final gateway = BackendCurrentUserCompaniesGateway(
+      ApiClient(
+        environment: environment,
+        httpClient: MockClient.streaming((request, bodyStream) async {
+          capturedUrl = request.url;
+          capturedContentType = request.headers['content-type'] ?? '';
+          capturedBody = await utf8.decodeStream(bodyStream);
+          return http.StreamedResponse(
+            Stream.value(
+              utf8.encode(
+                jsonEncode({
+                  ..._companyJson(),
+                  'imageUrl':
+                      'http://localhost:8080/uploads/companies/company-1/cover.png',
+                }),
+              ),
+            ),
+            200,
+          );
+        }),
+      ),
+    );
+
+    final company = await gateway.uploadCompanyImage(
+      'company-1',
+      const CompanyImageUpload(
+        bytes: [1, 2, 3],
+        filename: 'cover.png',
+        contentType: 'image/png',
+      ),
+    );
+
+    expect(capturedUrl.path, '/api/companies/company-1/image');
+    expect(capturedContentType, startsWith('multipart/form-data; boundary='));
+    expect(capturedBody, contains('name="image"'));
+    expect(capturedBody, contains('filename="cover.png"'));
+    expect(capturedBody.toLowerCase(), contains('content-type: image/png'));
+    expect(
+      company.imageUrl,
+      'http://localhost:8080/uploads/companies/company-1/cover.png',
+    );
+  });
 }
 
 Map<String, Object?> _companyJson() {

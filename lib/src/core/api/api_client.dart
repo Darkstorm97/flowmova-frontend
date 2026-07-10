@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import '../config/app_environment.dart';
 import 'api_error_response.dart';
@@ -32,6 +33,42 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
   }) {
     return request('POST', path, body: body, queryParameters: queryParameters);
+  }
+
+  Future<Object?> postMultipartBytes(
+    String path, {
+    required String fieldName,
+    required List<int> bytes,
+    required String filename,
+    required String contentType,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      environment.resolveApiUri(path, queryParameters),
+    );
+    request.headers.addAll(await _headers());
+    request.headers.remove('Content-Type');
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        fieldName,
+        bytes,
+        filename: filename,
+        contentType: MediaType.parse(contentType),
+      ),
+    );
+
+    try {
+      final streamedResponse = await _httpClient
+          .send(request)
+          .timeout(_timeout);
+      final response = await http.Response.fromStream(streamedResponse);
+      return _decodeResponse(response);
+    } on TimeoutException {
+      throw ApiException.timeout();
+    } on http.ClientException catch (error) {
+      throw ApiException.network(error);
+    }
   }
 
   Future<Object?> put(

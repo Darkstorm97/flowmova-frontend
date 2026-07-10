@@ -4,6 +4,11 @@ abstract interface class CurrentUserCompaniesGateway {
   Future<CurrentUserCompanyPage> listCompanies({int page = 0, int size = 10});
 
   Future<CurrentUserCompany> createCompany(CreateCompanyInput input);
+
+  Future<CurrentUserCompany> uploadCompanyImage(
+    String companyId,
+    CompanyImageUpload image,
+  );
 }
 
 class BackendCurrentUserCompaniesGateway
@@ -42,6 +47,38 @@ class BackendCurrentUserCompaniesGateway
 
     return CurrentUserCompany.fromJson({...response, 'role': 'ADMIN'});
   }
+
+  @override
+  Future<CurrentUserCompany> uploadCompanyImage(
+    String companyId,
+    CompanyImageUpload image,
+  ) async {
+    final response = await _apiClient.postMultipartBytes(
+      '/api/companies/${companyId.trim()}/image',
+      fieldName: 'image',
+      bytes: image.bytes,
+      filename: image.filename,
+      contentType: image.contentType,
+    );
+
+    if (response is! Map<String, dynamic>) {
+      throw const FormatException('Invalid uploaded company image payload.');
+    }
+
+    return CurrentUserCompany.fromJson({...response, 'role': 'ADMIN'});
+  }
+}
+
+class CompanyImageUpload {
+  const CompanyImageUpload({
+    required this.bytes,
+    required this.filename,
+    required this.contentType,
+  });
+
+  final List<int> bytes;
+  final String filename;
+  final String contentType;
 }
 
 class CreateCompanyInput {

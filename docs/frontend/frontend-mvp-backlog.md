@@ -791,6 +791,34 @@ Definition of Done:
 - aucune action de creation n'est disponible cote frontend quand elle est `CLOSED`;
 - les compagnies `OPEN` gardent le comportement actuel.
 
+### COMPANY-FRONT-005 - Photo picker entreprise avec preview et upload
+
+Issue GitHub: #53.
+
+Remplacer le champ `Image URL` par un vrai choix de photo local, avec preview et upload vers le backend.
+
+Dependance backend:
+
+- `COMPANY-BACK-001` / `flowmova-backend#106`.
+
+Definition of Done:
+
+- un admin peut choisir une photo locale dans la creation entreprise;
+- la photo est previsualisee avant soumission;
+- apres creation, l'image est envoyee via `POST /api/companies/{companyId}/image`.
+
+### COMPANY-FRONT-006 - Remplacer la devise par une liste deroulante priorisee
+
+Issue GitHub: #54.
+
+Remplacer le champ libre `Devise` par une liste deroulante priorisant les devises d'Afrique subsaharienne.
+
+Definition of Done:
+
+- la valeur envoyee au backend reste un code ISO 4217 sur 3 lettres;
+- les devises `XOF`, `XAF`, `CDF`, `GNF`, `RWF`, `BIF`, `KES`, `TZS`, `UGX`, `GHS`, `NGN`, `ZAR` sont prioritaires;
+- les devises courantes `CAD`, `USD`, `EUR` restent disponibles.
+
 ### CATCAT-FRONT-001 - Gerer les categories de catalogue
 
 Permettre la creation et la consultation des categories.
