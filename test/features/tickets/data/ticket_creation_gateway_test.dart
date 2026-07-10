@@ -122,4 +122,76 @@ void main() {
       expect(result.locationId, 'location-qr');
     },
   );
+
+  test('createTicket accepts connected empty-item ticket response', () async {
+    late Map<String, dynamic> capturedBody;
+
+    final gateway = BackendTicketCreationGateway(
+      ApiClient(
+        environment: environment,
+        httpClient: MockClient.streaming((request, bodyStream) async {
+          capturedBody =
+              jsonDecode(await utf8.decodeStream(bodyStream))
+                  as Map<String, dynamic>;
+
+          return http.StreamedResponse(
+            Stream.value(
+              utf8.encode(
+                jsonEncode({
+                  'id': 'ticket-empty',
+                  'ticketNumber': 'FM-0002',
+                  'serviceUnitId': 'service-unit-1',
+                  'locationId': 'location-1',
+                  'status': 'CREATED',
+                  'currency': 'CAD',
+                  'totalAmount': 0,
+                  'lines': const [],
+                  'createdAt': '2026-07-10T15:00:00Z',
+                }),
+              ),
+            ),
+            201,
+          );
+        }),
+      ),
+    );
+
+    final result = await gateway.createTicket(
+      'service-unit-1',
+      const CreateTicketCommand(locationId: 'location-1'),
+    );
+
+    expect(capturedBody['locationId'], 'location-1');
+    expect(capturedBody['lines'], isEmpty);
+    expect(result.ticketNumber, 'FM-0002');
+    expect(result.accessCode, isNull);
+    expect(result.totalLabel, '0.00 CAD');
+  });
+
+  test('createTicket accepts minimal ticket response', () async {
+    final gateway = BackendTicketCreationGateway(
+      ApiClient(
+        environment: environment,
+        httpClient: MockClient.streaming((request, bodyStream) async {
+          return http.StreamedResponse(
+            Stream.value(
+              utf8.encode(
+                jsonEncode({'id': 'ticket-empty', 'ticketNumber': 'FM-0003'}),
+              ),
+            ),
+            201,
+          );
+        }),
+      ),
+    );
+
+    final result = await gateway.createTicket(
+      'service-unit-1',
+      const CreateTicketCommand(locationId: 'location-1'),
+    );
+
+    expect(result.ticketNumber, 'FM-0003');
+    expect(result.status, 'CREATED');
+    expect(result.totalLabel, '0.00 ');
+  });
 }

@@ -116,16 +116,16 @@ class TicketCreationResult {
 
   factory TicketCreationResult.fromJson(Map<String, dynamic> json) {
     return TicketCreationResult(
-      id: json['id'] as String,
-      ticketNumber: json['ticketNumber'] as String,
+      id: json['id'] as String? ?? '',
+      ticketNumber: json['ticketNumber'] as String? ?? '',
       accessCode: json['accessCode'] as String?,
       guestName: json['guestName'] as String?,
       customerPhone: json['customerPhone'] as String?,
-      serviceUnitId: json['serviceUnitId'] as String,
-      locationId: json['locationId'] as String,
-      status: json['status'] as String,
-      currency: json['currency'] as String,
-      totalAmount: json['totalAmount'] as num,
+      serviceUnitId: json['serviceUnitId'] as String? ?? '',
+      locationId: json['locationId'] as String? ?? '',
+      status: json['status'] as String? ?? 'CREATED',
+      currency: json['currency'] as String? ?? '',
+      totalAmount: json['totalAmount'] as num? ?? 0,
     );
   }
 
