@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/business/presentation/business_home_screen.dart';
+import '../features/business/presentation/my_companies_screen.dart';
 import '../features/client/data/company_search_gateway.dart';
 import '../features/client/presentation/company_detail_screen.dart';
 import '../features/client/presentation/client_home_screen.dart';
@@ -132,11 +133,8 @@ abstract final class AppRouter {
       AppRoutes.myCompanies => const FlowMovaNavigationShell(
         selectedRoute: AppRoutes.business,
         title: 'Mes entreprises',
-        child: FeaturePlaceholderScreen(
-          title: 'Mes entreprises',
-          description:
-              'La liste des entreprises admin sera implementee dans COMPANY-FRONT-001.',
-        ),
+        contentScrolls: false,
+        child: MyCompaniesScreen(),
       ),
       _ => NotFoundScreen(routeName: routeName),
     };

@@ -704,6 +704,8 @@ Objectif: permettre a un admin de gerer ses entreprises et leur configuration de
 
 ### COMPANY-FRONT-001 - Lister mes entreprises
 
+Issue GitHub: #17.
+
 Afficher les entreprises de l'utilisateur authentifie.
 
 Inclure:
@@ -715,6 +717,13 @@ Inclure:
 - entreprises actives et desactivees si l'API admin les retourne;
 - acces creation/detail/modification;
 - clic sur une entreprise vers la page d'administration de cette entreprise.
+
+Implementation MVP:
+
+- consommation de `GET /api/users/me/companies`;
+- recherche locale sur la page courante pour le nom, la ville, le role et les statuts;
+- pagination backend avec boutons precedent/suivant;
+- ouverture d'une entreprise vers le dashboard admin de l'entreprise, en attendant les ecrans admin detailles.
 
 Definition of Done:
 

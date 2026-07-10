@@ -19,7 +19,7 @@ class BusinessHomeScreen extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Gerez vos entreprises, services, emplacements, catalogues et demandes client.',
+          'Retrouvez vos entreprises rattachees, puis ouvrez leur espace d administration.',
           style: textTheme.titleMedium?.copyWith(color: FlowMovaColors.slate),
         ),
         const SizedBox(height: 28),
@@ -37,7 +37,7 @@ class BusinessHomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Le dashboard complet sera branche progressivement avec les issues COMPANY, CATALOG, SERVICE et TICKET admin.',
+                  'Commencez par selectionner une entreprise. Le dashboard complet sera branche progressivement avec les services, catalogues et tickets admin.',
                   style: textTheme.bodyMedium?.copyWith(
                     color: FlowMovaColors.slate,
                   ),
@@ -48,16 +48,16 @@ class BusinessHomeScreen extends StatelessWidget {
                   runSpacing: 12,
                   children: [
                     FilledButton(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, AppRoutes.myCompanies),
+                      child: const Text('Mes entreprises'),
+                    ),
+                    OutlinedButton(
                       onPressed: () => Navigator.pushNamed(
                         context,
                         AppRoutes.businessDashboard,
                       ),
-                      child: const Text('Ouvrir le dashboard'),
-                    ),
-                    OutlinedButton(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, AppRoutes.myCompanies),
-                      child: const Text('Mes entreprises'),
+                      child: const Text('Dashboard'),
                     ),
                   ],
                 ),

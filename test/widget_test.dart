@@ -68,6 +68,10 @@ void main() {
     await tester.tap(find.text('Entreprise'));
     await tester.pumpAndSettle();
     expect(find.text('Administration entreprise'), findsOneWidget);
+
+    await tester.tap(find.text('Mes entreprises'));
+    await tester.pumpAndSettle();
+    expect(find.text('Connectez-vous'), findsOneWidget);
   });
 
   testWidgets('company card opens the public company detail route', (
