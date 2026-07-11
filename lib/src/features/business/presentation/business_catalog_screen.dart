@@ -304,9 +304,7 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
   Future<void> _runMutation(Future<Object?> Function() action) async {
     try {
       await action();
-      if (mounted) {
-        _reload();
-      }
+      await _refreshAfterMutation();
     } catch (error) {
       if (!mounted) {
         return;
@@ -314,6 +312,26 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(_errorMessage(error))));
+    }
+  }
+
+  Future<void> _refreshAfterMutation() async {
+    try {
+      final bundle = await _gateway!.getCatalog(widget.companyId);
+      if (mounted) {
+        setState(() => _future = Future.value(bundle));
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Element enregistre. Actualisez la page pour voir la liste a jour.',
+          ),
+        ),
+      );
     }
   }
 
