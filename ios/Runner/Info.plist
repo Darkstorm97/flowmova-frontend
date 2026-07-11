@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>FlowMova utilise la camera pour prendre une photo a associer a votre entreprise ou a votre catalogue.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>FlowMova utilise votre galerie pour choisir une photo a associer a votre entreprise ou a votre catalogue.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

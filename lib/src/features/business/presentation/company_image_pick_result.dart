@@ -11,3 +11,5 @@ class CompanyImagePickResult {
   final String filename;
   final String contentType;
 }
+
+enum CompanyImagePickProfile { company, catalog, avatar }

@@ -905,6 +905,27 @@ Definition of Done:
 - un element catalogue peut recevoir ou remplacer une image locale;
 - l'ecran se rafraichit apres sauvegarde.
 
+### MEDIA-FRONT-001 - Migrer vers image picker avec recadrage mobile
+
+Issue GitHub: #64.
+
+Remplacer le picker fichier generique par un picker image avec recadrage avant upload.
+
+Formats retenus:
+
+- photo entreprise: ratio 16:9, sortie JPEG;
+- image catalogue/article: ratio 1:1, sortie JPEG;
+- avatar utilisateur: ratio 1:1, sortie JPEG, prepare pour usage futur.
+
+Definition of Done:
+
+- les ecrans entreprise et catalogue utilisent `image_picker`;
+- sur Android/iOS, l'utilisateur peut choisir galerie ou camera;
+- sur web/desktop, l'utilisateur peut choisir une image depuis le selecteur disponible;
+- l'utilisateur recadre l'image avant upload;
+- les images envoyees respectent le ratio attendu;
+- `file_picker` n'est plus utilise pour ces parcours image.
+
 ### CATALOG-FRONT-003 - Synchronisation locale robuste du catalogue apres mutation
 
 Issue GitHub: #65.

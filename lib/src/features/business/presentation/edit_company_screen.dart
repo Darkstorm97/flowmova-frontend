@@ -382,7 +382,10 @@ class _EditCompanyScreenState extends State<EditCompanyScreen> {
 
   Future<void> _pickImage() async {
     try {
-      final pickedImage = await pickCompanyImage();
+      final pickedImage = await pickCompanyImage(
+        context,
+        profile: CompanyImagePickProfile.company,
+      );
       if (pickedImage == null) {
         return;
       }

@@ -935,7 +935,10 @@ class _CatalogFormSheetState extends State<_CatalogFormSheet> {
 
   Future<void> _pickImage() async {
     try {
-      final result = await pickCompanyImage();
+      final result = await pickCompanyImage(
+        context,
+        profile: CompanyImagePickProfile.catalog,
+      );
       if (result == null || !mounted) {
         return;
       }
