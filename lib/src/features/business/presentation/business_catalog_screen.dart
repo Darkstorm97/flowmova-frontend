@@ -27,6 +27,7 @@ class BusinessCatalogScreen extends StatefulWidget {
 }
 
 class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
+  final _searchController = TextEditingController();
   AdminCatalogGateway? _gateway;
   Future<AdminCatalogBundle>? _future;
   AdminCatalogBundle? _bundle;
@@ -107,6 +108,7 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
               ],
               const SizedBox(height: 12),
               TextField(
+                controller: _searchController,
                 onChanged: (value) => setState(() => _query = value),
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.search),
@@ -446,6 +448,12 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
 
   void _reload() {
     setState(() => _future = _loadCatalog());
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   String _errorMessage(Object? error) {
