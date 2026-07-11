@@ -9,6 +9,7 @@ abstract final class AppRoutes {
   static const register = '/auth/register';
   static const businessDashboard = '/business/dashboard';
   static const businessCatalog = '/business/catalog';
+  static const businessTickets = '/business/tickets';
   static const createCompany = '/business/companies/create';
   static const editCompany = '/business/companies/edit';
   static const businessServiceUnits = '/business/service-units';

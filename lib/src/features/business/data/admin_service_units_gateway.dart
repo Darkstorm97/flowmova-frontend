@@ -60,6 +60,15 @@ abstract interface class AdminServiceUnitsGateway {
     String? locationId,
   });
 
+  Future<CurrentUserTicketPage> listCompanyTickets(
+    String companyId, {
+    int page = 0,
+    int size = 50,
+    String? serviceUnitId,
+    String? status,
+    String? ticketNumber,
+  });
+
   Future<CurrentUserTicket> changeTicketStatus(
     String companyId,
     String serviceUnitId,
@@ -220,7 +229,7 @@ class BackendAdminServiceUnitsGateway implements AdminServiceUnitsGateway {
       queryParameters: {
         'page': page,
         'size': size,
-        'sort': 'createdAt,desc',
+        'sort': 'createdAt,asc',
         if (status != null && status.trim().isNotEmpty) 'status': status,
         if (ticketNumber != null && ticketNumber.trim().isNotEmpty)
           'ticketNumber': ticketNumber.trim(),
@@ -230,6 +239,34 @@ class BackendAdminServiceUnitsGateway implements AdminServiceUnitsGateway {
     );
     if (response is! Map<String, dynamic>) {
       throw const FormatException('Invalid admin tickets response.');
+    }
+    return CurrentUserTicketPage.fromJson(response);
+  }
+
+  @override
+  Future<CurrentUserTicketPage> listCompanyTickets(
+    String companyId, {
+    int page = 0,
+    int size = 50,
+    String? serviceUnitId,
+    String? status,
+    String? ticketNumber,
+  }) async {
+    final response = await _apiClient.get(
+      '/api/companies/$companyId/admin/tickets',
+      queryParameters: {
+        'page': page,
+        'size': size,
+        'sort': 'createdAt,asc',
+        if (serviceUnitId != null && serviceUnitId.trim().isNotEmpty)
+          'serviceUnitId': serviceUnitId,
+        if (status != null && status.trim().isNotEmpty) 'status': status,
+        if (ticketNumber != null && ticketNumber.trim().isNotEmpty)
+          'ticketNumber': ticketNumber.trim(),
+      },
+    );
+    if (response is! Map<String, dynamic>) {
+      throw const FormatException('Invalid company tickets response.');
     }
     return CurrentUserTicketPage.fromJson(response);
   }

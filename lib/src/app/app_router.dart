@@ -7,6 +7,7 @@ import '../features/business/presentation/business_catalog_screen.dart';
 import '../features/business/presentation/business_service_unit_items_screen.dart';
 import '../features/business/presentation/business_service_unit_tickets_screen.dart';
 import '../features/business/presentation/business_service_units_screen.dart';
+import '../features/business/presentation/business_tickets_screen.dart';
 import '../features/business/presentation/create_company_screen.dart';
 import '../features/business/presentation/edit_company_screen.dart';
 import '../features/business/presentation/my_companies_screen.dart';
@@ -86,6 +87,12 @@ abstract final class AppRouter {
         title: 'Catalogue',
         contentScrolls: false,
         child: _businessCatalogPage(settings.arguments),
+      ),
+      AppRoutes.businessTickets => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.business,
+        title: 'Tickets',
+        contentScrolls: false,
+        child: _businessTicketsPage(settings.arguments),
       ),
       AppRoutes.businessServiceUnits => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.business,
@@ -318,6 +325,19 @@ abstract final class AppRouter {
     }
 
     return BusinessCatalogScreen(companyId: companyId);
+  }
+
+  static Widget _businessTicketsPage(Object? arguments) {
+    final companyId = arguments is String ? arguments : null;
+    if (companyId == null || companyId.trim().isEmpty) {
+      return const FeaturePlaceholderScreen(
+        title: 'Entreprise introuvable',
+        description:
+            'Revenez au dashboard et ouvrez le suivi tickets de l entreprise.',
+      );
+    }
+
+    return BusinessTicketsScreen(companyId: companyId);
   }
 
   static Widget _businessServiceUnitsPage(Object? arguments) {

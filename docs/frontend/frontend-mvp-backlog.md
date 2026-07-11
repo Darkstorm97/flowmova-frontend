@@ -1001,6 +1001,23 @@ Definition of Done:
 
 - un admin peut preparer les articles selectionnables dans les tickets.
 
+### ITEM-FRONT-002 - Recherche catalogue dans ajout article service
+
+Issue GitHub: #63.
+
+Faciliter l'ajout d'articles dans un service quand le catalogue contient beaucoup d'elements.
+
+Inclure:
+
+- champ de recherche dans la modale `Nouvel article`;
+- filtrage local des catalogues disponibles par nom et description;
+- conservation de l'edition d'un article existant;
+- etat vide quand aucun catalogue ne correspond.
+
+Definition of Done:
+
+- un admin peut rechercher un catalogue avant de l'associer au service.
+
 ### TICKET-ADMIN-FRONT-001 - Lister les tickets d'une unite de service
 
 Issue GitHub: #59.
@@ -1019,6 +1036,28 @@ Inclure:
 Definition of Done:
 
 - un admin peut suivre les demandes d'une unite de service.
+
+### TICKET-FRONT-003 - Vue globale suivi tickets entreprise
+
+Issue GitHub: #62.
+
+Afficher une vue globale de suivi des tickets pour une entreprise.
+
+Inclure:
+
+- la tuile `Tickets` du dashboard ouvre la vue globale;
+- liste de tous les tickets de l'entreprise;
+- filtres par service, statut et numero;
+- tri ascendant par creation pour afficher les tickets recents vers le bas;
+- affichage des articles du ticket avec quantites;
+- actions `Recu`, `Traite`, `Terminer` et `Annuler` selon le statut;
+- confirmation explicite pour les actions definitives.
+
+Definition of Done:
+
+- l'admin peut suivre tous les tickets et filtrer par service;
+- les lignes articles affichent nom et quantite;
+- fermer ou annuler demande une confirmation claire.
 
 ### TICKET-ADMIN-FRONT-002 - Mettre a jour le cycle de vie ticket cote equipe
 

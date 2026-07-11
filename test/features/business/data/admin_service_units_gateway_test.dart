@@ -209,6 +209,7 @@ void main() {
       capturedUrls[0].path,
       '/api/companies/company-1/admin/service-units/service-1/tickets',
     );
+    expect(capturedUrls[0].queryParameters['sort'], 'createdAt,asc');
     expect(capturedUrls[0].queryParameters['status'], 'CREATED');
     expect(capturedUrls[0].queryParameters['ticketNumber'], 'T-1');
     expect(capturedUrls[0].queryParameters['locationId'], 'location-1');
@@ -219,6 +220,42 @@ void main() {
     );
     expect(capturedBody, {'status': 'RECEIVED'});
     expect(ticket.status, 'RECEIVED');
+  });
+
+  test('listCompanyTickets calls company admin ticket endpoint', () async {
+    late Uri capturedUrl;
+
+    final gateway = BackendAdminServiceUnitsGateway(
+      ApiClient(
+        environment: environment,
+        httpClient: MockClient.streaming((request, bodyStream) async {
+          capturedUrl = request.url;
+          return _jsonResponse({
+            'items': [_ticketJson(status: 'CREATED')],
+            'page': 0,
+            'size': 50,
+            'totalItems': 1,
+            'totalPages': 1,
+          });
+        }),
+      ),
+    );
+
+    final page = await gateway.listCompanyTickets(
+      'company-1',
+      serviceUnitId: 'service-1',
+      status: 'CREATED',
+      ticketNumber: ' T-1 ',
+    );
+
+    expect(capturedUrl.path, '/api/companies/company-1/admin/tickets');
+    expect(capturedUrl.queryParameters['page'], '0');
+    expect(capturedUrl.queryParameters['size'], '50');
+    expect(capturedUrl.queryParameters['sort'], 'createdAt,asc');
+    expect(capturedUrl.queryParameters['serviceUnitId'], 'service-1');
+    expect(capturedUrl.queryParameters['status'], 'CREATED');
+    expect(capturedUrl.queryParameters['ticketNumber'], 'T-1');
+    expect(page.items.single.ticketNumber, 'T-0001');
   });
 
   test(

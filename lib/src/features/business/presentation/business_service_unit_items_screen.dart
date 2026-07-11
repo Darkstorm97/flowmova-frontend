@@ -349,6 +349,8 @@ class _ItemFormSheetState extends State<_ItemFormSheet> {
   late final TextEditingController _orderController = TextEditingController(
     text: (widget.item?.displayOrder ?? 0).toString(),
   );
+  final _catalogSearchController = TextEditingController();
+  String _catalogQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -373,25 +375,49 @@ class _ItemFormSheetState extends State<_ItemFormSheet> {
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                initialValue: _catalogId,
-                decoration: const InputDecoration(labelText: 'Catalogue'),
-                items: [
-                  for (final catalog in widget.catalogs)
-                    DropdownMenuItem(
-                      value: catalog.id,
-                      child: Text(catalog.name),
-                    ),
-                  if (editing && widget.item != null)
-                    DropdownMenuItem(
-                      value: widget.item!.catalog.id,
-                      child: Text(widget.item!.catalog.name),
-                    ),
-                ],
-                onChanged: editing
-                    ? null
-                    : (value) => setState(() => _catalogId = value),
-              ),
+              if (!editing) ...[
+                TextField(
+                  controller: _catalogSearchController,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.search),
+                    labelText: 'Rechercher dans le catalogue',
+                  ),
+                  onChanged: (value) => setState(() {
+                    _catalogQuery = value;
+                    final visibleCatalogs = _filteredCatalogs();
+                    if (_catalogId != null &&
+                        !visibleCatalogs.any(
+                          (catalog) => catalog.id == _catalogId,
+                        )) {
+                      _catalogId = visibleCatalogs.isEmpty
+                          ? null
+                          : visibleCatalogs.first.id;
+                    }
+                  }),
+                ),
+                const SizedBox(height: 10),
+              ],
+              if (_catalogOptions().isEmpty)
+                const _StateCard(
+                  icon: Icons.inventory_2_outlined,
+                  title: 'Aucun catalogue',
+                  message: 'Aucun catalogue disponible pour cette recherche.',
+                )
+              else
+                DropdownButtonFormField<String>(
+                  initialValue: _catalogId,
+                  decoration: const InputDecoration(labelText: 'Catalogue'),
+                  items: [
+                    for (final catalog in _catalogOptions())
+                      DropdownMenuItem(
+                        value: catalog.id,
+                        child: Text(catalog.name),
+                      ),
+                  ],
+                  onChanged: editing
+                      ? null
+                      : (value) => setState(() => _catalogId = value),
+                ),
               const SizedBox(height: 10),
               TextField(
                 controller: _priceController,
@@ -469,11 +495,33 @@ class _ItemFormSheetState extends State<_ItemFormSheet> {
     );
   }
 
+  List<CompanyCatalogItem> _catalogOptions() {
+    if (widget.item != null) {
+      return [widget.item!.catalog];
+    }
+    return _filteredCatalogs();
+  }
+
+  List<CompanyCatalogItem> _filteredCatalogs() {
+    final needle = _catalogQuery.trim().toLowerCase();
+    if (needle.isEmpty) {
+      return widget.catalogs;
+    }
+    return widget.catalogs
+        .where(
+          (catalog) =>
+              catalog.name.toLowerCase().contains(needle) ||
+              (catalog.description?.toLowerCase().contains(needle) ?? false),
+        )
+        .toList(growable: false);
+  }
+
   @override
   void dispose() {
     _priceController.dispose();
     _quantityController.dispose();
     _orderController.dispose();
+    _catalogSearchController.dispose();
     super.dispose();
   }
 }

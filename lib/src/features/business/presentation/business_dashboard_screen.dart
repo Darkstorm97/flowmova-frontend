@@ -188,10 +188,8 @@ class _DashboardContent extends StatelessWidget {
                 helper: 'par service',
                 onTap: () => Navigator.pushNamed(
                   context,
-                  AppRoutes.businessServiceUnits,
-                  arguments: BusinessServiceUnitsArguments(
-                    companyId: company.id,
-                  ),
+                  AppRoutes.businessTickets,
+                  arguments: company.id,
                 ),
               ),
             ],

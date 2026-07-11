@@ -8,40 +8,26 @@ import '../../tickets/data/current_user_ticket_gateway.dart';
 import '../data/admin_service_units_gateway.dart';
 import '../data/business_dashboard_gateway.dart';
 
-class BusinessServiceUnitTicketsArguments {
-  const BusinessServiceUnitTicketsArguments({
-    required this.companyId,
-    required this.serviceUnit,
-  });
-
-  final String companyId;
-  final BusinessServiceUnit serviceUnit;
-}
-
-class BusinessServiceUnitTicketsScreen extends StatefulWidget {
-  const BusinessServiceUnitTicketsScreen({
+class BusinessTicketsScreen extends StatefulWidget {
+  const BusinessTicketsScreen({
     super.key,
     required this.companyId,
-    required this.serviceUnit,
     this.gateway,
   });
 
   final String companyId;
-  final BusinessServiceUnit serviceUnit;
   final AdminServiceUnitsGateway? gateway;
 
   @override
-  State<BusinessServiceUnitTicketsScreen> createState() =>
-      _BusinessServiceUnitTicketsScreenState();
+  State<BusinessTicketsScreen> createState() => _BusinessTicketsScreenState();
 }
 
-class _BusinessServiceUnitTicketsScreenState
-    extends State<BusinessServiceUnitTicketsScreen> {
+class _BusinessTicketsScreenState extends State<BusinessTicketsScreen> {
   AdminServiceUnitsGateway? _gateway;
-  Future<_TicketAdminBundle>? _future;
+  Future<_CompanyTicketsBundle>? _future;
   final _ticketNumberController = TextEditingController();
   String? _status;
-  String? _locationId;
+  String? _serviceUnitId;
 
   @override
   void didChangeDependencies() {
@@ -62,18 +48,18 @@ class _BusinessServiceUnitTicketsScreenState
       return const _StateCard(
         icon: Icons.lock_outline,
         title: 'Connexion requise',
-        message: 'Connectez-vous pour suivre les tickets de ce service.',
+        message: 'Connectez-vous pour suivre les tickets.',
       );
     }
 
-    return FutureBuilder<_TicketAdminBundle>(
+    return FutureBuilder<_CompanyTicketsBundle>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const _StateCard(
             icon: Icons.hourglass_empty,
             title: 'Chargement des tickets',
-            message: 'Nous recuperons les demandes du service.',
+            message: 'Nous recuperons les demandes de l entreprise.',
           );
         }
         if (snapshot.hasError) {
@@ -92,46 +78,48 @@ class _BusinessServiceUnitTicketsScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.serviceUnit.name,
+                'Suivi des tickets',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                '${bundle.page.totalItems} ticket${bundle.page.totalItems > 1 ? 's' : ''}',
+                '${bundle.tickets.totalItems} ticket${bundle.tickets.totalItems > 1 ? 's' : ''}',
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: FlowMovaColors.slate),
               ),
               const SizedBox(height: 16),
-              _TicketFilters(
+              _CompanyTicketFilters(
                 ticketNumberController: _ticketNumberController,
                 status: _status,
-                locationId: _locationId,
-                locations: bundle.locations.items,
+                serviceUnitId: _serviceUnitId,
+                services: bundle.services.items,
                 onStatusChanged: (value) => setState(() => _status = value),
-                onLocationChanged: (value) =>
-                    setState(() => _locationId = value),
+                onServiceChanged: (value) =>
+                    setState(() => _serviceUnitId = value),
                 onApply: _reload,
               ),
               const SizedBox(height: 14),
-              if (bundle.page.items.isEmpty)
+              if (bundle.tickets.items.isEmpty)
                 const _StateCard(
                   icon: Icons.confirmation_number_outlined,
                   title: 'Aucun ticket',
                   message:
-                      'Ce service n a pas encore de ticket pour ce filtre.',
+                      'Aucun ticket ne correspond aux filtres selectionnes.',
                 )
               else
-                for (final ticket in bundle.page.items) ...[
-                  _AdminTicketCard(
+                for (final ticket in bundle.tickets.items) ...[
+                  _CompanyTicketCard(
                     ticket: ticket,
-                    onReceive: _canReceive(ticket)
+                    onReceive: ticket.status == 'CREATED'
                         ? () =>
                               _confirmStatus(ticket, 'RECEIVED', 'Marquer recu')
                         : null,
-                    onTreat: _canTreat(ticket)
+                    onTreat:
+                        ticket.status == 'CREATED' ||
+                            ticket.status == 'RECEIVED'
                         ? () => _confirmStatus(
                             ticket,
                             'TREATED',
@@ -146,7 +134,9 @@ class _BusinessServiceUnitTicketsScreenState
                             irreversible: true,
                           )
                         : null,
-                    onCancel: _canCancel(ticket)
+                    onCancel:
+                        ticket.status == 'CREATED' ||
+                            ticket.status == 'RECEIVED'
                         ? () => _confirmStatus(
                             ticket,
                             'CANCELLED',
@@ -164,40 +154,26 @@ class _BusinessServiceUnitTicketsScreenState
     );
   }
 
-  Future<_TicketAdminBundle> _load() async {
-    final gateway = _gateway!;
-    final tickets = await gateway.listTickets(
+  Future<_CompanyTicketsBundle> _load() async {
+    final services = await _gateway!.listServiceUnits(
       widget.companyId,
-      widget.serviceUnit.id,
-      status: _status,
-      ticketNumber: _ticketNumberController.text,
-      locationId: _locationId,
-    );
-    final locations = await gateway.listLocations(
-      widget.companyId,
-      widget.serviceUnit.id,
       size: 100,
     );
-    return _TicketAdminBundle(page: tickets, locations: locations);
+    final tickets = await _gateway!.listCompanyTickets(
+      widget.companyId,
+      serviceUnitId: _serviceUnitId,
+      status: _status,
+      ticketNumber: _ticketNumberController.text,
+    );
+    return _CompanyTicketsBundle(services: services, tickets: tickets);
   }
 
-  void _reload() {
-    setState(() => _future = _load());
+  bool _canClose(CurrentUserTicket ticket) {
+    return ticket.status == 'CREATED' ||
+        ticket.status == 'RECEIVED' ||
+        ticket.status == 'TREATED' ||
+        ticket.status == 'CUSTOMER_CONFIRMED';
   }
-
-  bool _canReceive(CurrentUserTicket ticket) => ticket.status == 'CREATED';
-
-  bool _canTreat(CurrentUserTicket ticket) =>
-      ticket.status == 'CREATED' || ticket.status == 'RECEIVED';
-
-  bool _canClose(CurrentUserTicket ticket) =>
-      ticket.status == 'CREATED' ||
-      ticket.status == 'RECEIVED' ||
-      ticket.status == 'TREATED' ||
-      ticket.status == 'CUSTOMER_CONFIRMED';
-
-  bool _canCancel(CurrentUserTicket ticket) =>
-      ticket.status == 'CREATED' || ticket.status == 'RECEIVED';
 
   Future<void> _confirmStatus(
     CurrentUserTicket ticket,
@@ -233,7 +209,7 @@ class _BusinessServiceUnitTicketsScreenState
     try {
       await _gateway!.changeTicketStatus(
         widget.companyId,
-        widget.serviceUnit.id,
+        ticket.serviceUnitId,
         ticket.id,
         status,
       );
@@ -248,6 +224,10 @@ class _BusinessServiceUnitTicketsScreenState
         context,
       ).showSnackBar(SnackBar(content: Text(_errorMessage(error))));
     }
+  }
+
+  void _reload() {
+    setState(() => _future = _load());
   }
 
   String _errorMessage(Object? error) {
@@ -267,30 +247,30 @@ class _BusinessServiceUnitTicketsScreenState
   }
 }
 
-class _TicketAdminBundle {
-  const _TicketAdminBundle({required this.page, required this.locations});
+class _CompanyTicketsBundle {
+  const _CompanyTicketsBundle({required this.services, required this.tickets});
 
-  final CurrentUserTicketPage page;
-  final BusinessServiceUnitLocationPage locations;
+  final BusinessServiceUnitPage services;
+  final CurrentUserTicketPage tickets;
 }
 
-class _TicketFilters extends StatelessWidget {
-  const _TicketFilters({
+class _CompanyTicketFilters extends StatelessWidget {
+  const _CompanyTicketFilters({
     required this.ticketNumberController,
     required this.status,
-    required this.locationId,
-    required this.locations,
+    required this.serviceUnitId,
+    required this.services,
     required this.onStatusChanged,
-    required this.onLocationChanged,
+    required this.onServiceChanged,
     required this.onApply,
   });
 
   final TextEditingController ticketNumberController;
   final String? status;
-  final String? locationId;
-  final List<BusinessServiceUnitLocation> locations;
+  final String? serviceUnitId;
+  final List<BusinessServiceUnit> services;
   final ValueChanged<String?> onStatusChanged;
-  final ValueChanged<String?> onLocationChanged;
+  final ValueChanged<String?> onServiceChanged;
   final VoidCallback onApply;
 
   @override
@@ -310,6 +290,20 @@ class _TicketFilters extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String?>(
+              initialValue: serviceUnitId,
+              decoration: const InputDecoration(labelText: 'Service'),
+              items: [
+                const DropdownMenuItem(value: null, child: Text('Tous')),
+                for (final service in services)
+                  DropdownMenuItem(
+                    value: service.id,
+                    child: Text(service.name),
+                  ),
+              ],
+              onChanged: onServiceChanged,
+            ),
+            const SizedBox(height: 10),
+            DropdownButtonFormField<String?>(
               initialValue: status,
               decoration: const InputDecoration(labelText: 'Statut'),
               items: const [
@@ -317,27 +311,14 @@ class _TicketFilters extends StatelessWidget {
                 DropdownMenuItem(value: 'CREATED', child: Text('Cree')),
                 DropdownMenuItem(value: 'RECEIVED', child: Text('Recu')),
                 DropdownMenuItem(value: 'TREATED', child: Text('Traite')),
-                DropdownMenuItem(value: 'CANCELLED', child: Text('Annule')),
                 DropdownMenuItem(
                   value: 'CUSTOMER_CONFIRMED',
                   child: Text('Confirme'),
                 ),
+                DropdownMenuItem(value: 'CLOSED', child: Text('Termine')),
+                DropdownMenuItem(value: 'CANCELLED', child: Text('Annule')),
               ],
               onChanged: onStatusChanged,
-            ),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String?>(
-              initialValue: locationId,
-              decoration: const InputDecoration(labelText: 'Emplacement'),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('Tous')),
-                for (final location in locations)
-                  DropdownMenuItem(
-                    value: location.id,
-                    child: Text(location.name),
-                  ),
-              ],
-              onChanged: onLocationChanged,
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -355,8 +336,8 @@ class _TicketFilters extends StatelessWidget {
   }
 }
 
-class _AdminTicketCard extends StatelessWidget {
-  const _AdminTicketCard({
+class _CompanyTicketCard extends StatelessWidget {
+  const _CompanyTicketCard({
     required this.ticket,
     required this.onReceive,
     required this.onTreat,
@@ -375,6 +356,12 @@ class _AdminTicketCard extends StatelessWidget {
     final customer = ticket.userId.isNotEmpty
         ? 'Client connecte'
         : (ticket.customerPhone ?? 'Invite');
+    final subtitleParts = [
+      ticket.serviceUnitName,
+      if (!ticket.locationDefault && ticket.locationName.trim().isNotEmpty)
+        ticket.locationName,
+      ticket.totalLabel,
+    ].where((part) => part.trim().isNotEmpty).join(' - ');
 
     return Card(
       child: Padding(
@@ -396,21 +383,41 @@ class _AdminTicketCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text('${ticket.locationName} - ${ticket.totalLabel}'),
+            Text(subtitleParts),
             const SizedBox(height: 4),
             Text(customer, style: const TextStyle(color: FlowMovaColors.slate)),
-            if (ticket.lines.isNotEmpty) ...[
-              const SizedBox(height: 8),
+            const SizedBox(height: 10),
+            if (ticket.lines.isEmpty)
+              const Text(
+                'Aucun article commande',
+                style: TextStyle(color: FlowMovaColors.slate),
+              )
+            else
               for (final line in ticket.lines)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    'x${line.quantity} ${line.itemName}',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 32,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: FlowMovaColors.cloud,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'x${line.quantity}',
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text(line.itemName)),
+                      Text(line.lineTotalAmount.toStringAsFixed(2)),
+                    ],
                   ),
                 ),
-            ],
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -422,7 +429,7 @@ class _AdminTicketCard extends StatelessWidget {
                     label: const Text('Recu'),
                   ),
                 if (onTreat != null)
-                  FilledButton.icon(
+                  FilledButton.tonalIcon(
                     onPressed: onTreat,
                     icon: const Icon(Icons.check_circle_outline),
                     label: const Text('Traite'),
@@ -519,7 +526,7 @@ String _ticketStatusLabel(String status) {
     'TREATED' => 'Traite',
     'CUSTOMER_CONFIRMED' => 'Confirme',
     'CANCELLED' => 'Annule',
-    'CLOSED' => 'Ferme',
+    'CLOSED' => 'Termine',
     _ => status,
   };
 }
