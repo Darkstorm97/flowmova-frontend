@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../app/app_routes.dart';
@@ -27,6 +29,7 @@ class BusinessTicketsScreen extends StatefulWidget {
 class _BusinessTicketsScreenState extends State<BusinessTicketsScreen> {
   AdminServiceUnitsGateway? _gateway;
   Future<_CompanyTicketsBundle>? _future;
+  _CompanyTicketsBundle? _bundle;
   final _ticketNumberController = TextEditingController();
   String? _status;
   String? _serviceUnitId;
@@ -74,7 +77,7 @@ class _BusinessTicketsScreenState extends State<BusinessTicketsScreen> {
           );
         }
 
-        final bundle = snapshot.requireData;
+        final bundle = _bundle ?? snapshot.requireData;
         return SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,7 +171,9 @@ class _BusinessTicketsScreenState extends State<BusinessTicketsScreen> {
       status: _status,
       ticketNumber: _ticketNumberController.text,
     );
-    return _CompanyTicketsBundle(services: services, tickets: tickets);
+    final bundle = _CompanyTicketsBundle(services: services, tickets: tickets);
+    _bundle = bundle;
+    return bundle;
   }
 
   Future<void> _openTicket(CurrentUserTicket ticket) async {
@@ -182,34 +187,87 @@ class _BusinessTicketsScreenState extends State<BusinessTicketsScreen> {
       ),
     );
     if (updated is CurrentUserTicket) {
-      _replaceTicket(updated);
+      _applyTicketMutation(updated);
+      unawaited(_refreshAfterMutation());
     }
   }
 
-  void _replaceTicket(CurrentUserTicket updatedTicket) {
-    final current = _future;
+  void _applyTicketMutation(CurrentUserTicket updatedTicket) {
+    final current = _bundle;
     if (current == null) {
       return;
     }
+    final matchesFilters = _matchesCurrentFilters(updatedTicket);
+    final existingItems = current.tickets.items
+        .where((ticket) => ticket.id != updatedTicket.id)
+        .toList(growable: true);
+    if (matchesFilters) {
+      existingItems.add(updatedTicket);
+      existingItems.sort(
+        (left, right) => left.createdAt.compareTo(right.createdAt),
+      );
+    }
+    final totalItems = matchesFilters
+        ? current.tickets.totalItems
+        : (current.tickets.totalItems - 1).clamp(0, current.tickets.totalItems);
+    final updatedBundle = _CompanyTicketsBundle(
+      services: current.services,
+      tickets: CurrentUserTicketPage(
+        items: existingItems,
+        page: current.tickets.page,
+        size: current.tickets.size,
+        totalItems: totalItems,
+        totalPages: current.tickets.totalPages,
+      ),
+    );
     setState(() {
-      _future = current.then((bundle) {
-        return _CompanyTicketsBundle(
-          services: bundle.services,
-          tickets: CurrentUserTicketPage(
-            items: bundle.tickets.items
-                .map(
-                  (ticket) =>
-                      ticket.id == updatedTicket.id ? updatedTicket : ticket,
-                )
-                .toList(growable: false),
-            page: bundle.tickets.page,
-            size: bundle.tickets.size,
-            totalItems: bundle.tickets.totalItems,
-            totalPages: bundle.tickets.totalPages,
-          ),
-        );
-      });
+      _bundle = updatedBundle;
+      _future = Future.value(updatedBundle);
     });
+  }
+
+  bool _matchesCurrentFilters(CurrentUserTicket ticket) {
+    final serviceFilter = _serviceUnitId?.trim();
+    if (serviceFilter != null &&
+        serviceFilter.isNotEmpty &&
+        ticket.serviceUnitId != serviceFilter) {
+      return false;
+    }
+    final statusFilter = _status?.trim();
+    if (statusFilter != null &&
+        statusFilter.isNotEmpty &&
+        ticket.status != statusFilter) {
+      return false;
+    }
+    final ticketNumberFilter = _ticketNumberController.text
+        .trim()
+        .toLowerCase();
+    if (ticketNumberFilter.isNotEmpty &&
+        !ticket.ticketNumber.toLowerCase().contains(ticketNumberFilter)) {
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _refreshAfterMutation() async {
+    try {
+      final bundle = await _load();
+      if (!mounted) {
+        return;
+      }
+      setState(() => _future = Future.value(bundle));
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Ticket mis a jour. Actualisez la liste pour resynchroniser.',
+          ),
+        ),
+      );
+    }
   }
 
   bool _canClose(CurrentUserTicket ticket) {
@@ -251,14 +309,15 @@ class _BusinessTicketsScreenState extends State<BusinessTicketsScreen> {
     }
 
     try {
-      await _gateway!.changeTicketStatus(
+      final updated = await _gateway!.changeTicketStatus(
         widget.companyId,
         ticket.serviceUnitId,
         ticket.id,
         status,
       );
       if (mounted) {
-        _reload();
+        _applyTicketMutation(updated);
+        unawaited(_refreshAfterMutation());
       }
     } catch (error) {
       if (!mounted) {
