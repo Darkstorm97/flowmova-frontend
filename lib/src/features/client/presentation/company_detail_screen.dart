@@ -1603,8 +1603,8 @@ class _CatalogSection extends StatefulWidget {
 }
 
 class _CatalogSectionState extends State<_CatalogSection> {
+  final _searchController = TextEditingController();
   String? _selectedCategoryId;
-  String _query = '';
 
   List<CompanyCatalogCategory> get _visibleCategories {
     final categories = widget.categories
@@ -1620,7 +1620,7 @@ class _CatalogSectionState extends State<_CatalogSection> {
   }
 
   List<CompanyCatalogItem> get _filteredCatalogs {
-    final normalizedQuery = _query.trim().toLowerCase();
+    final normalizedQuery = _searchController.text.trim().toLowerCase();
     return widget.catalogs
         .where((catalog) {
           final matchesCategory =
@@ -1649,9 +1649,8 @@ class _CatalogSectionState extends State<_CatalogSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextField(
-            onChanged: (value) => setState(() {
-              _query = value;
-            }),
+            controller: _searchController,
+            onChanged: (_) => setState(() {}),
             textInputAction: TextInputAction.search,
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.search),
@@ -1700,6 +1699,12 @@ class _CatalogSectionState extends State<_CatalogSection> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }
 

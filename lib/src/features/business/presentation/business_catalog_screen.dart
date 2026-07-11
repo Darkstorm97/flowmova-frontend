@@ -31,7 +31,6 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
   AdminCatalogGateway? _gateway;
   Future<AdminCatalogBundle>? _future;
   AdminCatalogBundle? _bundle;
-  String _query = '';
   String? _categoryId;
 
   @override
@@ -109,7 +108,7 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: _searchController,
-                onChanged: (value) => setState(() => _query = value),
+                onChanged: (_) => setState(() {}),
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.search),
                   labelText: 'Rechercher dans le catalogue',
@@ -151,7 +150,7 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
   List<CompanyCatalogItem> _filteredCatalogs(
     List<CompanyCatalogItem> catalogs,
   ) {
-    final needle = _query.trim().toLowerCase();
+    final needle = _searchController.text.trim().toLowerCase();
     return catalogs
         .where((catalog) {
           final categoryMatches =
