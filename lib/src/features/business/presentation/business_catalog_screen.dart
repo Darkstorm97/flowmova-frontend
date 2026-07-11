@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -28,6 +29,7 @@ class BusinessCatalogScreen extends StatefulWidget {
 class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
   AdminCatalogGateway? _gateway;
   Future<AdminCatalogBundle>? _future;
+  AdminCatalogBundle? _bundle;
   String _query = '';
   String? _categoryId;
 
@@ -40,7 +42,7 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
         BackendAdminCatalogGateway(
           ApiClient(accessTokenProvider: session.currentAccessToken),
         );
-    _future ??= _gateway!.getCatalog(widget.companyId);
+    _future ??= _loadCatalog();
   }
 
   @override
@@ -74,7 +76,7 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
           );
         }
 
-        final bundle = snapshot.requireData;
+        final bundle = _bundle ?? snapshot.requireData;
         final catalogs = _filteredCatalogs(bundle.catalogs);
         return SingleChildScrollView(
           child: Column(
@@ -185,7 +187,7 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
     if (input == null) {
       return;
     }
-    await _runMutation(() {
+    await _runMutation(() async {
       if (category == null) {
         return _gateway!.createCategory(widget.companyId, input);
       }
@@ -206,7 +208,7 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
     if (result == null) {
       return;
     }
-    await _runMutation(() {
+    await _runMutation(() async {
       if (catalog == null) {
         return _createCatalogWithOptionalImage(result);
       }
@@ -295,16 +297,17 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
       ),
     );
     if (confirmed == true) {
-      await _runMutation(
-        () => _gateway!.archiveCatalog(widget.companyId, catalog.id),
-      );
+      await _runMutation(() async {
+        return _gateway!.archiveCatalog(widget.companyId, catalog.id);
+      });
     }
   }
 
   Future<void> _runMutation(Future<Object?> Function() action) async {
     try {
-      await action();
-      await _refreshAfterMutation();
+      final result = await action();
+      _applyMutationResult(result);
+      unawaited(_refreshAfterMutation());
     } catch (error) {
       if (!mounted) {
         return;
@@ -315,11 +318,20 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
     }
   }
 
+  Future<AdminCatalogBundle> _loadCatalog() async {
+    final bundle = await _gateway!.getCatalog(widget.companyId);
+    _bundle = bundle;
+    return bundle;
+  }
+
   Future<void> _refreshAfterMutation() async {
     try {
       final bundle = await _gateway!.getCatalog(widget.companyId);
       if (mounted) {
-        setState(() => _future = Future.value(bundle));
+        setState(() {
+          _bundle = bundle;
+          _future = Future.value(bundle);
+        });
       }
     } catch (_) {
       if (!mounted) {
@@ -335,8 +347,82 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
     }
   }
 
+  void _applyMutationResult(Object? result) {
+    switch (result) {
+      case CompanyCatalogCategory category:
+        _applyCategoryMutation(category);
+      case CompanyCatalogItem catalog:
+        _applyCatalogMutation(catalog);
+    }
+  }
+
+  void _applyCategoryMutation(CompanyCatalogCategory category) {
+    final current = _bundle;
+    if (current == null) {
+      return;
+    }
+
+    final categories = current.categories
+        .where((item) => item.id != category.id)
+        .toList();
+    final catalogs = current.catalogs.toList();
+
+    if (category.status == 'ARCHIVED') {
+      if (_categoryId == category.id) {
+        _categoryId = null;
+      }
+      catalogs.removeWhere(
+        (catalog) => catalog.catalogCategoryId == category.id,
+      );
+    } else {
+      categories.add(category);
+      categories.sort((a, b) {
+        final orderComparison = a.displayOrder.compareTo(b.displayOrder);
+        if (orderComparison != 0) {
+          return orderComparison;
+        }
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+    }
+
+    _setLocalBundle(
+      AdminCatalogBundle(categories: categories, catalogs: catalogs),
+    );
+  }
+
+  void _applyCatalogMutation(CompanyCatalogItem catalog) {
+    final current = _bundle;
+    if (current == null) {
+      return;
+    }
+
+    final catalogs = current.catalogs
+        .where((item) => item.id != catalog.id)
+        .toList();
+    if (catalog.status != 'ARCHIVED') {
+      catalogs.add(catalog);
+      catalogs.sort(
+        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+      );
+    }
+
+    _setLocalBundle(
+      AdminCatalogBundle(categories: current.categories, catalogs: catalogs),
+    );
+  }
+
+  void _setLocalBundle(AdminCatalogBundle bundle) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _bundle = bundle;
+      _future = Future.value(bundle);
+    });
+  }
+
   void _reload() {
-    setState(() => _future = _gateway!.getCatalog(widget.companyId));
+    setState(() => _future = _loadCatalog());
   }
 
   String _errorMessage(Object? error) {

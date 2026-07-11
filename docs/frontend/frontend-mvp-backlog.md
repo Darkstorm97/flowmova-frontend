@@ -885,6 +885,27 @@ Definition of Done:
 - un element catalogue peut recevoir ou remplacer une image locale;
 - l'ecran se rafraichit apres sauvegarde.
 
+### CATALOG-FRONT-003 - Synchronisation locale robuste du catalogue apres mutation
+
+Issue GitHub: #65.
+
+Rendre l'ecran Catalogue robuste sur mobile lorsque la mutation backend reussit mais que le refresh immediat echoue ou arrive trop lentement.
+
+Inclure:
+
+- utiliser le resultat du `POST`/`PUT`/`DELETE` comme source de verite immediate;
+- mettre a jour localement les categories apres creation, modification et archivage;
+- mettre a jour localement les catalogues apres creation, modification, upload image et archivage;
+- lancer un refresh backend en arriere-plan pour resynchroniser;
+- conserver l'etat local et afficher un message discret si ce refresh echoue.
+
+Definition of Done:
+
+- l'utilisateur voit immediatement l'objet cree ou modifie;
+- l'archivage retire l'objet de la liste locale;
+- l'ecran ne bascule plus en erreur si seule la resynchronisation echoue;
+- les tests et l'analyse frontend restent au vert.
+
 ### CATALOG-FRONT-001 - Gerer les catalogues
 
 Issue GitHub: #22.
