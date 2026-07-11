@@ -15,6 +15,7 @@ import '../features/business/presentation/my_companies_screen.dart';
 import '../features/client/data/company_search_gateway.dart';
 import '../features/client/presentation/company_detail_screen.dart';
 import '../features/client/presentation/client_home_screen.dart';
+import '../features/client/presentation/qr_scanner_screen.dart';
 import '../features/client/presentation/public_location_screen.dart';
 import '../features/navigation/presentation/flow_mova_navigation_shell.dart';
 import '../features/placeholders/presentation/feature_placeholder_screen.dart';
@@ -145,6 +146,14 @@ abstract final class AppRouter {
           description:
               'Le detail unite de service sera implemente dans PUBLIC-FRONT-003.',
         ),
+      ),
+      AppRoutes.publicLocationScan => const FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.client,
+        title: 'Scanner QR',
+        contentScrolls: false,
+        maxContentWidth: 680,
+        contentPadding: EdgeInsets.zero,
+        child: QrScannerScreen(),
       ),
       AppRoutes.publicLocationDetail => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.client,

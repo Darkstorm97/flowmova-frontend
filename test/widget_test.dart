@@ -102,7 +102,7 @@ void main() {
     expect(capturedArguments, 'company-1');
   });
 
-  testWidgets('QR shortcut opens the public location screen', (tester) async {
+  testWidgets('QR shortcut opens the scanner fallback screen', (tester) async {
     await tester.pumpWidget(
       FlowMovaApp(companySearchGateway: companySearchGateway),
     );
@@ -111,13 +111,14 @@ void main() {
     await tester.tap(find.byTooltip('Scanner un QR code'));
     await tester.pumpAndSettle();
 
-    expect(find.text('QR code'), findsOneWidget);
+    expect(find.text('Scanner QR'), findsOneWidget);
     expect(find.byType(BackButton), findsOneWidget);
     expect(find.text('Accueil'), findsAtLeastNWidgets(1));
     expect(find.text('Tickets'), findsOneWidget);
     expect(find.text('Profil'), findsOneWidget);
     expect(find.text('Entreprise'), findsOneWidget);
-    expect(find.text('Commande sur place'), findsOneWidget);
+    expect(find.text('Scanner un QR code'), findsOneWidget);
+    expect(find.text('Ouvrir la commande'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Code ou lien QR'), findsOneWidget);
   });
 

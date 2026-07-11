@@ -20,6 +20,7 @@ abstract final class AppRoutes {
   static const businessServiceUnitTickets = '/business/service-units/tickets';
   static const companyDetail = '/companies/detail';
   static const serviceUnitDetail = '/service-units/detail';
+  static const publicLocationScan = '/locations/scan';
   static const publicLocationDetail = '/locations/public';
   static const createTicket = '/tickets/create';
   static const ticketCreationSuccess = '/tickets/create/success';

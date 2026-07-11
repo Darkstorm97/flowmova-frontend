@@ -379,19 +379,27 @@ Ajouter une entree QR code depuis l'accueil client pour acceder rapidement au pa
 Inclure:
 
 - bouton/action secondaire `Scanner un QR code` sur l'accueil;
-- sur mobile, preparation du parcours scanner camera quand le package Flutter sera valide;
-- sur web, fallback simple par saisie ou collage d'un lien public si la camera n'est pas disponible ou non autorisee;
-- ouverture du lien public vers l'ecran `PUBLIC-FRONT-004`;
-- gestion des permissions camera, chargement et erreur lorsque le scanner reel sera implemente;
+- sur Android/iOS, ouverture d'un scanner camera QR;
+- fallback simple par saisie ou collage d'un lien public si la camera n'est pas disponible ou non autorisee;
+- lecture des liens frontend `/locations/public?slug=...`, des liens hash web et des liens backend `/public/locations/{slug}`;
+- ouverture automatique du parcours public d'emplacement vers l'ecran `PUBLIC-FRONT-004`;
+- gestion des permissions camera, chargement et erreur scanner;
 - aucun generation de QR code cote frontend ou backend dans ce ticket;
 - ne bloque pas la recherche publique d'entreprises.
 
 Definition of Done:
 
 - un utilisateur voit une entree QR code depuis l'accueil;
-- l'entree permet d'aller vers un parcours public existant par scan ou lien manuel selon la plateforme;
+- l'entree ouvre le scanner sur mobile et garde le lien manuel en fallback;
+- un QR valide ouvre automatiquement le parcours public de l'emplacement;
 - un refus de permission camera n'empeche pas d'utiliser l'application;
 - le parcours reste separe de `Voir un ticket avec le code`, qui appartient a l'onglet `Tickets`.
+
+Implementation:
+
+- issue GitHub: #68;
+- librairie scanner: `mobile_scanner`;
+- fallback web/debug: champ `Code ou lien QR`.
 
 ### PUBLIC-FRONT-002 - Consulter la fiche publique entreprise
 

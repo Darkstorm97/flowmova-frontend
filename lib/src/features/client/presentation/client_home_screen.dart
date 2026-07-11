@@ -48,7 +48,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
           loading: _loading,
           onSubmit: () => _search(page: 0),
           onQrPressed: () =>
-              Navigator.pushNamed(context, AppRoutes.publicLocationDetail),
+              Navigator.pushNamed(context, AppRoutes.publicLocationScan),
         ),
         const SizedBox(height: 16),
         _DomainScroller(

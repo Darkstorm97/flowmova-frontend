@@ -1,0 +1,1 @@
+bool get canUseQrCameraScanner => false;
