@@ -31,8 +31,12 @@ class _BusinessTicketsScreenState extends State<BusinessTicketsScreen> {
   Future<_CompanyTicketsBundle>? _future;
   _CompanyTicketsBundle? _bundle;
   final _ticketNumberController = TextEditingController();
-  String? _status;
-  String? _serviceUnitId;
+  String? _draftStatus;
+  String? _draftServiceUnitId;
+  String? _appliedStatus;
+  String? _appliedServiceUnitId;
+  String? _appliedTicketNumber;
+  bool _filtersExpanded = false;
 
   @override
   void didChangeDependencies() {
@@ -98,13 +102,19 @@ class _BusinessTicketsScreenState extends State<BusinessTicketsScreen> {
               const SizedBox(height: 16),
               _CompanyTicketFilters(
                 ticketNumberController: _ticketNumberController,
-                status: _status,
-                serviceUnitId: _serviceUnitId,
+                expanded: _filtersExpanded,
+                summary: _filterSummary(bundle.services.items),
+                status: _draftStatus,
+                serviceUnitId: _draftServiceUnitId,
                 services: bundle.services.items,
-                onStatusChanged: (value) => setState(() => _status = value),
+                onExpandedChanged: (value) =>
+                    setState(() => _filtersExpanded = value),
+                onStatusChanged: (value) =>
+                    setState(() => _draftStatus = value),
                 onServiceChanged: (value) =>
-                    setState(() => _serviceUnitId = value),
-                onApply: _reload,
+                    setState(() => _draftServiceUnitId = value),
+                onApply: _applyFilters,
+                onClear: _clearFilters,
               ),
               const SizedBox(height: 14),
               if (bundle.tickets.items.isEmpty)
@@ -167,9 +177,9 @@ class _BusinessTicketsScreenState extends State<BusinessTicketsScreen> {
     );
     final tickets = await _gateway!.listCompanyTickets(
       widget.companyId,
-      serviceUnitId: _serviceUnitId,
-      status: _status,
-      ticketNumber: _ticketNumberController.text,
+      serviceUnitId: _appliedServiceUnitId,
+      status: _appliedStatus,
+      ticketNumber: _appliedTicketNumber,
     );
     final bundle = _CompanyTicketsBundle(services: services, tickets: tickets);
     _bundle = bundle;
@@ -227,19 +237,19 @@ class _BusinessTicketsScreenState extends State<BusinessTicketsScreen> {
   }
 
   bool _matchesCurrentFilters(CurrentUserTicket ticket) {
-    final serviceFilter = _serviceUnitId?.trim();
+    final serviceFilter = _appliedServiceUnitId?.trim();
     if (serviceFilter != null &&
         serviceFilter.isNotEmpty &&
         ticket.serviceUnitId != serviceFilter) {
       return false;
     }
-    final statusFilter = _status?.trim();
+    final statusFilter = _appliedStatus?.trim();
     if (statusFilter != null &&
         statusFilter.isNotEmpty &&
         ticket.status != statusFilter) {
       return false;
     }
-    final ticketNumberFilter = _ticketNumberController.text
+    final ticketNumberFilter = (_appliedTicketNumber ?? '')
         .trim()
         .toLowerCase();
     if (ticketNumberFilter.isNotEmpty &&
@@ -333,6 +343,54 @@ class _BusinessTicketsScreenState extends State<BusinessTicketsScreen> {
     setState(() => _future = _load());
   }
 
+  void _applyFilters() {
+    setState(() {
+      _appliedServiceUnitId = _draftServiceUnitId;
+      _appliedStatus = _draftStatus;
+      final ticketNumber = _ticketNumberController.text.trim();
+      _appliedTicketNumber = ticketNumber.isEmpty ? null : ticketNumber;
+      _filtersExpanded = false;
+      _future = _load();
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _ticketNumberController.clear();
+      _draftServiceUnitId = null;
+      _draftStatus = null;
+      _appliedServiceUnitId = null;
+      _appliedStatus = null;
+      _appliedTicketNumber = null;
+      _filtersExpanded = false;
+      _future = _load();
+    });
+  }
+
+  String _filterSummary(List<BusinessServiceUnit> services) {
+    final parts = <String>[];
+    final appliedServiceId = _appliedServiceUnitId;
+    if (appliedServiceId != null && appliedServiceId.trim().isNotEmpty) {
+      String? serviceName;
+      for (final service in services) {
+        if (service.id == appliedServiceId) {
+          serviceName = service.name;
+          break;
+        }
+      }
+      parts.add('Service: ${serviceName ?? 'Selection'}');
+    }
+    final appliedStatus = _appliedStatus;
+    if (appliedStatus != null && appliedStatus.trim().isNotEmpty) {
+      parts.add('Statut: ${_ticketStatusLabel(appliedStatus)}');
+    }
+    final ticketNumber = _appliedTicketNumber;
+    if (ticketNumber != null && ticketNumber.trim().isNotEmpty) {
+      parts.add('Numero: $ticketNumber');
+    }
+    return parts.isEmpty ? 'Tous les tickets' : parts.join(' - ');
+  }
+
   String _errorMessage(Object? error) {
     if (error is ApiException) {
       return error.message;
@@ -360,76 +418,147 @@ class _CompanyTicketsBundle {
 class _CompanyTicketFilters extends StatelessWidget {
   const _CompanyTicketFilters({
     required this.ticketNumberController,
+    required this.expanded,
+    required this.summary,
     required this.status,
     required this.serviceUnitId,
     required this.services,
+    required this.onExpandedChanged,
     required this.onStatusChanged,
     required this.onServiceChanged,
     required this.onApply,
+    required this.onClear,
   });
 
   final TextEditingController ticketNumberController;
+  final bool expanded;
+  final String summary;
   final String? status;
   final String? serviceUnitId;
   final List<BusinessServiceUnit> services;
+  final ValueChanged<bool> onExpandedChanged;
   final ValueChanged<String?> onStatusChanged;
   final ValueChanged<String?> onServiceChanged;
   final VoidCallback onApply;
+  final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
+    final selectedServiceId =
+        services.any((service) => service.id == serviceUnitId)
+        ? serviceUnitId
+        : null;
+
     return Card(
+      clipBehavior: Clip.antiAlias,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: ticketNumberController,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                labelText: 'Numero ticket',
+            ListTile(
+              onTap: () => onExpandedChanged(!expanded),
+              leading: const Icon(Icons.filter_alt_outlined),
+              title: const Text(
+                'Filtres',
+                style: TextStyle(fontWeight: FontWeight.w800),
               ),
-              onSubmitted: (_) => onApply(),
+              subtitle: Text(
+                summary,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: Icon(expanded ? Icons.expand_less : Icons.expand_more),
             ),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String?>(
-              initialValue: serviceUnitId,
-              decoration: const InputDecoration(labelText: 'Service'),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('Tous')),
-                for (final service in services)
-                  DropdownMenuItem(
-                    value: service.id,
-                    child: Text(service.name),
-                  ),
-              ],
-              onChanged: onServiceChanged,
-            ),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String?>(
-              initialValue: status,
-              decoration: const InputDecoration(labelText: 'Statut'),
-              items: const [
-                DropdownMenuItem(value: null, child: Text('Tous')),
-                DropdownMenuItem(value: 'CREATED', child: Text('Cree')),
-                DropdownMenuItem(value: 'RECEIVED', child: Text('Recu')),
-                DropdownMenuItem(value: 'TREATED', child: Text('Traite')),
-                DropdownMenuItem(
-                  value: 'CUSTOMER_CONFIRMED',
-                  child: Text('Confirme'),
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 180),
+              crossFadeState: expanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              firstChild: const SizedBox.shrink(),
+              secondChild: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: ticketNumberController,
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.search),
+                        labelText: 'Numero ticket',
+                      ),
+                      onSubmitted: (_) => onApply(),
+                    ),
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<String?>(
+                      key: ValueKey('service-$selectedServiceId'),
+                      initialValue: selectedServiceId,
+                      decoration: const InputDecoration(labelText: 'Service'),
+                      items: [
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('Tous'),
+                        ),
+                        for (final service in services)
+                          DropdownMenuItem(
+                            value: service.id,
+                            child: Text(service.name),
+                          ),
+                      ],
+                      onChanged: onServiceChanged,
+                    ),
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<String?>(
+                      key: ValueKey('status-$status'),
+                      initialValue: status,
+                      decoration: const InputDecoration(labelText: 'Statut'),
+                      items: const [
+                        DropdownMenuItem(value: null, child: Text('Tous')),
+                        DropdownMenuItem(value: 'CREATED', child: Text('Cree')),
+                        DropdownMenuItem(
+                          value: 'RECEIVED',
+                          child: Text('Recu'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'TREATED',
+                          child: Text('Traite'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'CUSTOMER_CONFIRMED',
+                          child: Text('Confirme'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'CLOSED',
+                          child: Text('Termine'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'CANCELLED',
+                          child: Text('Annule'),
+                        ),
+                      ],
+                      onChanged: onStatusChanged,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: onClear,
+                            icon: const Icon(Icons.clear_outlined),
+                            label: const Text('Effacer'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: onApply,
+                            icon: const Icon(Icons.check),
+                            label: const Text('Appliquer'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                DropdownMenuItem(value: 'CLOSED', child: Text('Termine')),
-                DropdownMenuItem(value: 'CANCELLED', child: Text('Annule')),
-              ],
-              onChanged: onStatusChanged,
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: onApply,
-                icon: const Icon(Icons.filter_alt_outlined),
-                label: const Text('Appliquer'),
               ),
             ),
           ],
