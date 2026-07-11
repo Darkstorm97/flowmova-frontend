@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/app_routes.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/session/session_scope.dart';
@@ -7,6 +8,7 @@ import '../../../core/theme/flow_mova_colors.dart';
 import '../../tickets/data/current_user_ticket_gateway.dart';
 import '../data/admin_service_units_gateway.dart';
 import '../data/business_dashboard_gateway.dart';
+import 'business_ticket_detail_screen.dart';
 
 class BusinessTicketsScreen extends StatefulWidget {
   const BusinessTicketsScreen({
@@ -113,6 +115,7 @@ class _BusinessTicketsScreenState extends State<BusinessTicketsScreen> {
                 for (final ticket in bundle.tickets.items) ...[
                   _CompanyTicketCard(
                     ticket: ticket,
+                    onOpen: () => _openTicket(ticket),
                     onReceive: ticket.status == 'CREATED'
                         ? () =>
                               _confirmStatus(ticket, 'RECEIVED', 'Marquer recu')
@@ -166,6 +169,47 @@ class _BusinessTicketsScreenState extends State<BusinessTicketsScreen> {
       ticketNumber: _ticketNumberController.text,
     );
     return _CompanyTicketsBundle(services: services, tickets: tickets);
+  }
+
+  Future<void> _openTicket(CurrentUserTicket ticket) async {
+    final updated = await Navigator.pushNamed(
+      context,
+      AppRoutes.businessTicketDetail,
+      arguments: BusinessTicketDetailArguments(
+        companyId: widget.companyId,
+        ticket: ticket,
+        gateway: _gateway!,
+      ),
+    );
+    if (updated is CurrentUserTicket) {
+      _replaceTicket(updated);
+    }
+  }
+
+  void _replaceTicket(CurrentUserTicket updatedTicket) {
+    final current = _future;
+    if (current == null) {
+      return;
+    }
+    setState(() {
+      _future = current.then((bundle) {
+        return _CompanyTicketsBundle(
+          services: bundle.services,
+          tickets: CurrentUserTicketPage(
+            items: bundle.tickets.items
+                .map(
+                  (ticket) =>
+                      ticket.id == updatedTicket.id ? updatedTicket : ticket,
+                )
+                .toList(growable: false),
+            page: bundle.tickets.page,
+            size: bundle.tickets.size,
+            totalItems: bundle.tickets.totalItems,
+            totalPages: bundle.tickets.totalPages,
+          ),
+        );
+      });
+    });
   }
 
   bool _canClose(CurrentUserTicket ticket) {
@@ -339,6 +383,7 @@ class _CompanyTicketFilters extends StatelessWidget {
 class _CompanyTicketCard extends StatelessWidget {
   const _CompanyTicketCard({
     required this.ticket,
+    required this.onOpen,
     required this.onReceive,
     required this.onTreat,
     required this.onClose,
@@ -346,6 +391,7 @@ class _CompanyTicketCard extends StatelessWidget {
   });
 
   final CurrentUserTicket ticket;
+  final VoidCallback onOpen;
   final VoidCallback? onReceive;
   final VoidCallback? onTreat;
   final VoidCallback? onClose;
@@ -353,7 +399,9 @@ class _CompanyTicketCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final customer = ticket.userId.isNotEmpty
+    final customer = ticket.guestName?.trim().isNotEmpty == true
+        ? ticket.guestName!.trim()
+        : ticket.userId.isNotEmpty
         ? 'Client connecte'
         : (ticket.customerPhone ?? 'Invite');
     final subtitleParts = [
@@ -364,91 +412,103 @@ class _CompanyTicketCard extends StatelessWidget {
     ].where((part) => part.trim().isNotEmpty).join(' - ');
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    ticket.ticketNumber,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onOpen,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      ticket.ticketNumber,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-                _StatusPill(label: _ticketStatusLabel(ticket.status)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(subtitleParts),
-            const SizedBox(height: 4),
-            Text(customer, style: const TextStyle(color: FlowMovaColors.slate)),
-            const SizedBox(height: 10),
-            if (ticket.lines.isEmpty)
-              const Text(
-                'Aucun article commande',
-                style: TextStyle(color: FlowMovaColors.slate),
-              )
-            else
-              for (final line in ticket.lines)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 42,
-                        height: 32,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: FlowMovaColors.cloud,
-                          borderRadius: BorderRadius.circular(8),
+                  _StatusPill(label: _ticketStatusLabel(ticket.status)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(subtitleParts),
+              const SizedBox(height: 4),
+              Text(
+                customer,
+                style: const TextStyle(color: FlowMovaColors.slate),
+              ),
+              const SizedBox(height: 10),
+              if (ticket.lines.isEmpty)
+                const Text(
+                  'Aucun article commande',
+                  style: TextStyle(color: FlowMovaColors.slate),
+                )
+              else
+                for (final line in ticket.lines)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 32,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: FlowMovaColors.cloud,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'x${line.quantity}',
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
                         ),
-                        child: Text(
-                          'x${line.quantity}',
-                          style: const TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(child: Text(line.itemName)),
-                      Text(line.lineTotalAmount.toStringAsFixed(2)),
-                    ],
+                        const SizedBox(width: 10),
+                        Expanded(child: Text(line.itemName)),
+                        Text(line.lineTotalAmount.toStringAsFixed(2)),
+                      ],
+                    ),
                   ),
-                ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                if (onReceive != null)
-                  FilledButton.tonalIcon(
-                    onPressed: onReceive,
-                    icon: const Icon(Icons.inbox_outlined),
-                    label: const Text('Recu'),
-                  ),
-                if (onTreat != null)
-                  FilledButton.tonalIcon(
-                    onPressed: onTreat,
-                    icon: const Icon(Icons.check_circle_outline),
-                    label: const Text('Traite'),
-                  ),
-                if (onClose != null)
-                  FilledButton.icon(
-                    onPressed: onClose,
-                    icon: const Icon(Icons.done_all_outlined),
-                    label: const Text('Terminer'),
-                  ),
-                if (onCancel != null)
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
                   OutlinedButton.icon(
-                    onPressed: onCancel,
-                    icon: const Icon(Icons.cancel_outlined),
-                    label: const Text('Annuler'),
+                    onPressed: onOpen,
+                    icon: const Icon(Icons.visibility_outlined),
+                    label: const Text('Detail'),
                   ),
-              ],
-            ),
-          ],
+                  if (onReceive != null)
+                    FilledButton.tonalIcon(
+                      onPressed: onReceive,
+                      icon: const Icon(Icons.inbox_outlined),
+                      label: const Text('Recu'),
+                    ),
+                  if (onTreat != null)
+                    FilledButton.tonalIcon(
+                      onPressed: onTreat,
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text('Traite'),
+                    ),
+                  if (onClose != null)
+                    FilledButton.icon(
+                      onPressed: onClose,
+                      icon: const Icon(Icons.done_all_outlined),
+                      label: const Text('Terminer'),
+                    ),
+                  if (onCancel != null)
+                    OutlinedButton.icon(
+                      onPressed: onCancel,
+                      icon: const Icon(Icons.cancel_outlined),
+                      label: const Text('Annuler'),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

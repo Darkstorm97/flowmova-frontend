@@ -7,6 +7,7 @@ import '../features/business/presentation/business_catalog_screen.dart';
 import '../features/business/presentation/business_service_unit_items_screen.dart';
 import '../features/business/presentation/business_service_unit_tickets_screen.dart';
 import '../features/business/presentation/business_service_units_screen.dart';
+import '../features/business/presentation/business_ticket_detail_screen.dart';
 import '../features/business/presentation/business_tickets_screen.dart';
 import '../features/business/presentation/create_company_screen.dart';
 import '../features/business/presentation/edit_company_screen.dart';
@@ -94,6 +95,12 @@ abstract final class AppRouter {
         title: 'Tickets',
         contentScrolls: false,
         child: _businessTicketsPage(settings.arguments),
+      ),
+      AppRoutes.businessTicketDetail => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.business,
+        title: 'Detail ticket',
+        contentScrolls: false,
+        child: _businessTicketDetailPage(settings.arguments),
       ),
       AppRoutes.businessServiceUnits => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.business,
@@ -356,6 +363,18 @@ abstract final class AppRouter {
     }
 
     return BusinessTicketsScreen(companyId: companyId);
+  }
+
+  static Widget _businessTicketDetailPage(Object? arguments) {
+    if (arguments is BusinessTicketDetailArguments) {
+      return BusinessTicketDetailScreen(arguments: arguments);
+    }
+
+    return const FeaturePlaceholderScreen(
+      title: 'Ticket introuvable',
+      description:
+          'Revenez au suivi des tickets et selectionnez un ticket de la liste.',
+    );
   }
 
   static Widget _businessServiceUnitsPage(Object? arguments) {

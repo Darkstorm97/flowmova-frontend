@@ -50,6 +50,7 @@ void main() {
     expect(capturedUrl.queryParameters['status'], 'RECEIVED');
     expect(capturedUrl.queryParameters['ticketNumber'], 'FM-0001');
     expect(page.items.single.ticketNumber, 'FM-0001');
+    expect(page.items.single.guestName, 'Alice Client');
     expect(page.items.single.companyName, 'Cafe Flow');
     expect(page.items.single.serviceUnitName, 'Comptoir');
     expect(page.items.single.locationName, 'Accueil');
@@ -196,6 +197,7 @@ Map<String, Object?> _ticketJson({required String status}) {
     'id': 'ticket-1',
     'ticketNumber': 'FM-0001',
     'userId': 'user-1',
+    'guestName': 'Alice Client',
     'customerPhone': '+15145550000',
     'companyId': 'company-1',
     'companyName': 'Cafe Flow',

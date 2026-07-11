@@ -10,6 +10,7 @@ abstract final class AppRoutes {
   static const businessDashboard = '/business/dashboard';
   static const businessCatalog = '/business/catalog';
   static const businessTickets = '/business/tickets';
+  static const businessTicketDetail = '/business/tickets/detail';
   static const createCompany = '/business/companies/create';
   static const editCompany = '/business/companies/edit';
   static const businessServiceUnits = '/business/service-units';

@@ -1101,6 +1101,29 @@ Definition of Done:
 - les lignes articles affichent nom et quantite;
 - fermer ou annuler demande une confirmation claire.
 
+### TICKET-FRONT-012 - Detail ticket admin depuis suivi entreprise
+
+Issue GitHub: #67.
+
+Afficher le detail d'un ticket depuis la page Suivi des tickets entreprise.
+
+Inclure:
+
+- rendre les cartes de suivi tickets cliquables;
+- ouvrir une page detail admin dediee;
+- afficher numero, statut, dates, service, emplacement non-defaut;
+- afficher le nom invite/client disponible et le telephone si disponible;
+- afficher les articles commandes avec quantites et montants;
+- conserver les actions de changement de statut avec confirmation pour les actions definitives;
+- revenir a la liste avec le ticket mis a jour si une action change son statut.
+
+Definition of Done:
+
+- le suivi tickets permet d'ouvrir le detail d'un ticket;
+- les infos client et articles sont visibles dans le detail;
+- les actions de statut restent fonctionnelles;
+- l'analyse frontend et les tests cibles passent.
+
 ### TICKET-ADMIN-FRONT-002 - Mettre a jour le cycle de vie ticket cote equipe
 
 Permettre a l'equipe de faire avancer un ticket.

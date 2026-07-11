@@ -126,6 +126,7 @@ class CurrentUserTicket {
     required this.totalAmount,
     required this.lines,
     required this.createdAt,
+    this.guestName,
     this.customerPhone,
     this.notes,
     this.updatedAt,
@@ -139,6 +140,7 @@ class CurrentUserTicket {
       id: json['id'] as String,
       ticketNumber: json['ticketNumber'] as String,
       userId: json['userId'] as String? ?? '',
+      guestName: json['guestName'] as String?,
       customerPhone: json['customerPhone'] as String?,
       companyId: json['companyId'] as String? ?? '',
       companyName: json['companyName'] as String? ?? '',
@@ -166,6 +168,7 @@ class CurrentUserTicket {
   final String id;
   final String ticketNumber;
   final String userId;
+  final String? guestName;
   final String? customerPhone;
   final String companyId;
   final String companyName;
@@ -190,6 +193,7 @@ class CurrentUserTicket {
       id: id,
       ticketNumber: ticketNumber,
       userId: userId,
+      guestName: guestName,
       customerPhone: customerPhone,
       companyId: companyId,
       companyName: companyName,
