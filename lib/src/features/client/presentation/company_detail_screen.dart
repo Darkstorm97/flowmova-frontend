@@ -8,6 +8,7 @@ import '../../../core/theme/flow_mova_colors.dart';
 import '../../../core/theme/flow_mova_radii.dart';
 import '../../tickets/data/recent_ticket_storage.dart';
 import '../../tickets/data/ticket_creation_gateway.dart';
+import '../../tickets/presentation/ticket_creation_success_screen.dart';
 import '../data/company_detail_gateway.dart';
 
 class CompanyDetailScreen extends StatefulWidget {
@@ -320,19 +321,7 @@ class _CreateOrderButton extends StatelessWidget {
     final canCreate = hasService && hasStandardService && companyIsOpen;
 
     return FilledButton.icon(
-      onPressed: canCreate
-          ? () => showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              useSafeArea: true,
-              builder: (_) => _CreateTicketSheet(
-                bundle: bundle,
-                detailGateway: detailGateway,
-                ticketCreationGateway: ticketCreationGateway,
-                recentTicketStorage: recentTicketStorage,
-              ),
-            )
-          : null,
+      onPressed: canCreate ? () => _openCreateTicket(context) : null,
       icon: Icon(
         companyIsOpen ? Icons.add_task_outlined : Icons.do_not_disturb_on,
       ),
@@ -346,6 +335,29 @@ class _CreateOrderButton extends StatelessWidget {
             : 'Aucun service ouvert',
       ),
     );
+  }
+
+  Future<void> _openCreateTicket(BuildContext context) async {
+    final confirmation =
+        await showModalBottomSheet<TicketCreationSuccessArguments>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          builder: (_) => _CreateTicketSheet(
+            bundle: bundle,
+            detailGateway: detailGateway,
+            ticketCreationGateway: ticketCreationGateway,
+            recentTicketStorage: recentTicketStorage,
+          ),
+        );
+
+    if (confirmation != null && context.mounted) {
+      Navigator.pushNamed(
+        context,
+        AppRoutes.ticketCreationSuccess,
+        arguments: confirmation,
+      );
+    }
   }
 }
 
@@ -376,7 +388,6 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
   CompanyServiceUnitItem? _selectedServiceUnit;
   CompanyServiceUnitDetail? _serviceUnitDetail;
   CompanyServiceUnitLocation? _selectedLocation;
-  _TicketConfirmation? _createdTicket;
   String? _errorMessage;
   bool _loadingServiceUnit = false;
   bool _submitting = false;
@@ -408,9 +419,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
             controller: scrollController,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-              child: _createdTicket == null
-                  ? _buildForm(context)
-                  : _TicketCreatedSummary(confirmation: _createdTicket!),
+              child: _buildForm(context),
             ),
           );
         },
@@ -757,7 +766,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
       await _saveRecentTicket(confirmation);
 
       if (mounted) {
-        setState(() => _createdTicket = confirmation);
+        Navigator.pop(context, confirmation.toSuccessArguments());
       }
     } on ApiException catch (error) {
       if (mounted) {
@@ -1294,34 +1303,6 @@ class _ItemSelectionTile extends StatelessWidget {
   }
 }
 
-class _SelectedSummary extends StatelessWidget {
-  const _SelectedSummary({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: FlowMovaColors.white,
-        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
-        border: Border.all(color: FlowMovaColors.border),
-      ),
-      child: ListTile(
-        leading: Icon(icon),
-        title: Text(label),
-        subtitle: Text(value),
-      ),
-    );
-  }
-}
-
 class _InlineError extends StatelessWidget {
   const _InlineError({required this.message});
 
@@ -1428,6 +1409,28 @@ class _TicketConfirmation {
       ],
     );
   }
+
+  TicketCreationSuccessArguments toSuccessArguments() {
+    return TicketCreationSuccessArguments(
+      ticketId: ticket.id,
+      ticketNumber: ticket.ticketNumber,
+      accessCode: ticket.accessCode,
+      companyName: company.name,
+      serviceUnitName: serviceUnit.name,
+      locationName: location.name,
+      locationDefault: location.defaultLocation,
+      totalLabel: ticket.totalLabel,
+      recentTicket: ticket.accessCode == null ? null : toRecentTicketEntry(),
+      items: [
+        for (final item in items)
+          TicketCreationSuccessItem(
+            itemId: item.itemId,
+            name: item.name,
+            quantity: item.quantity,
+          ),
+      ],
+    );
+  }
 }
 
 class _TicketConfirmationItem {
@@ -1442,125 +1445,6 @@ class _TicketConfirmationItem {
   final int quantity;
 
   String get label => '$name x$quantity';
-}
-
-class _TicketCreatedSummary extends StatelessWidget {
-  const _TicketCreatedSummary({required this.confirmation});
-
-  final _TicketConfirmation confirmation;
-
-  @override
-  Widget build(BuildContext context) {
-    final ticket = confirmation.ticket;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 8),
-        Icon(
-          Icons.check_circle_outline,
-          size: 54,
-          color: FlowMovaColors.leafGreen,
-        ),
-        const SizedBox(height: 14),
-        Text(
-          'Ticket cree',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            color: FlowMovaColors.logoInk,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _SelectedSummary(
-          icon: Icons.confirmation_number_outlined,
-          label: 'Numero de ticket',
-          value: ticket.ticketNumber,
-        ),
-        if (ticket.accessCode != null) ...[
-          const SizedBox(height: 10),
-          _SelectedSummary(
-            icon: Icons.key_outlined,
-            label: 'Code acces',
-            value: ticket.accessCode!,
-          ),
-          const SizedBox(height: 10),
-          const _InfoMessage(
-            icon: Icons.info_outline,
-            message:
-                'Conservez ce code. Il permettra de confirmer et retrouver votre commande depuis cet appareil ou avec le numero du ticket.',
-          ),
-        ],
-        const SizedBox(height: 10),
-        _SelectedSummary(
-          icon: Icons.room_service_outlined,
-          label: 'Service',
-          value: confirmation.serviceUnit.name,
-        ),
-        const SizedBox(height: 10),
-        _SelectedSummary(
-          icon: Icons.place_outlined,
-          label: 'Emplacement',
-          value: confirmation.location.name,
-        ),
-        if (confirmation.items.isNotEmpty) ...[
-          const SizedBox(height: 10),
-          _SelectedSummary(
-            icon: Icons.shopping_bag_outlined,
-            label: 'Articles commandes',
-            value: confirmation.items.map((item) => item.label).join(', '),
-          ),
-        ],
-        const SizedBox(height: 10),
-        _SelectedSummary(
-          icon: Icons.payments_outlined,
-          label: 'Total indicatif',
-          value: ticket.totalLabel,
-        ),
-        const SizedBox(height: 18),
-        FilledButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Fermer'),
-        ),
-      ],
-    );
-  }
-}
-
-class _InfoMessage extends StatelessWidget {
-  const _InfoMessage({required this.icon, required this.message});
-
-  final IconData icon;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: FlowMovaColors.primaryAqua.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(FlowMovaRadii.medium),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, size: 20, color: FlowMovaColors.primaryAqua),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                message,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: FlowMovaColors.ink,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _ServiceUnitsSection extends StatelessWidget {

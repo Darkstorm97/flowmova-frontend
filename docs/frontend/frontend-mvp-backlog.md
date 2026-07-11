@@ -662,6 +662,26 @@ Definition of Done:
 - la fiche connectee affiche les libelles entreprise, service, emplacement non-defaut et articles dans cette presentation;
 - les tests widget couvrent la fiche connectee uniformisee.
 
+### TICKET-FRONT-011 - Page dediee confirmation creation ticket
+
+Issue GitHub: #66.
+
+Sortir la confirmation de creation ticket des modales de creation et afficher un ecran dedie apres succes, commun au parcours fiche entreprise et au parcours QR.
+
+Inclure:
+
+- navigation vers une page de confirmation apres creation reussie;
+- recapitulatif ticket: numero, code acces si disponible, entreprise, service, emplacement non-defaut, articles et quantites;
+- acces direct au detail du ticket quand le code local est disponible;
+- retour simple vers l'accueil client;
+- aucun changement du contrat backend de creation.
+
+Definition of Done:
+
+- la confirmation n'est plus affichee directement dans la modale de creation;
+- le parcours fiche entreprise et le parcours QR partagent la meme presentation de confirmation;
+- l'analyse frontend et les tests cibles restent au vert.
+
 ### TICKET-FRONT-005 - Limiter les creations invitees avec les tickets recents
 
 Appliquer cote frontend le mode `AUTHENTICATED_OR_GUEST_RECENT_ONE_OPEN_TICKET` pour les visiteurs non authentifies.
@@ -896,6 +916,7 @@ Inclure:
 - utiliser le resultat du `POST`/`PUT`/`DELETE` comme source de verite immediate;
 - mettre a jour localement les categories apres creation, modification et archivage;
 - mettre a jour localement les catalogues apres creation, modification, upload image et archivage;
+- afficher un message de succes apres creation, modification et archivage;
 - lancer un refresh backend en arriere-plan pour resynchroniser;
 - conserver l'etat local et afficher un message discret si ce refresh echoue.
 

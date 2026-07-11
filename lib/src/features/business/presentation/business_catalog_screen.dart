@@ -187,12 +187,17 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
     if (input == null) {
       return;
     }
-    await _runMutation(() async {
-      if (category == null) {
-        return _gateway!.createCategory(widget.companyId, input);
-      }
-      return _gateway!.updateCategory(widget.companyId, category.id, input);
-    });
+    await _runMutation(
+      () async {
+        if (category == null) {
+          return _gateway!.createCategory(widget.companyId, input);
+        }
+        return _gateway!.updateCategory(widget.companyId, category.id, input);
+      },
+      successMessage: category == null
+          ? 'Categorie creee'
+          : 'Categorie mise a jour',
+    );
   }
 
   Future<void> _openCatalogForm({
@@ -208,12 +213,17 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
     if (result == null) {
       return;
     }
-    await _runMutation(() async {
-      if (catalog == null) {
-        return _createCatalogWithOptionalImage(result);
-      }
-      return _updateCatalogWithOptionalImage(catalog.id, result);
-    });
+    await _runMutation(
+      () async {
+        if (catalog == null) {
+          return _createCatalogWithOptionalImage(result);
+        }
+        return _updateCatalogWithOptionalImage(catalog.id, result);
+      },
+      successMessage: catalog == null
+          ? 'Catalogue cree'
+          : 'Catalogue mis a jour',
+    );
   }
 
   Future<CompanyCatalogItem> _createCatalogWithOptionalImage(
@@ -274,7 +284,7 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
           _categoryId = null;
         }
         return archived;
-      });
+      }, successMessage: 'Categorie archivee');
     }
   }
 
@@ -299,14 +309,18 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
     if (confirmed == true) {
       await _runMutation(() async {
         return _gateway!.archiveCatalog(widget.companyId, catalog.id);
-      });
+      }, successMessage: 'Catalogue archive');
     }
   }
 
-  Future<void> _runMutation(Future<Object?> Function() action) async {
+  Future<void> _runMutation(
+    Future<Object?> Function() action, {
+    required String successMessage,
+  }) async {
     try {
       final result = await action();
       _applyMutationResult(result);
+      _showMessage(successMessage);
       unawaited(_refreshAfterMutation());
     } catch (error) {
       if (!mounted) {
@@ -345,6 +359,15 @@ class _BusinessCatalogScreenState extends State<BusinessCatalogScreen> {
         ),
       );
     }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _applyMutationResult(Object? result) {

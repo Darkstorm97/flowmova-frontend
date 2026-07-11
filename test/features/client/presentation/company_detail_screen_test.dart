@@ -2,10 +2,12 @@ import 'dart:convert';
 
 import 'package:flowmova_frontend/src/core/session/auth_session_controller.dart';
 import 'package:flowmova_frontend/src/core/session/session_scope.dart';
+import 'package:flowmova_frontend/src/app/app_routes.dart';
 import 'package:flowmova_frontend/src/features/client/data/company_detail_gateway.dart';
 import 'package:flowmova_frontend/src/features/client/presentation/company_detail_screen.dart';
 import 'package:flowmova_frontend/src/features/tickets/data/recent_ticket_storage.dart';
 import 'package:flowmova_frontend/src/features/tickets/data/ticket_creation_gateway.dart';
+import 'package:flowmova_frontend/src/features/tickets/presentation/ticket_creation_success_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,6 +17,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        onGenerateRoute: _onGenerateRoute,
         home: CompanyDetailScreen(
           companyId: 'company-1',
           detailGateway: const _FakeCompanyDetailGateway(),
@@ -43,6 +46,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        onGenerateRoute: _onGenerateRoute,
         home: CompanyDetailScreen(
           companyId: 'company-1',
           detailGateway: const _ClosedCompanyDetailGateway(),
@@ -113,6 +117,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        onGenerateRoute: _onGenerateRoute,
         home: CompanyDetailScreen(
           companyId: 'company-1',
           detailGateway: const _FakeCompanyDetailGateway(),
@@ -136,12 +141,12 @@ void main() {
     await tester.tap(find.text('Creer mon ticket'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Ticket cree'), findsOneWidget);
+    expect(find.text('Commande creee'), findsOneWidget);
     expect(find.text('FM-0001'), findsOneWidget);
     expect(find.text('ABC123'), findsOneWidget);
     expect(find.text('Comptoir principal'), findsWidgets);
-    expect(find.text('Accueil'), findsWidgets);
-    expect(find.textContaining('Conservez ce code'), findsOneWidget);
+    expect(find.text('Cafe Flow'), findsOneWidget);
+    expect(find.textContaining('Conservez ces informations'), findsOneWidget);
 
     final recentTickets = await recentTicketStorage.load();
     expect(recentTickets, hasLength(1));
@@ -161,6 +166,7 @@ void main() {
       SessionScope(
         controller: sessionController,
         child: MaterialApp(
+          onGenerateRoute: _onGenerateRoute,
           home: CompanyDetailScreen(
             companyId: 'company-1',
             detailGateway: const _FakeCompanyDetailGateway(),
@@ -181,7 +187,9 @@ void main() {
     await tester.tap(find.text('Creer mon ticket'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Ticket cree'), findsOneWidget);
+    expect(find.text('Commande creee'), findsOneWidget);
+    expect(find.text('Cafe Flow'), findsOneWidget);
+    expect(find.text('Comptoir principal'), findsOneWidget);
     expect(ticketGateway.lastCommand?.guestName, isNull);
     expect(ticketGateway.lastCommand?.lines, isEmpty);
   });
@@ -257,6 +265,20 @@ void main() {
 
     expect(find.textContaining('Latte glace x1'), findsOneWidget);
   });
+}
+
+Route<dynamic>? _onGenerateRoute(RouteSettings settings) {
+  if (settings.name == AppRoutes.ticketCreationSuccess &&
+      settings.arguments is TicketCreationSuccessArguments) {
+    return MaterialPageRoute<void>(
+      settings: settings,
+      builder: (_) => TicketCreationSuccessScreen(
+        arguments: settings.arguments! as TicketCreationSuccessArguments,
+      ),
+    );
+  }
+
+  return null;
 }
 
 class _FakeCompanyDetailGateway implements CompanyDetailGateway {

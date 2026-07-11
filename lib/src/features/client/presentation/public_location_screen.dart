@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/app_routes.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/session/session_scope.dart';
@@ -7,6 +8,7 @@ import '../../../core/theme/flow_mova_colors.dart';
 import '../../../core/theme/flow_mova_radii.dart';
 import '../../tickets/data/recent_ticket_storage.dart';
 import '../../tickets/data/ticket_creation_gateway.dart';
+import '../../tickets/presentation/ticket_creation_success_screen.dart';
 import '../data/company_detail_gateway.dart';
 import '../data/public_location_gateway.dart';
 
@@ -47,7 +49,6 @@ class _PublicLocationScreenState extends State<PublicLocationScreen> {
       widget.recentTicketStorage ?? InMemoryRecentTicketStorage();
 
   PublicLocationAccess? _access;
-  TicketCreationResult? _createdTicket;
   String? _loadedSlug;
   String? _errorMessage;
   bool _loading = false;
@@ -72,12 +73,7 @@ class _PublicLocationScreenState extends State<PublicLocationScreen> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 680),
-            child: _createdTicket == null
-                ? _buildContent(context)
-                : _QrTicketCreatedSummary(
-                    ticket: _createdTicket!,
-                    access: _access!,
-                  ),
+            child: _buildContent(context),
           ),
         ),
       ),
@@ -148,7 +144,6 @@ class _PublicLocationScreenState extends State<PublicLocationScreen> {
       _loading = true;
       _errorMessage = null;
       _access = null;
-      _createdTicket = null;
       _selectedItemIds.clear();
       _itemQuantities.clear();
     });
@@ -230,10 +225,34 @@ class _PublicLocationScreenState extends State<PublicLocationScreen> {
             ),
           );
 
-      await _saveRecentTicket(result, access);
+      final recentTicket = _recentTicketEntry(result, access);
+      await _saveRecentTicket(recentTicket);
 
       if (mounted) {
-        setState(() => _createdTicket = result);
+        Navigator.pushNamed(
+          context,
+          AppRoutes.ticketCreationSuccess,
+          arguments: TicketCreationSuccessArguments(
+            ticketId: result.id,
+            ticketNumber: result.ticketNumber,
+            accessCode: result.accessCode,
+            companyName: access.company.name,
+            serviceUnitName: access.serviceUnit.name,
+            locationName: access.location.name,
+            locationDefault: access.location.defaultLocation,
+            totalLabel: result.totalLabel,
+            recentTicket: result.accessCode == null ? null : recentTicket,
+            items: [
+              for (final item in access.items)
+                if (_selectedItemIds.contains(item.id))
+                  TicketCreationSuccessItem(
+                    itemId: item.id,
+                    name: item.catalog.name,
+                    quantity: _itemQuantities[item.id] ?? 1,
+                  ),
+            ],
+          ),
+        );
       }
     } on ApiException catch (error) {
       if (mounted) {
@@ -254,42 +273,44 @@ class _PublicLocationScreenState extends State<PublicLocationScreen> {
     }
   }
 
-  Future<void> _saveRecentTicket(
+  RecentTicketEntry _recentTicketEntry(
     TicketCreationResult ticket,
     PublicLocationAccess access,
-  ) async {
+  ) {
+    return RecentTicketEntry(
+      id: ticket.id,
+      ticketNumber: ticket.ticketNumber,
+      accessCode: ticket.accessCode,
+      guestName: ticket.guestName,
+      customerPhone: ticket.customerPhone,
+      serviceUnitId: access.serviceUnit.id,
+      locationId: access.location.id,
+      companyId: access.company.id,
+      status: ticket.status,
+      createdAt: DateTime.now(),
+      companyName: access.company.name,
+      serviceUnitName: access.serviceUnit.name,
+      locationName: access.location.name,
+      totalLabel: ticket.totalLabel,
+      items: [
+        for (final item in access.items)
+          if (_selectedItemIds.contains(item.id))
+            RecentTicketItemEntry(
+              itemId: item.id,
+              name: item.catalog.name,
+              quantity: _itemQuantities[item.id] ?? 1,
+            ),
+      ],
+    );
+  }
+
+  Future<void> _saveRecentTicket(RecentTicketEntry ticket) async {
     if (SessionScope.maybeOf(context)?.isAuthenticated ?? false) {
       return;
     }
 
     try {
-      await _recentTicketStorage.save(
-        RecentTicketEntry(
-          id: ticket.id,
-          ticketNumber: ticket.ticketNumber,
-          accessCode: ticket.accessCode,
-          guestName: ticket.guestName,
-          customerPhone: ticket.customerPhone,
-          serviceUnitId: access.serviceUnit.id,
-          locationId: access.location.id,
-          companyId: access.company.id,
-          status: ticket.status,
-          createdAt: DateTime.now(),
-          companyName: access.company.name,
-          serviceUnitName: access.serviceUnit.name,
-          locationName: access.location.name,
-          totalLabel: ticket.totalLabel,
-          items: [
-            for (final item in access.items)
-              if (_selectedItemIds.contains(item.id))
-                RecentTicketItemEntry(
-                  itemId: item.id,
-                  name: item.catalog.name,
-                  quantity: _itemQuantities[item.id] ?? 1,
-                ),
-          ],
-        ),
-      );
+      await _recentTicketStorage.save(ticket);
     } catch (_) {
       // Local recents are helpful but should never block ticket creation.
     }
@@ -599,64 +620,6 @@ class _QrItemTile extends StatelessWidget {
                 },
               )
             : null,
-      ),
-    );
-  }
-}
-
-class _QrTicketCreatedSummary extends StatelessWidget {
-  const _QrTicketCreatedSummary({required this.ticket, required this.access});
-
-  final TicketCreationResult ticket;
-  final PublicLocationAccess access;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Icon(
-              Icons.check_circle_outline,
-              size: 54,
-              color: FlowMovaColors.leafGreen,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Commande creee',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: FlowMovaColors.logoInk,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _InfoRow(
-              icon: Icons.confirmation_number_outlined,
-              label: ticket.ticketNumber,
-            ),
-            if (ticket.accessCode != null) ...[
-              const SizedBox(height: 8),
-              _InfoRow(icon: Icons.lock_outline, label: ticket.accessCode!),
-            ],
-            const SizedBox(height: 8),
-            _InfoRow(icon: Icons.business_outlined, label: access.company.name),
-            const SizedBox(height: 8),
-            _InfoRow(icon: Icons.place_outlined, label: access.location.name),
-            const SizedBox(height: 14),
-            Text(
-              'Conservez ce code pour consulter ou annuler votre commande.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: FlowMovaColors.slate,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

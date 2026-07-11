@@ -22,6 +22,7 @@ import '../features/profile/presentation/profile_home_screen.dart';
 import '../features/tickets/data/recent_ticket_storage.dart';
 import '../features/tickets/presentation/my_tickets_screen.dart';
 import '../features/tickets/presentation/recent_tickets_screen.dart';
+import '../features/tickets/presentation/ticket_creation_success_screen.dart';
 import '../features/tickets/presentation/ticket_lookup_screen.dart';
 import '../features/tickets/presentation/tickets_home_screen.dart';
 import '../core/session/session_scope.dart';
@@ -160,6 +161,12 @@ abstract final class AppRouter {
               'La creation de ticket sera implementee dans TICKET-FRONT-001.',
         ),
       ),
+      AppRoutes.ticketCreationSuccess => FlowMovaNavigationShell(
+        selectedRoute: AppRoutes.tickets,
+        title: 'Commande creee',
+        contentScrolls: false,
+        child: _ticketCreationSuccessPage(settings.arguments),
+      ),
       AppRoutes.ticketLookup => FlowMovaNavigationShell(
         selectedRoute: AppRoutes.tickets,
         title: 'Voir un ticket',
@@ -271,6 +278,17 @@ abstract final class AppRouter {
       return arguments;
     }
     return null;
+  }
+
+  static Widget _ticketCreationSuccessPage(Object? arguments) {
+    if (arguments is TicketCreationSuccessArguments) {
+      return TicketCreationSuccessScreen(arguments: arguments);
+    }
+
+    return const FeaturePlaceholderScreen(
+      title: 'Confirmation introuvable',
+      description: 'Revenez a l accueil pour creer une nouvelle commande.',
+    );
   }
 
   static Widget _myTicketDetailPage(Object? arguments) {
